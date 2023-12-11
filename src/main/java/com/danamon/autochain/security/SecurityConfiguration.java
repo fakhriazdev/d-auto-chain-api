@@ -31,6 +31,10 @@ public class SecurityConfiguration {
                 .httpBasic(Customizer.withDefaults())
                 .csrf(Customizer.withDefaults())
                 .cors(Customizer.withDefaults())
+                .exceptionHandling((exceptionHandling) ->
+                        exceptionHandling.authenticationEntryPoint(authEntryPoint)
+                )
+                .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(n -> n
                         .requestMatchers(HttpMethod.GET,"/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
