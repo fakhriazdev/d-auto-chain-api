@@ -1,4 +1,4 @@
-package com.danamon.autochain.services.impl;
+package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.UserRoleType;
 import com.danamon.autochain.dto.auth.*;
@@ -6,11 +6,10 @@ import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
-import com.danamon.autochain.services.AuthService;
+import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.utils.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import jakarta.annotation.PostConstruct;
 import java.util.Optional;
 
 @Service
