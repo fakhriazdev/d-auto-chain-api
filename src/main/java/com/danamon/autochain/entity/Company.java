@@ -11,7 +11,6 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-<<<<<<< src/main/java/com/danamon/autochain/entity/Company.java
 @Table(name = "m_company")
 public class Company {
     @Id
@@ -45,10 +44,10 @@ public class Company {
 
     @Column(name = "remaining_limit", nullable = false)
     private Double remainingLimit;
-
-
-    @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
-    private User user;
+//
+//
+//    @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
+//    private User user;
 
 }

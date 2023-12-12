@@ -1,10 +1,13 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.dto.request.SearchCompanyRequest;
-import com.danamon.autochain.dto.response.CompanyResponse;
+import com.danamon.autochain.dto.company.NewCompanyRequest;
+import com.danamon.autochain.dto.company.SearchCompanyRequest;
+import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.repository.CompanyRepository;
 import com.danamon.autochain.service.CompanyService;
+import com.danamon.autochain.util.ValidationUtil;
+import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,31 @@ import java.util.List;
 @Slf4j
 public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
+    private final ValidationUtil validationUtil;
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public CompanyResponse create(NewCompanyRequest request) {
+        validationUtil.validate(request);
+//        FileRequest fileRequest = FileRequest.builder()
+//                .multipartFile(request.getImage())
+//                .type(FileType.MENU_IMAGE)
+//                .build();
+//        File menuImage = fileService.createFile(fileRequest);
+        Company company = Company.builder()
+                .companyName(request.getCompanyName())
+                .province(request.getProvince())
+                .city(request.getCity())
+                .address(request.getAddress())
+                .phoneNumber(request.getPhoneNumber())
+                .companyEmail(request.getCompanyEmail())
+                .accountNumber(request.getAccountNumber())
+                .financingLimit(request.getFinancingLimit())
+                .remainingLimit(request.getRemainingLimit())
+                .build();
+        companyRepository.saveAndFlush(company);
+        return mapToResponse(company);
+    }
 
     @Transactional(readOnly = true)
     @Override

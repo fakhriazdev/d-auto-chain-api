@@ -1,4 +1,4 @@
-package com.danamon.autochain.services;
+package com.danamon.autochain.service;
 
 import com.danamon.autochain.dto.auth.*;
 
