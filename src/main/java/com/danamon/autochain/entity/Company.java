@@ -11,7 +11,6 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-<<<<<<< src/main/java/com/danamon/autochain/entity/Company.java
 @Table(name = "m_company")
 public class Company {
     @Id
