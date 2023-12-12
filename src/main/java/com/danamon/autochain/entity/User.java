@@ -31,7 +31,7 @@ public class User implements UserDetails {
     @JoinColumn(name = "company_id")
     private Company company_id;
 
-    @Column(name = "username", nullable = false, length =128 )
+    @Column(name = "username", nullable = false, length =128, unique = true)
     private String username;
 
     @Column(name = "email",nullable = false, length =128, unique = true)
