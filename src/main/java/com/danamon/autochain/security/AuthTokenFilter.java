@@ -1,6 +1,6 @@
 package com.danamon.autochain.security;
 
-import com.danamon.autochain.services.UserService;
+import com.danamon.autochain.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

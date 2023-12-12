@@ -2,7 +2,7 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.services.AuthService;
+import com.danamon.autochain.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
