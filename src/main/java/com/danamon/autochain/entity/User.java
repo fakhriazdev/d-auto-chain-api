@@ -1,11 +1,7 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.UserRoleType;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,40 +13,35 @@ import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.List;
 
-@Getter
-@Setter
+
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 @Entity
+@Data
 @Table(name = "m_user")
-public class User extends HistoryLog implements UserDetails {
+public class User implements UserDetails {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "user_id", length = 128)
+    @Column(name = "user_id", length = 128, nullable = false)
     private String user_id;
 
     @OneToOne
-    @NotNull
     @JoinColumn(name = "company_id")
     private Company company_id;
 
-    @NotNull
-    @Column(name = "username", unique = true)
+    @Column(name = "username", nullable = false, length =128 )
     private String username;
 
-    @NotNull
-    @Column(name = "user_email", unique = true)
-    private String user_email;
+    @Column(name = "email",nullable = false, length =128, unique = true)
+    private String email;
 
-    @NotNull
-    @Column(name = "password")
+    @Column(name = "password", nullable = false, length =128)
     private String password;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_type")
+    @Column(name = "user_type", nullable = false, length =128)
     private UserRoleType user_type;
 
     @Override
@@ -58,6 +49,15 @@ public class User extends HistoryLog implements UserDetails {
         return List.of(new SimpleGrantedAuthority(user_type.name()));
     }
 
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
     @Override
     public boolean isAccountNonExpired() {
         return true;

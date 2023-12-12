@@ -11,7 +11,7 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "company")
+@Table(name = "m_company")
 public class Company {
 
     @Id

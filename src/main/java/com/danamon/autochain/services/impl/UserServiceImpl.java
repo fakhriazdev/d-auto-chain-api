@@ -1,6 +1,6 @@
 package com.danamon.autochain.services.impl;
 
-import com.danamon.autochain.dto.response.UserResponse;
+import com.danamon.autochain.dto.user.UserResponse;
 import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.services.UserService;
@@ -45,9 +45,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.info("Start loadUserByUsername");
-        User userCredential = userCredentialRepository.findByUsername(username).
+        User userCredential = userCredentialRepository.findByEmail(email).
                 orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
         log.info("End loadUserByUsername");
         return User.builder()

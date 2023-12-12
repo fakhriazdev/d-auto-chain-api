@@ -1,14 +1,17 @@
-package com.danamon.autochain.dto.response;
+package com.danamon.autochain.dto.auth;
+
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserResponse {
+public class UserRegisterResponse {
     private String username;
-    private String role;
+    private String email;
+    private String user_type;
 }
