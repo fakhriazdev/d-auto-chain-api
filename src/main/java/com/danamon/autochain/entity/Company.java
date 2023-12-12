@@ -11,52 +11,44 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
+<<<<<<< src/main/java/com/danamon/autochain/entity/Company.java
 @Table(name = "m_company")
 public class Company {
-
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "company_id", length = 128)
     private String company_id;
 
-    @NotNull
-    @Column(length = 128)
-    private String company_name;
+    @Column(name = "company_name", length = 128, nullable = false)
+    private String companyName;
 
-    @NotNull
-    @Column(length = 64)
+    @Column(length = 64, nullable = false)
     private String province;
 
-    @NotNull
-    @Column(length = 64)
+    @Column(length = 64, nullable = false)
     private String city;
 
-    @NotNull
-    @Column(length = 128)
+    @Column(length = 128, nullable = false)
     private String address;
 
-    @NotNull
-    @Column(length = 64)
-    private String phone_number;
+    @Column(name = "phone_number", length = 64, nullable = false)
+    private String phoneNumber;
 
-    @NotNull
-    @Column(length = 64)
-    private String company_email;
+    @Column(name = "company_email", length = 64, nullable = false)
+    private String companyEmail;
 
-    @NotNull
-    @Column(length = 128)
-    private String account_number;
+    @Column(name = "account_number", length = 128, nullable = false)
+    private String accountNumber;
 
-    @NotNull
-    @Column(length = 128)
-    private Double financing_limit;
+    @Column(name = "financing_limit", nullable = false)
+    private Double financingLimit;
 
-    @NotNull
-    @Column(length = 128)
-    private Double remaining_limit;
+    @Column(name = "remaining_limit", nullable = false)
+    private Double remainingLimit;
+
 
     @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
     private User user;
+
 }
