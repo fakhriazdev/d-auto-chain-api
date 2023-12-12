@@ -7,7 +7,7 @@ import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
-import com.danamon.autochain.utils.ValidationUtil;
+import com.danamon.autochain.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

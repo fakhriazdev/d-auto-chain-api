@@ -1,4 +1,4 @@
-package com.danamon.autochain.dto.response;
+package com.danamon.autochain.dto.company;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
