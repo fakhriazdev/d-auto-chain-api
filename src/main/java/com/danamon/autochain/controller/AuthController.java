@@ -2,7 +2,7 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.services.AuthService;
+import com.danamon.autochain.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final CompanyService.AuthService authService;
 
     @GetMapping
     public String home(){

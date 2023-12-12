@@ -1,9 +1,9 @@
-package com.danamon.autochain.services.impl;
+package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.dto.user.UserResponse;
 import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.UserRepository;
-import com.danamon.autochain.services.UserService;
+import com.danamon.autochain.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements CompanyService.UserService {
     private final UserRepository userCredentialRepository;
 
     @Override

@@ -1,6 +1,6 @@
 package com.danamon.autochain.security;
 
-import com.danamon.autochain.services.UserService;
+import com.danamon.autochain.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,7 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class AuthTokenFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final UserService userService;
+    private final CompanyService.UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
