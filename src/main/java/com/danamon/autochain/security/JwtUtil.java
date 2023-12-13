@@ -6,9 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.danamon.autochain.entity.BackOffice;
 import com.danamon.autochain.entity.Credential;
-import com.danamon.autochain.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,7 +31,7 @@ public class JwtUtil {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             return JWT.create()
                     .withIssuer(appName)
-                    .withSubject(user.getCredential_id())
+                    .withSubject(user.getCredentialId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("actor", user.getActor().getName())

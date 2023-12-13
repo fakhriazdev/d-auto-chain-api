@@ -17,7 +17,7 @@ public class BackOffice {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "backoffice_id", length = 128, nullable = false)
+    @Column(name = "backofficeId", length = 128, nullable = false)
     private String backoffice_id;
 
     @OneToOne

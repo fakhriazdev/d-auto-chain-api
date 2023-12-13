@@ -52,7 +52,7 @@ public class CredentialServiceImpl implements CredentialService {
         log.info("End loadUserByUsername");
 
         return Credential.builder()
-                .credential_id(userCredential.getCredential_id())
+                .credentialId(userCredential.getCredentialId())
                 .email(userCredential.getEmail())
                 .username(userCredential.getUsername())
                 .password(userCredential.getPassword())

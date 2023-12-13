@@ -31,6 +31,4 @@ public class UserRegisterRequest {
     @Size(max = 128, message = "must be less than 128 character")
     private String company_id;
 
-    private UserRole userRole;
-
 }

@@ -26,8 +26,8 @@ public class Credential implements UserDetails {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "credential_id", length = 128, nullable = false)
-    private String credential_id;
+    @Column(name = "credentialId", length = 128, nullable = false)
+    private String credentialId;
 
     @Column
     private String email;

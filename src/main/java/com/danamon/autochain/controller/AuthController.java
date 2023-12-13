@@ -37,11 +37,11 @@ public class AuthController {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest request){
-        LoginResponse data = authService.loginUser(request);
-        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
+        String data = authService.loginUser(request);
+        DataResponse<String> response = DataResponse.<String>builder()
                 .message("User Successfully login")
                 .statusCode(HttpStatus.OK.value())
-                .data(otp)
+                .data(data)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -50,8 +50,8 @@ public class AuthController {
 
     @PostMapping("/varifyOtp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpRequest otpRequest){
-        UserLoginResponse userLoginResponse = authService.verifyOneTimePassword(otpRequest);
-        DataResponse<UserLoginResponse> response = DataResponse.<UserLoginResponse>builder()
+        LoginResponse userLoginResponse = authService.verifyOneTimePassword(otpRequest);
+        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
                 .message("Success Verify OTP Code")
                 .statusCode(HttpStatus.OK.value())
                 .data(userLoginResponse)

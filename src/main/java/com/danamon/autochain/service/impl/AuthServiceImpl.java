@@ -4,7 +4,6 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.entity.BackOffice;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.entity.User;
@@ -15,6 +14,7 @@ import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
+import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
 import com.danamon.autochain.util.ValidationUtil;
@@ -28,6 +28,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.mail.MessagingException;
@@ -51,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final UserService userService;
+    private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
     private final BackOfficeRepository backOfficeRepository;
@@ -97,12 +99,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String loginUser(UserLoginRequest request) {
+    public String loginUser(LoginRequest request) {
         log.info("Start login User");
 
         validationUtil.validate(request);
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         HashMap<String, String> info = new HashMap<>();
 
@@ -127,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserLoginResponse verifyOneTimePassword(OtpRequest otpRequest) {
+    public LoginResponse verifyOneTimePassword(OtpRequest otpRequest) {
         try {
             Boolean verifyOtp = OTPGenerator.verifyOtp(otpRequest);
             if (!verifyOtp) {
@@ -137,36 +139,32 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        User user = userRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        /*Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                user.getEmailX().toLowerCase(),
+       /* Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                credential.getEmail().toLowerCase(),
                 null,
-                user.getAuthorities()
+                credential.getAuthorities()
         ));
 
         SecurityContextHolder.getContext().setAuthentication(authenticate);
-        boolean validAuth = SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
-        if(validAuth){
-            Credential user = (Credential) authenticate.getPrincipal();
-            System.out.println(user.toString());
+        boolean validAuth = SecurityContextHolder.getContext().getAuthentication().isAuthenticated();*/
+//            Credential user = (Credential) authenticate.getPrincipal();
+//            System.out.println(user.toString());
             String token = jwtUtil.generateTokenUser(user);
             return LoginResponse.builder()
                     .username(user.getUsername())
-                    .credential_id(user.getCredential_id())
+                    .credential_id(user.getCredentialId())
                     .userType(user.getRole().getName().toUpperCase())
                     .actorType(user.getActor().getName().toUpperCase())
                     .token(token)
                     .build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid credential");
-        }
     }
 
-    @Override
-    public BackOfficeRegisterResponse registerBackOffice(BackOfficeRegisterRequest request) {
-        return null;
-    }
+//    @Override
+//    public BackOfficeRegisterResponse registerBackOffice(BackOfficeRegisterRequest request) {
+//        return null;
+//    }
 
     @Override
     public LoginResponse loginBackOffice(LoginRequest request) {
@@ -187,10 +185,32 @@ public class AuthServiceImpl implements AuthService {
 
         return LoginResponse.builder()
                 .username(user.getUsername())
-                .credential_id(user.getCredential_id())
+                .credential_id(user.getCredentialId())
                 .actorType(user.getActor().getName())
                 .userType(user.getRole().getName())
                 .token(token)
                 .build();
+    }
+
+    @Override
+    public String getByEmail(String email) {
+        Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+        User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+
+        HashMap<String,String> info = new HashMap<>();
+        String urlBuilder = "http://localhost:5432/user/forget/"+user.getUser_id();
+        try{    URL url = new URI(urlBuilder).toURL();
+            info.put("url", url.toString());
+            MailSender.mailer("Password Recovery Link", info, email);    return "Success send link for email recovery";
+        }catch (MessagingException e){    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (MalformedURLException | URISyntaxException e) {    throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void updatePassword(String id, String password) {
+        Credential credential = credentialRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        credential.setPassword(bCryptUtil.hashPassword(password));
+        credentialRepository.saveAndFlush(credential);
     }
 }

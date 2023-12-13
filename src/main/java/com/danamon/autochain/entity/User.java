@@ -17,15 +17,15 @@ public class User {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "user_id", length = 128, nullable = false)
+    @Column(name = "userId", length = 128, nullable = false)
     private String user_id;
 
     @OneToOne
-    @JoinColumn(name = "company_id")
+    @JoinColumn(name = "companyId")
     private Company company;
 
     @OneToOne
-    @JoinColumn(name = "credential_id")
+    @JoinColumn(name = "credentialId")
     private Credential credential;
 
 }
