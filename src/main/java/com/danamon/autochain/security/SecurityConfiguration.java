@@ -41,12 +41,12 @@ public class SecurityConfiguration {
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .authorizeHttpRequests(n -> n
-                            .requestMatchers("/api/auth/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-//                            .anyRequest().permitAll()
-                            .anyRequest().authenticated()
-                )
+//                .authorizeHttpRequests(n -> n
+//                            .requestMatchers("/api/auth/**").permitAll()
+//                            .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+////                            .anyRequest().permitAll()
+//                            .anyRequest().authenticated()
+//                )
                 .exceptionHandling((exceptionHandling) ->
                         exceptionHandling.authenticationEntryPoint(authEntryPoint)
                 )

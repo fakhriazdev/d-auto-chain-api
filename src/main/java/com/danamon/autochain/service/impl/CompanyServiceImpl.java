@@ -1,11 +1,18 @@
 package com.danamon.autochain.service.impl;
 
+import com.danamon.autochain.constant.UserRoleType;
 import com.danamon.autochain.dto.company.NewCompanyRequest;
+import com.danamon.autochain.dto.company.NewCompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.entity.Company;
+import com.danamon.autochain.entity.CompanyFile;
+import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.CompanyRepository;
+import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
+import com.danamon.autochain.service.UserService;
+import com.danamon.autochain.util.RandomPasswordUtil;
 import com.danamon.autochain.util.ValidationUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
@@ -16,11 +23,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,16 +37,20 @@ import java.util.List;
 public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final ValidationUtil validationUtil;
+    private final CompanyFileService companyFileService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
+    private final RandomPasswordUtil randomPasswordUtil;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public CompanyResponse create(NewCompanyRequest request) {
+    public NewCompanyResponse create(NewCompanyRequest request) {
         validationUtil.validate(request);
-//        FileRequest fileRequest = FileRequest.builder()
-//                .multipartFile(request.getImage())
-//                .type(FileType.MENU_IMAGE)
-//                .build();
-//        File menuImage = fileService.createFile(fileRequest);
+
+        List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
+                companyFileService.createFile(multipartFile)
+        ).collect(Collectors.toList());
+
         Company company = Company.builder()
                 .companyName(request.getCompanyName())
                 .province(request.getProvince())
@@ -48,9 +61,24 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(request.getAccountNumber())
                 .financingLimit(request.getFinancingLimit())
                 .remainingLimit(request.getRemainingLimit())
+                .companyFiles(companyFiles)
                 .build();
-        companyRepository.saveAndFlush(company);
-        return mapToResponse(company);
+        Company companySaved = companyRepository.saveAndFlush(company);
+
+        String password = randomPasswordUtil.generateRandomPassword(12);
+
+        User user = User.builder()
+                .company_id(company)
+                .email(request.getCompanyEmail())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(password))
+                .user_type(UserRoleType.SUPER_ADMIN)
+                .build();
+        userService.create(user);
+
+        companySaved.setUser(user);
+
+        return newMapToResponse(companySaved, password);
     }
 
     @Transactional(readOnly = true)
@@ -75,6 +103,24 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
+                .username(company.getUser().getUsername())
+                .build();
+    }
+
+    private NewCompanyResponse newMapToResponse(Company company, String password) {
+        return NewCompanyResponse.builder()
+                .companyId(company.getCompany_id())
+                .companyName(company.getCompanyName())
+                .province(company.getProvince())
+                .city(company.getCity())
+                .address(company.getAddress())
+                .phoneNumber(company.getPhoneNumber())
+                .companyEmail(company.getCompanyEmail())
+                .accountNumber(company.getAccountNumber())
+                .financingLimit(company.getFinancingLimit())
+                .reaminingLimit(company.getRemainingLimit())
+                .username(company.getUser().getUsername())
+                .password(password)
                 .build();
     }
 
