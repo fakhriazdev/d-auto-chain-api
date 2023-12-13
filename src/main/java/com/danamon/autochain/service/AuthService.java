@@ -1,7 +1,9 @@
 package com.danamon.autochain.service;
 
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.entity.User;
+
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 
 public interface AuthService {
     UserRegisterResponse registerUser(UserRegisterRequest request);
@@ -9,4 +11,6 @@ public interface AuthService {
     UserLoginResponse verifyOneTimePassword(OtpRequest otpRequest);
     UserRegisterResponse registerBackOffice(AuthRequest request);
     UserLoginResponse loginBackOffice(AuthRequest request);
+    String getByEmail(String email);
+    void updatePassword(String id, String Password);
 }

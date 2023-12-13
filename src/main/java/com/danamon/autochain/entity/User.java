@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.UserRole;
 import com.danamon.autochain.constant.UserRoleType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -42,7 +43,7 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false, length =128)
-    private UserRoleType user_type;
+    private UserRole user_type;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

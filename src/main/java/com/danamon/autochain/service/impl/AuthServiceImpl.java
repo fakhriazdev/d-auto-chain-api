@@ -1,6 +1,6 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.constant.UserRoleType;
+import com.danamon.autochain.constant.UserRole;
 import com.danamon.autochain.dto.auth.*;
 import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.UserRepository;
@@ -9,7 +9,8 @@ import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
-import com.danamon.autochain.utils.ValidationUtil;
+import com.danamon.autochain.util.ValidationUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,12 +19,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.mail.MessagingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -66,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(request.getUsername().toLowerCase())
                 .email(request.getEmail())
                 .password(bCryptUtil.hashPassword(request.getPassword()))
-                .user_type(UserRoleType.SUPER_ADMIN)
+                .user_type(UserRole.ROLE_BACKOFFICE_SUPER_ADMIN)
                 .build();
         userRepository.saveAndFlush(dataUser);
         log.info("End registerSuperAdmin");
@@ -81,7 +84,6 @@ public class AuthServiceImpl implements AuthService {
 
             Optional<User> username = userRepository.findByUsername(request.getUsername());
             Optional<User> email = userRepository.findByEmail(request.getEmail());
-//            companyRepository.findById(request.getCompany_id());
 
             if (username.isPresent() || email.isPresent()) return null;
 
@@ -89,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
                     .username(request.getUsername().toLowerCase())
                     .email(request.getEmail().toLowerCase())
                     .password(bCryptUtil.hashPassword(request.getPassword()))
-                    .user_type(UserRoleType.ADMIN)
+                    .user_type(request.getUserRole())
                     .build();
 
             userRepository.saveAndFlush(dataUser);
@@ -114,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
 
         validationUtil.validate(request);
 
-        Optional<User> email = userRepository.findByEmail(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         HashMap<String, String> info = new HashMap<>();
 
@@ -130,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
             info.put("counter", otpResponse.getPeriod()+"<br>");
             info.put("url", url);
 
-            MailSender.mailer("OTP", info, request.getEmail());
+            MailSender.mailer("OTP", info, user.getEmail());
 
             return "Please check your email to see OTP code";
         }catch (Exception e){
@@ -151,16 +153,15 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                user.getEmail().toLowerCase(),
-                user.getPassword()
+        /*Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                user.getEmailX().toLowerCase(),
+                null,
+                user.getAuthorities()
         ));
 
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
+        SecurityContextHolder.getContext().setAuthentication(authenticate);*/
         String token = jwtUtil.generateToken(user);
         return UserLoginResponse.builder()
-                .username(user.getUsername())
-                .user_id(user.getUser_id())
                 .user_type(user.getUser_type().name())
                 .token(token)
                 .build();
@@ -175,4 +176,36 @@ public class AuthServiceImpl implements AuthService {
     public UserLoginResponse loginBackOffice(AuthRequest request) {
         return null;
     }
+
+    @Override
+    public String getByEmail(String email){
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+
+        HashMap<String,String> info = new HashMap<>();
+
+        String urlBuilder = "http://localhost:5432/user/forget/"+user.getUser_id();
+
+        try{
+            URL url = new URI(urlBuilder).toURL();
+            info.put("url", url.toString());
+
+            MailSender.mailer("Password Recovery Link", info, email);
+            return "Success send link for email recovery";
+        }catch (MessagingException e){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updatePassword(String id, String password) {
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        user.setPassword(bCryptUtil.hashPassword(password));
+
+        userRepository.saveAndFlush(user);
+    }
+
 }
