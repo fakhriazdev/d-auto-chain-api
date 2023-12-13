@@ -35,14 +35,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest request){
-        UserLoginResponse data = authService.loginUser(request);
-        DataResponse<UserLoginResponse> response = DataResponse.<UserLoginResponse>builder()
+        String otp = authService.loginUser(request);
+//        UserLoginResponse data = (UserLoginResponse) otp;
+        DataResponse<String> response = DataResponse.<String>builder()
                 .message("User Successfully login")
                 .statusCode(HttpStatus.OK.value())
-                .data(data)
+                .data(otp)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PostMapping("/varifyOtp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpRequest otpRequest){
+        UserLoginResponse userLoginResponse = authService.verifyOneTimePassword(otpRequest);
+        DataResponse<UserLoginResponse> response = DataResponse.<UserLoginResponse>builder()
+                .message("Success Verify OTP Code")
+                .statusCode(HttpStatus.OK.value())
+                .data(userLoginResponse)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }
