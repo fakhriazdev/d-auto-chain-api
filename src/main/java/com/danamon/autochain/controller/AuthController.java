@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
 //    ===================================== USER AUTH ===========================================
 
     @PostMapping("/user/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request){
-        UserRegisterResponse user = userService.registerUser(request);
+        UserRegisterResponse user = authService.registerUser(request);
         DataResponse<UserRegisterResponse> response = DataResponse.<UserRegisterResponse>builder()
                 .message("User Successfully Register")
                 .statusCode(HttpStatus.OK.value())
@@ -38,7 +38,7 @@ public class AuthController {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest request){
-        LoginResponse data = userService.loginUser(request);
+        LoginResponse data = authService.loginUser(request);
         DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
                 .message("User Successfully login")
                 .statusCode(HttpStatus.OK.value())

@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class LoginResponse {
-    private String user_id;
+    private String credential_id;
     private String token;
     private String username;
-    private String actor;
-    private String user_type;
+    private String actorType;
+    private String userType;
 }

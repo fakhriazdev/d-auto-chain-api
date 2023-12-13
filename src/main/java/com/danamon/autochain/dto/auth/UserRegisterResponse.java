@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class UserRegisterResponse {
     private String username;
     private String email;
-    private String user_type;
+    private String roleType;
 }

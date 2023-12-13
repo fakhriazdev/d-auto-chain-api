@@ -1,12 +1,9 @@
 package com.danamon.autochain.security;
 
 import com.danamon.autochain.service.AuthService;
-import com.danamon.autochain.service.BackOfficeService;
-import com.danamon.autochain.service.UserService;
-import com.danamon.autochain.service.impl.AuthServiceImpl;
+import com.danamon.autochain.service.CredentialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,10 +21,10 @@ import java.util.Map;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@Lazy
 public class AuthTokenFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final AuthService authService;
+    private final CredentialService credentialService;
 
     @Override // dipanggil saat sebelum controller di hit
     protected void doFilterInternal(HttpServletRequest request,
@@ -46,15 +43,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             // jika token tidak null & token valid in memorry database
             if (token != null && jwtUtil.verifyJwtToken(token)) {
 
-                String requestURI = request.getRequestURI();
-                String actor = "";
-                if (requestURI.contains("backoffice")) actor = "backoffice";
-                if (requestURI.contains("user")) actor = "user";
 
                 // set authentication ke spring security
                 Map<String, String> userInfo = jwtUtil.getUserInfoByToken(token);
 
-                UserDetails user = authService.loadToken(userInfo.get("userId"), actor);
+                UserDetails user = credentialService.loadUserByUserId(userInfo.get("userId"));
 
                 System.out.println(userInfo);
                 System.out.println(user.getAuthorities());

@@ -1,6 +1,8 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.MasterRole;
+import com.danamon.autochain.constant.ActorType;
+import com.danamon.autochain.constant.RoleType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,12 +19,25 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserCredential implements UserDetails {
+@Entity
+@Table(name = "m_credential")
+public class Credential implements UserDetails {
     private String id;
     private String email;
+    private String username;
     private String password;
-    private String actor;
-    private MasterRole role;
+    private boolean isSupplier;
+    private boolean isManufacturer;
+    private ActorType actor;
+    private RoleType role;
+
+    @OneToOne(mappedBy = "backoffice_id" ,cascade = CascadeType.ALL)
+    @JoinColumn(name = "backoffice_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
+    private BackOffice backOffice;
+
+    @OneToOne(mappedBy = "user_id" ,cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id" , foreignKey= @ForeignKey(name = "Fk_user_id"))
+    private User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
