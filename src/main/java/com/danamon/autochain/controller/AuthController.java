@@ -22,7 +22,7 @@ public class AuthController {
 
 //    ===================================== USER AUTH ===========================================
 
-    @PostMapping("/user/register")
+    @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request){
         UserRegisterResponse user = authService.registerUser(request);
         DataResponse<UserRegisterResponse> response = DataResponse.<UserRegisterResponse>builder()
@@ -35,7 +35,7 @@ public class AuthController {
                 .body(response);
     }
 
-    @PostMapping("/user/login")
+    @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest request){
         String data = authService.loginUser(request);
         DataResponse<String> response = DataResponse.<String>builder()
@@ -48,7 +48,7 @@ public class AuthController {
                 .body(response);
     }
 
-    @PostMapping("/varifyOtp")
+    @PostMapping("/verifyOtp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpRequest otpRequest){
         LoginResponse userLoginResponse = authService.verifyOneTimePassword(otpRequest);
         DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
@@ -59,7 +59,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/forget-password")
+    @PostMapping("/forgot-password")
     public ResponseEntity<?> forgetPassword(@RequestBody String email){
         String message = authService.getByEmail(email);
 
