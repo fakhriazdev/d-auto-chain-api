@@ -1,0 +1,16 @@
+package com.danamon.autochain.constant;
+
+public enum UserRole {
+
+    // User
+    ROLE_USER_SUPER_USER,
+    ROLE_USER_INVOICE_STAFF,
+    ROLE_USER_FINANCE_STAFF,
+    ROLE_USER_PAYMENT_STAFF,
+
+    // Backoffice
+    ROLE_BACKOFFICE_SUPER_ADMIN,
+    ROLE_BACKOFFICE_ADMIN,
+    ROLE_BACKOFFICE_RELATIONSHIP_MANAGER,
+    ROLE_BACKOFFICE_CREDIT_ANALYST
+}

@@ -5,12 +5,16 @@ import com.danamon.autochain.entity.Credential;
 
 import java.util.Optional;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+
 public interface AuthService {
 
     UserRegisterResponse registerUser(UserRegisterRequest request);
-    LoginResponse loginUser(LoginRequest request);
-
-    BackOfficeRegisterResponse registerBackOffice(BackOfficeRegisterRequest request);
-    LoginResponse loginBackOffice(LoginRequest request);
-
+    String loginUser(UserLoginRequest request);
+    UserLoginResponse verifyOneTimePassword(OtpRequest otpRequest);
+    UserRegisterResponse registerBackOffice(AuthRequest request);
+    UserLoginResponse loginBackOffice(AuthRequest request);
+    String getByEmail(String email);
+    void updatePassword(String id, String Password);
 }
