@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,21 +23,37 @@ import java.util.List;
 @Entity
 @Table(name = "m_credential")
 public class Credential implements UserDetails {
-    private String id;
+    @Id
+    @GenericGenerator(name = "uuid", strategy = "uuid")
+    @GeneratedValue(generator = "uuid")
+    @Column(name = "credential_id", length = 128, nullable = false)
+    private String credential_id;
+
+    @Column
     private String email;
+
+    @Column
     private String username;
+
+    @Column
     private String password;
+    @Column
     private boolean isSupplier;
+    @Column
     private boolean isManufacturer;
+
+    @Enumerated(EnumType.STRING)
     private ActorType actor;
+
+    @Enumerated(EnumType.STRING)
     private RoleType role;
 
-    @OneToOne(mappedBy = "backoffice_id" ,cascade = CascadeType.ALL)
-    @JoinColumn(name = "backoffice_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
+    @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "backoffice_id" , foreignKey= @ForeignKey(name = "Fk_backoffice_id"))
     private BackOffice backOffice;
 
-    @OneToOne(mappedBy = "user_id" ,cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id" , foreignKey= @ForeignKey(name = "Fk_user_id"))
+    @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "user_id" , foreignKey= @ForeignKey(name = "Fk_user_id"))
     private User user;
 
     @Override

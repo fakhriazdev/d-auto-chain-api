@@ -23,7 +23,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthTokenFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final AuthService authService;
     private final CredentialService credentialService;
 
     @Override // dipanggil saat sebelum controller di hit

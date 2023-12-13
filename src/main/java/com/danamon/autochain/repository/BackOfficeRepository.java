@@ -8,6 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface BackOfficeRepository extends JpaRepository<BackOffice, String> {
-    Optional<BackOffice> findByUsername(String username);
-    Optional<BackOffice> findByEmail(String email);
+//    Optional<BackOffice> findByCredentialId(String credentialId);
 }

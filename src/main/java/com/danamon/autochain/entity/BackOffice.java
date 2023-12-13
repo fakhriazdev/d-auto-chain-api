@@ -1,15 +1,7 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.BackofficeRoleType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import jakarta.persistence.Table;
@@ -28,5 +20,7 @@ public class BackOffice {
     @Column(name = "backoffice_id", length = 128, nullable = false)
     private String backoffice_id;
 
-
+    @OneToOne
+    @JoinColumn(name= "credential_id", nullable=false)
+    private Credential credential;
 }

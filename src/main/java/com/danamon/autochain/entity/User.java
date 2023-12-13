@@ -1,20 +1,11 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.UserRoleType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Table;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,11 +21,11 @@ public class User {
     private String user_id;
 
     @OneToOne
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company_id;
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @OneToOne
-    @JoinColumn(name= "credential_id", nullable=false)
-    private Credential credential_id;
+    @JoinColumn(name = "credential_id")
+    private Credential credential;
 
 }

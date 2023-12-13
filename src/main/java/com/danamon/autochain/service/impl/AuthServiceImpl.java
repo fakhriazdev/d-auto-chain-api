@@ -4,6 +4,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.dto.auth.*;
+import com.danamon.autochain.entity.BackOffice;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.entity.User;
@@ -14,6 +15,7 @@ import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
+import com.danamon.autochain.service.BackOfficeService;
 import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,15 +37,16 @@ import java.util.Optional;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final CredentialRepository credentialRepository;
-    private final BCryptUtil bCryptUtil;
+
     private final JwtUtil jwtUtil;
+    private final BCryptUtil bCryptUtil;
     private final ValidationUtil validationUtil;
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final BackOfficeRepository backOfficeRepository;
-    private final CompanyRepository companyRepository;
+
     private final UserService userService;
+    private final CompanyRepository companyRepository;
+    private final CredentialRepository credentialRepository;
+    private final BackOfficeRepository backOfficeRepository;
 
     @Override
     public UserRegisterResponse registerUser(UserRegisterRequest request) {
@@ -51,8 +54,8 @@ public class AuthServiceImpl implements AuthService {
             log.info("Start register user");
             validationUtil.validate(request);
 
-            Optional<User> username = userRepository.findByUsername(request.getUsername());
-            Optional<User> email = userRepository.findByEmail(request.getEmail());
+            Optional<Credential> username = credentialRepository.findByUsername(request.getUsername());
+            Optional<Credential> email = credentialRepository.findByEmail(request.getEmail());
             Company company = companyRepository.findById(request.getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company not exist, invalid with ID "+ request.getCompany_id()));
 
             if (username.isPresent() || email.isPresent()) throw new ResponseStatusException(HttpStatus.CONFLICT, "username / email already exist");
@@ -60,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
             Credential credential = Credential.builder()
                     .email(request.getEmail())
                     .username(request.getUsername())
-                    .password(request.getPassword())
+                    .password(bCryptUtil.hashPassword(request.getPassword()))
                     .isManufacturer(true)
                     .isSupplier(false)
                     .actor(ActorType.USER)
@@ -89,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse loginUser(LoginRequest request) {
         validationUtil.validate(request);
 
-        User email = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid email"));
+        Credential email = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid email"));
 
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail().toLowerCase(),
@@ -104,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
             String token = jwtUtil.generateTokenUser(user);
             return LoginResponse.builder()
                     .username(user.getUsername())
-                    .credential_id(user.getId())
+                    .credential_id(user.getCredential_id())
                     .userType(user.getRole().getName().toUpperCase())
                     .actorType(user.getActor().getName().toUpperCase())
                     .token(token)
@@ -121,6 +124,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse loginBackOffice(LoginRequest request) {
-        return null;
+        validationUtil.validate(request);
+
+        Credential email = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid email"));
+
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                request.getEmail().toLowerCase(),
+                request.getPassword()
+        ));
+
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
+        Credential user = (Credential) authenticate.getPrincipal();
+        String token = jwtUtil.generateTokenUser(user);
+
+//        BackOffice backOffice = backOfficeRepository.findByCredential_CredentialId(user.getCredential_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid data backoffice"));
+
+        return LoginResponse.builder()
+                .username(user.getUsername())
+                .credential_id(user.getCredential_id())
+                .actorType(user.getActor().getName())
+                .userType(user.getRole().getName())
+                .token(token)
+                .build();
     }
 }

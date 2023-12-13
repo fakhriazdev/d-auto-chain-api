@@ -46,8 +46,7 @@ public class Company {
     private Double remainingLimit;
 //
 //
-    @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
+    @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
     private User user;
 
 }

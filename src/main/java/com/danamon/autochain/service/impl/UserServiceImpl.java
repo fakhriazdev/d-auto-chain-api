@@ -1,13 +1,9 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.dto.auth.UserRegisterRequest;
 import com.danamon.autochain.dto.auth.UserRegisterResponse;
-import com.danamon.autochain.dto.user.UserRequest;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.entity.User;
-import com.danamon.autochain.repository.CompanyRepository;
-import com.danamon.autochain.repository.CredentialRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +27,8 @@ public class UserServiceImpl implements UserService {
         try {
             log.info("Start createNew");
             User user = User.builder()
-                    .company_id(company)
-                    .credential_id(credential)
+                    .company(company)
+                    .credential(credential)
                     .build();
             userRepository.saveAndFlush(user);
             log.info("End createNew");

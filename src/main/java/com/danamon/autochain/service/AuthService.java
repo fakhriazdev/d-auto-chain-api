@@ -1,6 +1,9 @@
 package com.danamon.autochain.service;
 
 import com.danamon.autochain.dto.auth.*;
+import com.danamon.autochain.entity.Credential;
+
+import java.util.Optional;
 
 public interface AuthService {
 
@@ -9,13 +12,5 @@ public interface AuthService {
 
     BackOfficeRegisterResponse registerBackOffice(BackOfficeRegisterRequest request);
     LoginResponse loginBackOffice(LoginRequest request);
-//    UserDetails loadToken(String id, String userType);
-//
-//    BackOffice backOfficeLoadUserByUserId(String id);
-//
-//    User loadUserByUserId(String id);
-//
-//    UserResponse getUserInfo();
-//    UserResponse getBackOfficeInfo();
 
 }

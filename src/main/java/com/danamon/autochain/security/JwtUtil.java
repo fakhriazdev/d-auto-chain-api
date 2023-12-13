@@ -33,7 +33,7 @@ public class JwtUtil {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             return JWT.create()
                     .withIssuer(appName)
-                    .withSubject(user.getId())
+                    .withSubject(user.getCredential_id())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("actor", user.getActor().getName())
