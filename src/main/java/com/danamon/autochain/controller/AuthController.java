@@ -20,9 +20,10 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    //for admin backoffice
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegisterRequest request){
+//    ===================================== USER AUTH ===========================================
+
+    @PostMapping("/user/register")
+    public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request){
         UserRegisterResponse user = authService.registerUser(request);
         DataResponse<UserRegisterResponse> response = DataResponse.<UserRegisterResponse>builder()
                 .message("User Successfully Register")
@@ -34,25 +35,10 @@ public class AuthController {
                 .body(response);
     }
 
-    //for relationship backoffice
-    @PostMapping("/register-relationship-manager")
-    public ResponseEntity<?> registerRelationshipManager(@RequestBody UserRegisterRequest request){
-        request.setUserRole(UserRole.ROLE_BACKOFFICE_RELATIONSHIP_MANAGER);
-
-        return ResponseEntity.ok(request);
-    }
-
-    //for credit analyst backoffice
-    @PostMapping("/register-credit-analyst")
-    public ResponseEntity<?> registerCreditAnalyst(@RequestBody UserRegisterRequest request){
-        request.setUserRole(UserRole.ROLE_BACKOFFICE_CREDIT_ANALYST);
-        return ResponseEntity.ok(request);
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest request){
-        String otp = authService.loginUser(request);
-        DataResponse<String> response = DataResponse.<String>builder()
+    @PostMapping("/user/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest request){
+        LoginResponse data = authService.loginUser(request);
+        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
                 .message("User Successfully login")
                 .statusCode(HttpStatus.OK.value())
                 .data(otp)

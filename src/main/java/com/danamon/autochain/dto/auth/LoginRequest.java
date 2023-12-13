@@ -1,6 +1,6 @@
 package com.danamon.autochain.dto.auth;
 
-
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserRegisterResponse {
-    private String username;
+public class LoginRequest {
+
+    @NotNull(message = "email Required")
     private String email;
-    private String roleType;
+
+    @NotNull(message = "Password Required")
+    private String password;
 }

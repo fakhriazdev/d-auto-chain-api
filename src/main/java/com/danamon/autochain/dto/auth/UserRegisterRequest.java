@@ -16,16 +16,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserRegisterRequest {
 
-    @NotBlank(message = "email is required")
-    @Size(min = 6, max = 126, message = "must be greater than 6 character and less than 126 character")
+    @NotBlank(message = "username is required")
+    @Size(min = 4, max = 126, message = "must be greater than 6 character and less than 126 character")
     private String username;
 
     @NotBlank(message = "password is required")
-    @Size(min = 6, message = "must be greater than 6 character")
+    @Size(min = 4, message = "must be greater than 6 character")
     private String password;
 
     @NotBlank(message = "email is required")
-    @Size(min = 6, message = "must be greater than 6 character")
+    @Size(min = 4, message = "must be greater than 6 character")
     private String email;
 
     @Size(max = 128, message = "must be less than 128 character")

@@ -1,6 +1,8 @@
 package com.danamon.autochain.security;
 
 import com.danamon.autochain.service.UserService;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,19 +24,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfiguration {
     private final AuthTokenFilter authTokenFilter;
     private final AuthEntryPoint authEntryPoint;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public SecurityConfiguration(AuthTokenFilter authTokenFilter, AuthEntryPoint authEntryPoint, UserService userService, PasswordEncoder passwordEncoder) {
-        this.authTokenFilter = authTokenFilter;
-        this.authEntryPoint = authEntryPoint;
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-    }
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -45,7 +41,7 @@ public class SecurityConfiguration {
         http
                 .httpBasic(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )

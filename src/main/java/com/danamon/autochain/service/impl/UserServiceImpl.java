@@ -1,61 +1,46 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.dto.user.UserResponse;
+import com.danamon.autochain.dto.auth.UserRegisterResponse;
+import com.danamon.autochain.entity.Company;
+import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
-    private final UserRepository userCredentialRepository;
 
+    private final UserRepository userRepository;
+
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public User loadUserByUserId(String id) {
-        log.info("Start loadByUserId");
-        User userCredential = userCredentialRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
-        log.info("End loadByUserId");
-        return userCredential;
-    }
-
-    @Override
-    public UserResponse getUserInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    public UserRegisterResponse createNew(Credential credential, Company company){
+        try {
+            log.info("Start createNew");
+            User user = User.builder()
+                    .company(company)
+                    .credential(credential)
+                    .build();
+            userRepository.saveAndFlush(user);
+            log.info("End createNew");
+            return UserRegisterResponse.builder()
+                    .username(credential.getUsername())
+                    .email(credential.getEmail())
+                    .roleType(credential.getRole().getName())
+                    .build();
+        } catch (DataIntegrityViolationException e) {
+            log.error("Error createNew: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "user already exist");
         }
-
-        User userCredential = (User) authentication.getPrincipal();
-        return UserResponse.builder()
-                .username(userCredential.getUsername())
-                .role(userCredential.getUser_type().name())
-                .build();
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        log.info("Start loadUserByUsername");
-        User userCredential = userCredentialRepository.findByEmail(email).
-                orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
-        log.info("End loadUserByUsername");
-        return User.builder()
-                .user_id(userCredential.getUser_id())
-                .username(userCredential.getUsername())
-                .password(userCredential.getPassword())
-                .user_type(userCredential.getUser_type())
-                .build();
     }
 }
 
