@@ -5,14 +5,10 @@ import com.danamon.autochain.dto.auth.LoginRequest;
 import com.danamon.autochain.dto.auth.LoginResponse;
 import com.danamon.autochain.dto.auth.UserRegisterRequest;
 import com.danamon.autochain.dto.auth.UserRegisterResponse;
-import com.danamon.autochain.dto.user.UserResponse;
 import com.danamon.autochain.entity.User;
-import com.danamon.autochain.entity.UserCredential;
-import com.danamon.autochain.repository.CompanyRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
-import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +20,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,13 +89,13 @@ public class UserServiceImpl implements UserService {
         SecurityContextHolder.getContext().setAuthentication(authenticate);
         boolean validAuth = SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
         if(validAuth){
-            UserCredential user = (UserCredential) authenticate.getPrincipal();
+            User user = (User) authenticate.getPrincipal();
             System.out.println(user.toString());
             String token = jwtUtil.generateTokenUser(user);
             return LoginResponse.builder()
                     .username(user.getUsername())
-                    .user_id(user.getId())
-                    .user_type(user.getRole().getName())
+                    .user_id(user.getUser_id())
+                    .user_type(user.getUser_type().getName())
                     .actor("user".toUpperCase())
                     .token(token)
                     .build();
@@ -114,47 +109,11 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()){
             User user = userOptional.get();
-            return UserCredential.builder()
-                    .id(user.getUser_id())
-                    .email(user.getEmail())
-                    .password(user.getPassword())
-                    .role(user.getUser_type())
-                    .actor("user".toUpperCase())
-                    .build();
+            return user;
         } else {
             throw new UsernameNotFoundException("Invalid credentials");
         }
     }
 
-    @Override
-    public UserCredential loadUserByUserId(String id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
-
-        log.info("End loadByUserId");
-        return UserCredential.builder()
-                .id(user.getUser_id())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .role(user.getUser_type())
-                .actor("user".toUpperCase())
-                .build();
-    }
-
-    @Override
-    public UserResponse getUserInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-
-        User userCredential = (User) authentication.getPrincipal();
-        return UserResponse.builder()
-                .id(userCredential.getUser_id())
-                .username(userCredential.getUsername())
-                .role(userCredential.getUser_type().name())
-                .build();
-    }
 }
 

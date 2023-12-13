@@ -8,7 +8,6 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.danamon.autochain.entity.BackOfficeUser;
 import com.danamon.autochain.entity.User;
-import com.danamon.autochain.entity.UserCredential;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,16 +27,16 @@ public class JwtUtil {
     @Value("${app.autochain.jwtExpirationInSecond}")
     private long jwtExpirationInSecond;
 
-    public String generateTokenUser(UserCredential user) {
+    public String generateTokenUser(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             return JWT.create()
                     .withIssuer(appName)
-                    .withSubject(user.getId())
+                    .withSubject(user.getUser_id())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
-                    .withClaim("actor", user.getActor())
-                    .withClaim("role", user.getRole().getName())
+                    .withClaim("actor", "USER")
+                    .withClaim("role", user.getUser_type().getName())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             log.error("error while creating jwt token: {}", e.getMessage());
@@ -45,16 +44,16 @@ public class JwtUtil {
         }
     }
 
-    public String generateTokenBackOffice(UserCredential user) {
+    public String generateTokenBackOffice(BackOfficeUser user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             return JWT.create()
                     .withIssuer(appName)
-                    .withSubject(user.getId())
+                    .withSubject(user.getUser_id())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
-                    .withClaim("actor", user.getActor())
-                    .withClaim("role", user.getRole().getName())
+                    .withClaim("actor", "BACKOFFICE")
+                    .withClaim("role", user.getUser_role().getName())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             log.error("error while creating jwt token: {}", e.getMessage());

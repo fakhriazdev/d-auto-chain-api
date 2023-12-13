@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Table;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,7 +22,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "m_user")
-public class User {
+public class User implements UserDetails{
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
@@ -44,4 +46,35 @@ public class User {
     @Column(name = "user_type", nullable = false, length =128)
     private UserRoleType user_type;
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SimpleGrantedAuthority> simpleGrantedAuthorities = new ArrayList<>();
+        simpleGrantedAuthorities.add(new SimpleGrantedAuthority(user_type.getName()));
+        return simpleGrantedAuthorities;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

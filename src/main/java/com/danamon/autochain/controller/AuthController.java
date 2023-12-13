@@ -6,7 +6,10 @@ import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.service.BackOfficeService;
 import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.service.impl.AuthServiceImpl;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +18,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthServiceImpl authService;
-//    private final UserService userService;
-//    private final BackOfficeService backOfficeService;
 
+    private final UserService userService;
 
 //    ===================================== USER AUTH ===========================================
 
     @PostMapping("/user/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request){
-        UserRegisterResponse user = authService.registerUser(request);
+        UserRegisterResponse user = userService.registerUser(request);
         DataResponse<UserRegisterResponse> response = DataResponse.<UserRegisterResponse>builder()
                 .message("User Successfully Register")
                 .statusCode(HttpStatus.OK.value())
@@ -37,7 +38,7 @@ public class AuthController {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest request){
-        LoginResponse data = authService.authenticateUser(request, "user");
+        LoginResponse data = userService.loginUser(request);
         DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
                 .message("User Successfully login")
                 .statusCode(HttpStatus.OK.value())
@@ -50,31 +51,31 @@ public class AuthController {
 
 //    ==================================== BACK OFFICE AUTH ======================================
 
-    @PostMapping("/backoffice/register")
-    public ResponseEntity<?> registerBackOffice(@RequestBody BackOfficeRegisterRequest request){
-        BackOfficeRegisterResponse user = authService.registerBackOffice(request);
-        DataResponse<BackOfficeRegisterResponse> response = DataResponse.<BackOfficeRegisterResponse>builder()
-                .message("User Successfully Register")
-                .statusCode(HttpStatus.OK.value())
-                .data(user)
-                .build();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(response);
-    }
-
-    @PostMapping("/backoffice/login")
-    public ResponseEntity<?> loginBackOffice(@RequestBody LoginRequest request){
-        LoginResponse data = authService.authenticateUser(request, "backoffice");
-        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
-                .message("User Successfully login")
-                .statusCode(HttpStatus.OK.value())
-                .data(data)
-                .build();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(response);
-    }
+//    @PostMapping("/backoffice/register")
+//    public ResponseEntity<?> registerBackOffice(@RequestBody BackOfficeRegisterRequest request){
+//        BackOfficeRegisterResponse user = backOfficeService.registerBackOffice(request);
+//        DataResponse<BackOfficeRegisterResponse> response = DataResponse.<BackOfficeRegisterResponse>builder()
+//                .message("User Successfully Register")
+//                .statusCode(HttpStatus.OK.value())
+//                .data(user)
+//                .build();
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(response);
+//    }
+//
+//    @PostMapping("/backoffice/login")
+//    public ResponseEntity<?> loginBackOffice(@RequestBody LoginRequest request){
+//        LoginResponse data = backOfficeService.loginBackOffice(request);
+//        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
+//                .message("User Successfully login")
+//                .statusCode(HttpStatus.OK.value())
+//                .data(data)
+//                .build();
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(response);
+//    }
 
 
 }

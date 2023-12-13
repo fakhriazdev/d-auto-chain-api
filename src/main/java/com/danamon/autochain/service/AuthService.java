@@ -1,18 +1,18 @@
 package com.danamon.autochain.service;
 
 import com.danamon.autochain.dto.user.UserResponse;
-import com.danamon.autochain.entity.UserCredential;
+import com.danamon.autochain.entity.BackOfficeUser;
+import com.danamon.autochain.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+public interface AuthService {
 
-public interface AuthService extends UserDetailsService {
+    UserDetails loadToken(String id, String userType);
 
-//    UserCredential loadUserByUserId(String id);
-    UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException;
+    BackOfficeUser backOfficeLoadUserByUserId(String id);
 
-    UserCredential loadUserByUserId(String id);
+    User loadUserByUserId(String id);
 
     UserResponse getUserInfo();
+    UserResponse getBackOfficeInfo();
 
 }

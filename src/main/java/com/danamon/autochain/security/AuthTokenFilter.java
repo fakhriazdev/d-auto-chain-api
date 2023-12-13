@@ -27,7 +27,7 @@ import java.util.Map;
 @Lazy
 public class AuthTokenFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final AuthServiceImpl authService;
+    private final AuthService authService;
 
     @Override // dipanggil saat sebelum controller di hit
     protected void doFilterInternal(HttpServletRequest request,
