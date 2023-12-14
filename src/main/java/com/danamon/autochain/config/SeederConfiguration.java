@@ -20,7 +20,9 @@ public class SeederConfiguration implements CommandLineRunner {
     private final BackOfficeRepository backOfficeRepository;
     private final BCryptUtil bCryptUtil;
 
-    private String email = "admin@admin.com";
+    private final String email = "rizdaagisa@gmail.com";
+    private final String userame= "rizda";
+    private final String password = "string";
 
     @Override
     public void run(String... args) {
@@ -34,8 +36,8 @@ public class SeederConfiguration implements CommandLineRunner {
         // Create and save seed data for Credential entity
         Credential adminCredential = new Credential();
         adminCredential.setEmail(email);
-        adminCredential.setUsername("superadmin");
-        adminCredential.setPassword(bCryptUtil.hashPassword("superadmin"));
+        adminCredential.setUsername(userame);
+        adminCredential.setPassword(bCryptUtil.hashPassword(password));
         adminCredential.setSupplier(true);
         adminCredential.setManufacturer(true);
         adminCredential.setActor(ActorType.BACKOFFICE);
