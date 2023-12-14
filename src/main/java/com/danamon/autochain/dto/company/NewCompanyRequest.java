@@ -40,4 +40,6 @@ public class NewCompanyRequest {
     private List<MultipartFile> multipartFiles;
     @NotBlank(message = "username is required")
     private String username;
+    @NotBlank(message = "email user is required")
+    private String emailUser;
 }

@@ -25,5 +25,6 @@ public class NewCompanyResponse {
     private Double reaminingLimit;
     private List<FileResponse> files;
     private String username;
+    private String emailUser;
     private String password;
 }

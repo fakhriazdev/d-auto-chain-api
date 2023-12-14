@@ -10,7 +10,9 @@ import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +41,8 @@ public class CompanyController {
             @RequestParam Double financingLimit,
             @RequestParam Double remainingLimit,
             @RequestParam MultipartFile[] files,
-            @RequestParam String username
+            @RequestParam String username,
+            @RequestParam String emailUser
     ) {
         NewCompanyRequest request = NewCompanyRequest.builder()
                 .companyName(companyName)
@@ -53,6 +56,7 @@ public class CompanyController {
                 .remainingLimit(remainingLimit)
                 .multipartFiles(List.of(files))
                 .username(username)
+                .emailUser(emailUser)
                 .build();
 
         NewCompanyResponse companyResponse = companyService.create(request);
@@ -100,6 +104,29 @@ public class CompanyController {
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @GetMapping("/{id}/image")
+    public ResponseEntity<?> downloadCompanyFile(@PathVariable String id) {
+        Resource resource = companyService.getCompanyFilesByIdFile(id);
+        String headerValues = "attachment; filename=\"" + resource.getFilename() + "\"";
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .header(HttpHeaders.CONTENT_DISPOSITION, headerValues)
+                .body(resource);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCompanyById(@PathVariable String id) {
+        CompanyResponse productResponse = companyService.findById(id);
+        DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
+                .message("successfully get company")
+                .statusCode(HttpStatus.OK.value())
+                .data(productResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(response);
     }
 }

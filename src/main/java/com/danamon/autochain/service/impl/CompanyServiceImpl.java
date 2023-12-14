@@ -1,6 +1,8 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.UserRoleType;
+import com.danamon.autochain.dto.FileResponse;
+import com.danamon.autochain.dto.auth.OtpResponse;
 import com.danamon.autochain.dto.company.NewCompanyRequest;
 import com.danamon.autochain.dto.company.NewCompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
@@ -12,23 +14,31 @@ import com.danamon.autochain.repository.CompanyRepository;
 import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.UserService;
+import com.danamon.autochain.util.MailSender;
+import com.danamon.autochain.util.OTPGenerator;
 import com.danamon.autochain.util.RandomPasswordUtil;
 import com.danamon.autochain.util.ValidationUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import javax.mail.MessagingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,7 +79,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         User user = User.builder()
                 .company_id(company)
-                .email(request.getCompanyEmail())
+                .email(request.getEmailUser())
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(password))
                 .user_type(UserRoleType.SUPER_ADMIN)
@@ -77,6 +87,17 @@ public class CompanyServiceImpl implements CompanyService {
         userService.create(user);
 
         companySaved.setUser(user);
+
+        HashMap<String, String> info = new HashMap<>();
+
+        try {
+            info.put("Email: ",request.getCompanyEmail() +"<br>");
+            info.put("Password: ", password +"<br>");
+
+            MailSender.mailer("Your Company Account", info, request.getEmailUser());
+        }  catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         return newMapToResponse(companySaved, password);
     }
@@ -91,7 +112,35 @@ public class CompanyServiceImpl implements CompanyService {
         return companies.map(this::mapToResponse);
     }
 
+    @Override
+    public Company getById(String id) {
+        return findByIdOrThrowNotFound(id);
+    }
+
+    @Override
+    public CompanyResponse findById(String id) {
+        Company company = findByIdOrThrowNotFound(id);
+        return mapToResponse(company);
+    }
+
+    private Company findByIdOrThrowNotFound(String id) {
+        return companyRepository.findById(id).orElseThrow(() -> new RuntimeException("company not found"));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Resource getCompanyFilesByIdFile(String idFile) {
+        CompanyFile companyFile = companyFileService.findById(idFile);
+        return companyFileService.findByPath(companyFile.getPath());
+    }
+
     private CompanyResponse mapToResponse(Company company) {
+        List<FileResponse> fileResponses = company.getCompanyFiles().stream().map(
+                companyFiles -> FileResponse.builder()
+                        .filename(companyFiles.getName())
+                        .url("/api/companies/" + companyFiles.getId() + "/file")
+                        .build()
+        ).collect(Collectors.toList());
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())
                 .companyName(company.getCompanyName())
@@ -104,10 +153,18 @@ public class CompanyServiceImpl implements CompanyService {
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
                 .username(company.getUser().getUsername())
+                .emailUser(company.getUser().getEmail())
+                .files(fileResponses)
                 .build();
     }
 
     private NewCompanyResponse newMapToResponse(Company company, String password) {
+        List<FileResponse> fileResponses = company.getCompanyFiles().stream().map(
+                companyFiles -> FileResponse.builder()
+                        .filename(companyFiles.getName())
+                        .url("/api/companies/" + companyFiles.getId() + "/file")
+                        .build()
+        ).collect(Collectors.toList());
         return NewCompanyResponse.builder()
                 .companyId(company.getCompany_id())
                 .companyName(company.getCompanyName())
@@ -120,7 +177,9 @@ public class CompanyServiceImpl implements CompanyService {
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
                 .username(company.getUser().getUsername())
+                .emailUser(company.getUser().getEmail())
                 .password(password)
+                .files(fileResponses)
                 .build();
     }
 

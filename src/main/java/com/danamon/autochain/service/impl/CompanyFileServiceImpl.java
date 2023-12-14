@@ -49,6 +49,21 @@ public class CompanyFileServiceImpl implements CompanyFileService {
         }
     }
 
+    @Override
+    public Resource findByPath(String path) {
+        try {
+            Path filepath = Paths.get(path);
+            return new UrlResource(filepath.toUri());
+        } catch (MalformedURLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public CompanyFile findById(String id) {
+        return companyFileRepository.findById(id).orElseThrow(() -> new RuntimeException("company file not found"));
+    }
+
     private void saveValidation(MultipartFile multipartFile) throws IOException {
         if (multipartFile.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required");
