@@ -41,7 +41,6 @@ public class CompanyController {
                 .sortBy(sortBy)
                 .name(name)
                 .build();
-
         Page<CompanyResponse> companyResponse = companyService.getAll(request);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(companyResponse.getTotalElements())

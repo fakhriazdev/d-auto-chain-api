@@ -55,7 +55,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
-    private final BackOfficeRepository backOfficeRepository;
 
     @Override
     public UserRegisterResponse registerUser(UserRegisterRequest request) {
@@ -105,6 +104,11 @@ public class AuthServiceImpl implements AuthService {
         validationUtil.validate(request);
 
         Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                request.getEmail().toLowerCase(),
+                request.getPassword()
+        ));
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
 
         HashMap<String, String> info = new HashMap<>();
 
@@ -112,8 +116,7 @@ public class AuthServiceImpl implements AuthService {
         try {
             log.info("End login User");
 
-            OtpResponse otpResponse = OTPGenerator.getOtp();
-            URL generateURL = OTPGenerator.generateURL(user.getEmail());
+            OtpResponse otpResponse = OTPGenerator.generateOtp(user.getEmail());
 
             String otpEmail = "<html style='width: 100%;'>" +
                     "<body style='width: 100%'>" +
@@ -125,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
                     "<div><h5><center><u>Your OTP code is</u></center></h5></div><br>" +
                     "<div><h1><center><u>"+otpResponse.getCode()+"</u></center></h1></div><br>" +
                             "<div style='width: fit-content; height: fit-content; margin: auto;'>" +
-                                "<a href='"+generateURL+"' style='text-decoration:none; color:white;'>" +
+                                "<a href='"+otpResponse.getUrl()+"' style='text-decoration:none; color:white;'>" +
                                     "<div style='padding:10px 40px; height: 40px; background: #F6833C;'>" +
                                         "<h2 style='text-align:center; margin:0'>Input OTP</h2>" +
                                     "</div>" +

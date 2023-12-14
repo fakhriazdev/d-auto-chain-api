@@ -1,9 +1,7 @@
 package com.danamon.autochain.dto.auth;
 
-import com.danamon.autochain.constant.UserRole;
-import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +23,7 @@ public class UserRegisterRequest {
     private String password;
 
     @NotBlank(message = "email is required")
+    @Email(message = "invalid email format")
     @Size(min = 4, message = "must be greater than 6 character")
     private String email;
 

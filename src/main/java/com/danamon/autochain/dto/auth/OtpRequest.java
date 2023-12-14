@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class OtpRequest {
     private String secret;
     private String code;
-    private int period;
+    private String period;
     private int digits;
     private String email;
 }

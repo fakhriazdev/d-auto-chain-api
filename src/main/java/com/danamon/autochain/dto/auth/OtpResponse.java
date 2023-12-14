@@ -14,7 +14,7 @@ import java.net.URL;
 public class OtpResponse {
     private String secret;
     private String code;
-    private int period;
+    private String period;
     private String email;
     private String issuer;
     private URL url;
