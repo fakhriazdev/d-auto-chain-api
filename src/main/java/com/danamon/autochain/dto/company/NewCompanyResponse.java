@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CompanyResponse {
+public class NewCompanyResponse {
     private String companyId;
     private String companyName;
     private String province;
@@ -27,4 +27,5 @@ public class CompanyResponse {
     private String userId;
     private String username;
     private String emailUser;
+    private String password;
 }

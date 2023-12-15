@@ -9,7 +9,7 @@ import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
-import com.danamon.autochain.utils.ValidationUtil;
+import com.danamon.autochain.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -113,8 +113,6 @@ public class AuthServiceImpl implements AuthService {
         log.info("Start login User");
 
         validationUtil.validate(request);
-
-        Optional<User> email = userRepository.findByEmail(request.getEmail());
 
         HashMap<String, String> info = new HashMap<>();
 

@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserServiceImpl implements UserService {
     private final UserRepository userCredentialRepository;
 
+
     @Override
     public User loadUserByUserId(String id) {
         log.info("Start loadByUserId");
@@ -42,6 +43,12 @@ public class UserServiceImpl implements UserService {
                 .username(userCredential.getUsername())
                 .role(userCredential.getUser_type().name())
                 .build();
+    }
+
+    @Override
+    public User create(User user) {
+        userCredentialRepository.saveAndFlush(user);
+        return user;
     }
 
     @Override
