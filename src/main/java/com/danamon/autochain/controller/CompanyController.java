@@ -6,6 +6,8 @@ import com.danamon.autochain.dto.company.NewCompanyRequest;
 import com.danamon.autochain.dto.company.NewCompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
 import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.entity.CompanyFile;
+import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -28,6 +30,7 @@ import java.util.List;
 //@SecurityRequirement(name = "Bearer Authentication")
 public class CompanyController {
     private final CompanyService companyService;
+    private final CompanyFileService companyFileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createMenu(
@@ -107,7 +110,7 @@ public class CompanyController {
                 .body(response);
     }
 
-    @GetMapping("/{id}/image")
+    @GetMapping("/{id}/file")
     public ResponseEntity<?> downloadCompanyFile(@PathVariable String id) {
         Resource resource = companyService.getCompanyFilesByIdFile(id);
         String headerValues = "attachment; filename=\"" + resource.getFilename() + "\"";
@@ -115,6 +118,12 @@ public class CompanyController {
                 .status(HttpStatus.OK)
                 .header(HttpHeaders.CONTENT_DISPOSITION, headerValues)
                 .body(resource);
+    }
+
+    @DeleteMapping("/{id}/file")
+    public void deleteCompanyFile(@PathVariable String id) {
+        CompanyFile file = companyFileService.findById(id);
+        companyFileService.deleteFile(file);
     }
 
     @GetMapping("/{id}")

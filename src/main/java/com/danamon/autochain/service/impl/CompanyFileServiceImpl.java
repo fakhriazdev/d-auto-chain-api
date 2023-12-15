@@ -64,6 +64,20 @@ public class CompanyFileServiceImpl implements CompanyFileService {
         return companyFileRepository.findById(id).orElseThrow(() -> new RuntimeException("company file not found"));
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteFile(CompanyFile companyFile) {
+        try {
+            Path filepath = Paths.get(companyFile.getPath());
+            if (!Files.exists(filepath))
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "file not found");
+            Files.delete(filepath);
+            companyFileRepository.delete(companyFile);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     private void saveValidation(MultipartFile multipartFile) throws IOException {
         if (multipartFile.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required");

@@ -8,4 +8,5 @@ public interface CompanyFileService {
     CompanyFile createFile(MultipartFile multipartFile);
     Resource findByPath(String path);
     CompanyFile findById(String id);
+    void deleteFile(CompanyFile companyFile);
 }

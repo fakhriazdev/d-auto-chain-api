@@ -3,10 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.UserRoleType;
 import com.danamon.autochain.dto.FileResponse;
 import com.danamon.autochain.dto.auth.OtpResponse;
-import com.danamon.autochain.dto.company.NewCompanyRequest;
-import com.danamon.autochain.dto.company.NewCompanyResponse;
-import com.danamon.autochain.dto.company.SearchCompanyRequest;
-import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.CompanyFile;
 import com.danamon.autochain.entity.User;
@@ -22,6 +19,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.mapping.Any;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,11 +112,13 @@ public class CompanyServiceImpl implements CompanyService {
         return companies.map(this::mapToResponse);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Company getById(String id) {
         return findByIdOrThrowNotFound(id);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public CompanyResponse findById(String id) {
         Company company = findByIdOrThrowNotFound(id);
@@ -132,6 +134,26 @@ public class CompanyServiceImpl implements CompanyService {
     public Resource getCompanyFilesByIdFile(String idFile) {
         CompanyFile companyFile = companyFileService.findById(idFile);
         return companyFileService.findByPath(companyFile.getPath());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public CompanyResponse update(UpdateCompanyRequest request) {
+        validationUtil.validate(request);
+
+        Company companyOld = findByIdOrThrowNotFound(request.getId());
+        companyOld.setCompanyName(request.getCompanyName());
+        companyOld.setProvince(request.getProvince());
+        companyOld.setCity(request.getCity());
+        companyOld.setAddress(request.getAddress());
+        companyOld.setPhoneNumber(request.getPhoneNumber());
+        companyOld.setCompanyEmail(request.getCompanyEmail());
+        companyOld.setAccountNumber(request.getAccountNumber());
+        companyOld.setFinancingLimit(request.getFinancingLimit());
+        companyOld.setRemainingLimit(request.getReaminingLimit());
+        Company company = companyRepository.saveAndFlush(companyOld);
+
+        return mapToResponse(company);
     }
 
     private CompanyResponse mapToResponse(Company company) {
@@ -152,6 +174,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
+                .userId(company.getUser().getUser_id())
                 .username(company.getUser().getUsername())
                 .emailUser(company.getUser().getEmail())
                 .files(fileResponses)
@@ -176,6 +199,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
+                .userId(company.getUser().getUser_id())
                 .username(company.getUser().getUsername())
                 .emailUser(company.getUser().getEmail())
                 .password(password)

@@ -12,8 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class NewCompanyResponse {
-    private String companyId;
+public class UpdateCompanyRequest {
+    private String id;
     private String companyName;
     private String province;
     private String city;
@@ -24,7 +24,6 @@ public class NewCompanyResponse {
     private Double financingLimit;
     private Double reaminingLimit;
     private List<FileResponse> files;
-    private String userId;
     private String username;
     private String emailUser;
     private String password;
