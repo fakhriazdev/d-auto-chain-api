@@ -5,6 +5,8 @@ import com.danamon.autochain.service.CredentialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -16,7 +18,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -49,9 +53,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 UserDetails user = credentialService.loadUserByUserId(userInfo.get("userId"));
 
                 System.out.println(userInfo);
-                System.out.println(user.getAuthorities());
-                System.out.println(user.getUsername());
-                System.out.println(user);
+//                System.out.println(user.getAuthorities());
+//                System.out.println(user.getUsername());
+                System.out.println("======== USER DETAILS====== \n"+ user.toString());
+
 
                 // validasi/authentication by token
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(

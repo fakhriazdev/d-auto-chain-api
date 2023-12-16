@@ -1,9 +1,12 @@
 package com.danamon.autochain.dto.auth;
 
+import com.danamon.autochain.dto.user.UserRoleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +17,5 @@ public class LoginResponse {
     private String token;
     private String username;
     private String actorType;
-    private String userType;
+    private List<String> roleType;
 }

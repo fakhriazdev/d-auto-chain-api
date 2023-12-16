@@ -56,10 +56,20 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request){
+        String message = authService.changePassword(request);
+        DataResponse<String> response = DataResponse.<String>builder()
+                .data(message)
+                .statusCode(HttpStatus.CREATED.value())
+                .message("Success!!")
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgetPassword(@RequestBody String email){
         String message = authService.getByEmail(email);
-
         DataResponse<String> response = DataResponse.<String>builder()
                 .data(message)
                 .statusCode(HttpStatus.OK.value())
@@ -72,7 +82,6 @@ public class AuthController {
     @PutMapping("/recovery-password/{id}")
     public ResponseEntity<?> recoveryPassword(@PathVariable String id, @RequestBody String newPassword){
         authService.updatePassword(id,newPassword);
-
         return ResponseEntity.ok("Success fully update password");
     }
 }

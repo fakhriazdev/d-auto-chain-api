@@ -2,15 +2,10 @@ package com.danamon.autochain.service.impl;
 
 
 import com.danamon.autochain.constant.ActorType;
-import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.entity.Company;
-import com.danamon.autochain.entity.Credential;
-import com.danamon.autochain.entity.User;
-import com.danamon.autochain.repository.BackOfficeRepository;
-import com.danamon.autochain.repository.CompanyRepository;
-import com.danamon.autochain.repository.CredentialRepository;
-import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.dto.user.UserRoleResponse;
+import com.danamon.autochain.entity.*;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
@@ -36,7 +31,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -56,6 +54,8 @@ public class AuthServiceImpl implements AuthService {
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
     private final BackOfficeRepository backOfficeRepository;
+    private final RolesRepository rolesRepository;
+    private final UserRolesRepository userRolesRepository;
 
     @Override
     public UserRegisterResponse registerUser(UserRegisterRequest request) {
@@ -69,26 +69,46 @@ public class AuthServiceImpl implements AuthService {
 
             if (username.isPresent() || email.isPresent()) throw new ResponseStatusException(HttpStatus.CONFLICT, "username / email already exist");
 
+            List<Roles> getRoles = rolesRepository.findAllById(request.getRole_id());
+
+            if(getRoles.size() != request.getRole_id().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "please check role ID is not exist");
+
+            List<UserRole> userRoles = new ArrayList<>();
+
             Credential credential = Credential.builder()
                     .email(request.getEmail())
                     .username(request.getUsername())
                     .password(bCryptUtil.hashPassword(request.getPassword()))
-                    .isManufacturer(true)
-                    .isSupplier(false)
                     .actor(ActorType.USER)
-                    .role(RoleType.ADMIN)
+                    .roles(userRoles)
+                    .createdBy(request.getUsername())
+                    .createdDate(LocalDateTime.now())
+                    .modifiedBy(request.getUsername())
+                    .modifiedDate(LocalDateTime.now())
                     .build();
 
-            credentialRepository.saveAndFlush(credential);
 
+            getRoles.forEach(roles -> userRoles.add(
+                    UserRole.builder()
+                            .role(roles)
+                            .credential(credential)
+                            .build()
+            ));
+
+
+            credentialRepository.saveAndFlush(credential);
             userService.createNew(credential, company);
+            userRolesRepository.saveAllAndFlush(userRoles);
 
             log.info("End register user");
+
+            List<String> roleResponses = new ArrayList<>();
+            getRoles.forEach(roles -> roleResponses.add(roles.getRoleName()));
 
             return UserRegisterResponse.builder()
                     .username(request.getUsername())
                     .email(request.getEmail())
-                    .roleType(credential.getRole().getName())
+                    .roleType(roleResponses)
                     .build();
 
         } catch (DataIntegrityViolationException e) {
@@ -104,9 +124,15 @@ public class AuthServiceImpl implements AuthService {
 
         validationUtil.validate(request);
 
-        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid email"));
 
         HashMap<String, String> info = new HashMap<>();
+
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                request.getEmail().toLowerCase(),
+                request.getPassword()
+        ));
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
 
         // Generate OTP
         try {
@@ -133,63 +159,46 @@ public class AuthServiceImpl implements AuthService {
         try {
             Boolean verifyOtp = OTPGenerator.verifyOtp(otpRequest);
             if (!verifyOtp) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
             }
         }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR");
         }
 
         Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-       /* Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                credential.getEmail().toLowerCase(),
-                null,
-                credential.getAuthorities()
-        ));
+        String token = jwtUtil.generateTokenUser(user);
 
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
-        boolean validAuth = SecurityContextHolder.getContext().getAuthentication().isAuthenticated();*/
-//            Credential user = (Credential) authenticate.getPrincipal();
-//            System.out.println(user.toString());
-            String token = jwtUtil.generateTokenUser(user);
-            return LoginResponse.builder()
+        List<String> roleResponses = new ArrayList<>();
+        user.getRoles().forEach(roles -> roleResponses.add(roles.getRole().getRoleName()));
+
+        return LoginResponse.builder()
                     .username(user.getUsername())
                     .credential_id(user.getCredentialId())
-                    .userType(user.getRole().getName().toUpperCase())
+                    .roleType(roleResponses)
                     .actorType(user.getActor().getName().toUpperCase())
                     .token(token)
                     .build();
     }
 
-//    @Override
-//    public BackOfficeRegisterResponse registerBackOffice(BackOfficeRegisterRequest request) {
-//        return null;
-//    }
-
     @Override
-    public LoginResponse loginBackOffice(LoginRequest request) {
-        validationUtil.validate(request);
-
-        Credential email = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid email"));
+    public String changePassword(ChangePasswordRequest request){
+        Credential credential = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"EMAIL NOT FOUND"));
 
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail().toLowerCase(),
-                request.getPassword()
+                request.getOldPassword()
         ));
-
         SecurityContextHolder.getContext().setAuthentication(authenticate);
-        Credential user = (Credential) authenticate.getPrincipal();
-        String token = jwtUtil.generateTokenUser(user);
 
-//        BackOffice backOffice = backOfficeRepository.findByCredential_CredentialId(user.getCredential_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid data backoffice"));
+        if (!authenticate.isAuthenticated()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "INVALID PASSWORD");
 
-        return LoginResponse.builder()
-                .username(user.getUsername())
-                .credential_id(user.getCredentialId())
-                .actorType(user.getActor().getName())
-                .userType(user.getRole().getName())
-                .token(token)
-                .build();
+        credential.setPassword(bCryptUtil.hashPassword(request.getNewPassword()));
+        credential.setModifiedDate(LocalDateTime.now());
+
+        credentialRepository.saveAndFlush(credential);
+
+        return "Password Succsessfuly Changed";
     }
 
     @Override
@@ -201,7 +210,8 @@ public class AuthServiceImpl implements AuthService {
         String urlBuilder = "http://localhost:5432/user/forget/"+user.getUser_id();
         try{    URL url = new URI(urlBuilder).toURL();
             info.put("url", url.toString());
-            MailSender.mailer("Password Recovery Link", info, email);    return "Success send link for email recovery";
+            MailSender.mailer("Password Recovery Link", info, email);
+            return "Success send link for email recovery";
         }catch (MessagingException e){    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (MalformedURLException | URISyntaxException e) {    throw new RuntimeException(e);
         }
@@ -211,6 +221,11 @@ public class AuthServiceImpl implements AuthService {
     public void updatePassword(String id, String password) {
         Credential credential = credentialRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         credential.setPassword(bCryptUtil.hashPassword(password));
+        credential.setModifiedDate(LocalDateTime.now());
         credentialRepository.saveAndFlush(credential);
     }
+
+//    public void logout(String id)
+
+
 }

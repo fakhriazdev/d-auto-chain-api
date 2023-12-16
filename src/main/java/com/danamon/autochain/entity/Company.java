@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -47,7 +49,9 @@ public class Company {
     private Double remainingLimit;
 //
 //
-    @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
-    private User user;
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<User> user;
 
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<UserAccsess> userAccsess;
 }
