@@ -1,17 +1,16 @@
 package com.danamon.autochain.dto.auth;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserLoginResponse {
-    private String user_id;
-    private String token;
+public class CredentialResponse {
+    private String id;
     private String username;
-    private String user_type;
+    private String actor;
+    private String role;
 }

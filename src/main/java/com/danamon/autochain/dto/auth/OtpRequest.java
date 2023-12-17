@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class OtpRequest {
     private String secret;
-    private String counter;
-    private int digits;
     private String code;
+    private String period;
+    private int digits;
     private String email;
 }

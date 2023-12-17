@@ -9,7 +9,7 @@ public class UserActivityLog {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "acitivity_log_id", length = 128)
+    @Column(name = "acitivityId", length = 128)
     private String id;
 
     private String user_id;

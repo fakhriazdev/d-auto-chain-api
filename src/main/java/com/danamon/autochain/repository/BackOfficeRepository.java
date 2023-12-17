@@ -1,13 +1,12 @@
 package com.danamon.autochain.repository;
 
-import com.danamon.autochain.entity.User;
+import com.danamon.autochain.entity.BackOffice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, String> {
-    Optional<User> findByCredential_credentialId(String id);
+public interface BackOfficeRepository extends JpaRepository<BackOffice, String> {
+//    Optional<BackOffice> findByCredentialId(String credentialId);
 }
-

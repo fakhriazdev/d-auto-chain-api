@@ -7,11 +7,11 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(info = @Info(
-        title = "Warung Makan Bahari",
+        title = "AutoChain",
         version = "1.0",
         contact = @Contact(
-                name = "Enigma Camp",
-                url = "https://enigmacamp.com"
+                name = "Danamon Corp",
+                url = "https://www.danamon.co.id/"
         )
 )
 )

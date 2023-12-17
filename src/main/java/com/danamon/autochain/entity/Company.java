@@ -18,6 +18,7 @@ public class Company {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
+    @Column(name = "companyId", nullable = false)
     private String company_id;
 
     @Column(name = "company_name", length = 128, nullable = false)
