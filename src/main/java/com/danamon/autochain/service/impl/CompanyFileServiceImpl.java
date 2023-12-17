@@ -4,6 +4,8 @@ import com.danamon.autochain.entity.CompanyFile;
 import com.danamon.autochain.repository.CompanyFileRepository;
 import com.danamon.autochain.service.CompanyFileService;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -20,11 +22,16 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyFileServiceImpl implements CompanyFileService {
     private final CompanyFileRepository companyFileRepository;
     private final List<String> contentTypes = List.of("application/pdf");
-    private final Path directoryPath = Paths.get("${app.app.autochain.directory-file-path}");
+    private final Path directoryPath;
+
+    @Autowired
+    public CompanyFileServiceImpl(@org.springframework.beans.factory.annotation.Value("${app.autochain.directory-file-path}") String directoryPath, CompanyFileRepository companyFileRepository) {
+        this.directoryPath = Paths.get(directoryPath);
+        this.companyFileRepository = companyFileRepository;
+    }
     private final long MAX_FILE_SIZE = 2 * 1024 * 1024;
     @Override
     public CompanyFile createFile(MultipartFile multipartFile) {
