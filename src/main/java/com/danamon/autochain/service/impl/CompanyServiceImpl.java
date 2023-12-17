@@ -57,11 +57,16 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = findByIdOrThrowNotFound(companyId);
         List<Company> companies = companyRepository.findAll();
 
-        return companies.stream()
-                .filter(c -> c.getCompany_id() != company.getCompany_id())
-                .filter(c -> company.getPartnerships().stream()
-                .noneMatch(c2 -> c2.getPartner().getCompany_id().equals(c.getCompany_id())))
-                .map(this::mapToResponse).collect(Collectors.toList());
+        List<String> existingPartnershipCompanies = company.getPartnerships().stream()
+                .map(partnership -> partnership.getPartner().getCompany_id())
+                .collect(Collectors.toList());
+
+        List<Company> filteredCompanies = companies.stream()
+                .filter(c -> !c.getCompany_id().equals(company.getCompany_id()))
+                .filter(c -> !existingPartnershipCompanies.contains(c.getCompany_id()))
+                .collect(Collectors.toList());
+
+        return filteredCompanies.stream().map(c -> mapToResponse(c)).collect(Collectors.toList());
     }
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -163,6 +168,13 @@ public class CompanyServiceImpl implements CompanyService {
         companyOld.setFinancingLimit(request.getFinancingLimit());
         companyOld.setRemainingLimit(request.getReaminingLimit());
         Company company = companyRepository.saveAndFlush(companyOld);
+
+        // update user here
+        // get by id user
+        // update user password with generate util
+        // update to company
+
+
 
         return mapToResponse(company);
     }

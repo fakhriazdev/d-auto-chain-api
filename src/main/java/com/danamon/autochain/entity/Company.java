@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -51,7 +52,10 @@ public class Company {
     @JoinColumn(name = "company_file_id")
     private List<CompanyFile> companyFiles;
 
-    @OneToMany(mappedBy = "partner")
+//    @OneToMany(mappedBy = "partner")
+    @OneToMany
+    @JoinColumn(name = "partner_id")
+    @JsonManagedReference
     private List<Partnership> partnerships;
 
     @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
