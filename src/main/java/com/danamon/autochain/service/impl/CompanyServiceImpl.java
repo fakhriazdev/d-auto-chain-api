@@ -52,6 +52,17 @@ public class CompanyServiceImpl implements CompanyService {
     private final UserService userService;
     private final RandomPasswordUtil randomPasswordUtil;
 
+    @Override
+    public List<CompanyResponse> getNonPartnership(String companyId) {
+        Company company = findByIdOrThrowNotFound(companyId);
+        List<Company> companies = companyRepository.findAll();
+
+        return companies.stream()
+                .filter(c -> c.getCompany_id() != company.getCompany_id())
+                .filter(c -> company.getPartnerships().stream()
+                .noneMatch(c2 -> c2.getPartner().getCompany_id().equals(c.getCompany_id())))
+                .map(this::mapToResponse).collect(Collectors.toList());
+    }
     @Transactional(rollbackFor = Exception.class)
     @Override
     public NewCompanyResponse create(NewCompanyRequest request) {

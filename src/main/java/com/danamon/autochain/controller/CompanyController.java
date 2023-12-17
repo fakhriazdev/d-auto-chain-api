@@ -33,7 +33,7 @@ public class CompanyController {
     private final CompanyFileService companyFileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createMenu(
+    public ResponseEntity<?> createCompany(
             @RequestParam String companyName,
             @RequestParam String province,
             @RequestParam String city,
@@ -43,7 +43,7 @@ public class CompanyController {
             @RequestParam String accountNumber,
             @RequestParam Double financingLimit,
             @RequestParam Double remainingLimit,
-            @RequestParam MultipartFile[] files,
+            @RequestParam List<MultipartFile> files,
             @RequestParam String username,
             @RequestParam String emailUser
     ) {
@@ -57,7 +57,7 @@ public class CompanyController {
                 .accountNumber(accountNumber)
                 .financingLimit(financingLimit)
                 .remainingLimit(remainingLimit)
-                .multipartFiles(List.of(files))
+                .multipartFiles(files)
                 .username(username)
                 .emailUser(emailUser)
                 .build();
@@ -133,6 +133,19 @@ public class CompanyController {
                 .message("successfully get company")
                 .statusCode(HttpStatus.OK.value())
                 .data(productResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+    @GetMapping("/{id}/non-partnerships")
+    public ResponseEntity<?> getNonPartnershipByCompanyId(@PathVariable String id) {
+        List<CompanyResponse> nonPartnerships = companyService.getNonPartnership(id);
+        DataResponse<List<CompanyResponse>> response = DataResponse.<List<CompanyResponse>>builder()
+                .message("successfully get non partnership company")
+                .statusCode(HttpStatus.OK.value())
+                .data(nonPartnerships)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.CREATED)

@@ -51,6 +51,9 @@ public class Company {
     @JoinColumn(name = "company_file_id")
     private List<CompanyFile> companyFiles;
 
+    @OneToMany(mappedBy = "partner")
+    private List<Partnership> partnerships;
+
     @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
     private User user;
