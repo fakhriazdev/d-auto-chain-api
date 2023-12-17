@@ -11,6 +11,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface PartnershipService {
-    Page<PartnershipResponse> getAll(SearchPartnershipRequest request);
+    Page<PartnershipResponse> getAll(String id, SearchPartnershipRequest request);
     PartnershipResponse addPartnership(NewPartnershipRequest request);
 }

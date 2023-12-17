@@ -24,6 +24,7 @@ public class UpdateCompanyRequest {
     private Double financingLimit;
     private Double reaminingLimit;
     private List<FileResponse> files;
+    private String userId;
     private String username;
     private String emailUser;
     private String password;

@@ -64,10 +64,10 @@ public class PartnershipServiceImpl implements PartnershipService {
     }
     @Transactional(readOnly = true)
     @Override
-    public Page<PartnershipResponse> getAll(SearchPartnershipRequest request) {
+    public Page<PartnershipResponse> getAll(String id, SearchPartnershipRequest request) {
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, request.getSortBy());
-        Page<Partnership> parterships = partnershipRepository.findAll(pageable);
+        Page<Partnership> parterships = partnershipRepository.findAllByCompanyId(id, pageable);
         return parterships.map(this::mapToResponse);
     }
 
