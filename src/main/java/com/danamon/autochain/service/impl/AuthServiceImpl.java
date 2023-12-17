@@ -156,7 +156,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
         }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while generate OTP code");
         }
 
         Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -169,30 +169,6 @@ public class AuthServiceImpl implements AuthService {
                     .actorType(user.getActor().getName().toUpperCase())
                     .token(token)
                     .build();
-    }
-
-    @Override
-    public LoginResponse loginBackOffice(LoginRequest request) {
-        validationUtil.validate(request);
-
-        Credential email = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid email"));
-
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                request.getEmail().toLowerCase(),
-                request.getPassword()
-        ));
-
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
-        Credential user = (Credential) authenticate.getPrincipal();
-        String token = jwtUtil.generateTokenUser(user);
-
-        return LoginResponse.builder()
-                .username(user.getUsername())
-                .credential_id(user.getCredentialId())
-                .actorType(user.getActor().getName())
-                .userType(user.getRole().getName())
-                .token(token)
-                .build();
     }
 
     @Override
