@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,7 +36,7 @@ public class Company {
     @Column(name = "phone_number", length = 64, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "company_email", length = 64, nullable = false)
+    @Column(name = "company_email", length = 64, nullable = false, unique = true)
     private String companyEmail;
 
     @Column(name = "account_number", length = 128, nullable = false)
@@ -45,9 +47,15 @@ public class Company {
 
     @Column(name = "remaining_limit", nullable = false)
     private Double remainingLimit;
-//
-//
-    @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
-    private User user;
 
+    @OneToMany
+    @JoinColumn(name = "company_file_id")
+    private List<CompanyFile> companyFiles;
+
+    @OneToMany(mappedBy = "partner")
+    private List<Partnership> partnerships;
+
+    @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
+    private User user;
 }

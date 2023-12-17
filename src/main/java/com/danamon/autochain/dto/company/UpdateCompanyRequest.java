@@ -1,7 +1,6 @@
 package com.danamon.autochain.dto.company;
 
 import com.danamon.autochain.dto.FileResponse;
-import com.danamon.autochain.entity.Company;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CompanyResponse {
-    private String companyId;
+public class UpdateCompanyRequest {
+    private String id;
     private String companyName;
     private String province;
     private String city;
@@ -25,8 +24,7 @@ public class CompanyResponse {
     private Double financingLimit;
     private Double reaminingLimit;
     private List<FileResponse> files;
-    private String userId;
     private String username;
     private String emailUser;
-    private List<Company> partnerships;
+    private String password;
 }
