@@ -24,7 +24,7 @@ import java.util.List;
 public class CompanyFileServiceImpl implements CompanyFileService {
     private final CompanyFileRepository companyFileRepository;
     private final List<String> contentTypes = List.of("application/pdf");
-    private final Path directoryPath = Paths.get("/home/user/Java/company_file");
+    private final Path directoryPath = Paths.get("${app.app.autochain.directory-file-path}");
     private final long MAX_FILE_SIZE = 2 * 1024 * 1024;
     @Override
     public CompanyFile createFile(MultipartFile multipartFile) {

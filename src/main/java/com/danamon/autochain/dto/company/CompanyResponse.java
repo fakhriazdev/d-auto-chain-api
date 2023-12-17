@@ -1,6 +1,7 @@
 package com.danamon.autochain.dto.company;
 
 import com.danamon.autochain.dto.FileResponse;
+import com.danamon.autochain.entity.Company;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,4 +28,5 @@ public class CompanyResponse {
     private String userId;
     private String username;
     private String emailUser;
+    private List<Company> partnerships;
 }

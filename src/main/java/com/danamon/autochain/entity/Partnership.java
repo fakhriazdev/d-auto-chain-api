@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.PartnershipStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -34,13 +36,14 @@ public class Partnership {
     private Company partner;
 
     @Column(name = "partner_status", length = 128, nullable = false)
-    private String partnerStatus;
+    @Enumerated(EnumType.STRING)
+    private PartnershipStatus partnerStatus;
 
     @Column(name = "partner_requested_date", length = 128, nullable = false)
-    private LocalDate partnerRequestedDate;
+    private LocalDateTime partnerRequestedDate;
 
-    @Column(name = "partner_confirmation_date", length = 128, nullable = false)
-    private LocalDate partnerConfirmationDate;
+    @Column(name = "partner_confirmation_date", length = 128)
+    private LocalDateTime partnerConfirmationDate;
 
     @ManyToOne
     @JoinColumn(name = "requested_by")

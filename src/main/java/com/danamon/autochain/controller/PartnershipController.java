@@ -3,6 +3,7 @@ package com.danamon.autochain.controller;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
+import com.danamon.autochain.dto.partnership.NewPartnershipRequest;
 import com.danamon.autochain.dto.partnership.PartnershipResponse;
 import com.danamon.autochain.dto.partnership.SearchPartnershipRequest;
 import com.danamon.autochain.service.PartnershipService;
@@ -10,7 +11,9 @@ import com.danamon.autochain.util.PagingUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,18 @@ import java.util.List;
 public class PartnershipController {
     private final PartnershipService partnershipService;
 
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> addingPartnerships(@RequestBody NewPartnershipRequest request) {
+        PartnershipResponse partnershipResponse = partnershipService.addPartnership(request);
+        DataResponse<PartnershipResponse> response = DataResponse.<PartnershipResponse>builder()
+                .message("successfully create partnership request")
+                .statusCode(HttpStatus.CREATED.value())
+                .data(partnershipResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
     @GetMapping
     public ResponseEntity<?> getAllPartnerships(
             @RequestParam(required = false, defaultValue = "1") Integer page,
