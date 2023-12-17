@@ -1,7 +1,9 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.PartnershipStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,12 +29,12 @@ public class Partnership {
 
     @ManyToOne
     @JoinColumn(name = "company_id")
-    @JsonIgnore
+    @JsonBackReference
     private Company company;
 
     @ManyToOne
     @JoinColumn(name = "partner_id")
-    @JsonIgnore
+    @JsonBackReference
     private Company partner;
 
     @Column(name = "partner_status", length = 128, nullable = false)
@@ -47,11 +49,11 @@ public class Partnership {
 
     @ManyToOne
     @JoinColumn(name = "requested_by")
-    @JsonIgnore
+    @JsonBackReference
     private Company requestedBy;
 
     @ManyToOne
     @JoinColumn(name = "confirmed_by")
-    @JsonIgnore
+    @JsonBackReference
     private Company confirmedBy;
 }

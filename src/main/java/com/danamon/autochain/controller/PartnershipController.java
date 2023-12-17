@@ -37,12 +37,13 @@ public class PartnershipController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-    @GetMapping
+    @GetMapping("/{id}")
     public ResponseEntity<?> getAllPartnerships(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "company") String sortBy
+            @RequestParam(required = false, defaultValue = "company") String sortBy,
+            @PathVariable String id
     ) {
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -55,7 +56,7 @@ public class PartnershipController {
                 .sortBy(sortBy)
                 .build();
 
-        Page<PartnershipResponse> companyResponse = partnershipService.getAll(request);
+        Page<PartnershipResponse> companyResponse = partnershipService.getAll(id, request);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(companyResponse.getTotalElements())
                 .totalPages(companyResponse.getTotalPages())
