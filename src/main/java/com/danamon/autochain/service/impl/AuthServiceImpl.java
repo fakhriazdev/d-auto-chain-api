@@ -122,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
 
         validationUtil.validate(request);
 
-        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Found"));
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential"));
 
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail().toLowerCase(),
