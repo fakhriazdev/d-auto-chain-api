@@ -2,10 +2,7 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.PagingResponse;
-import com.danamon.autochain.dto.company.NewCompanyRequest;
-import com.danamon.autochain.dto.company.NewCompanyResponse;
-import com.danamon.autochain.dto.company.SearchCompanyRequest;
-import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.CompanyFile;
 import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
@@ -32,6 +29,43 @@ public class CompanyController {
     private final CompanyService companyService;
     private final CompanyFileService companyFileService;
 
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateCompany(
+            @RequestParam String id,
+            @RequestParam String companyName,
+            @RequestParam String province,
+            @RequestParam String city,
+            @RequestParam String address,
+            @RequestParam String phoneNumber,
+            @RequestParam String companyEmail,
+            @RequestParam String accountNumber,
+            @RequestParam List<MultipartFile> files,
+            @RequestParam String userId,
+            @RequestParam Boolean isGeneratePassword
+    ) {
+        UpdateCompanyRequest request = UpdateCompanyRequest.builder()
+                .id(id)
+                .companyName(companyName)
+                .province(province)
+                .city(city)
+                .address(address)
+                .phoneNumber(phoneNumber)
+                .companyEmail(companyEmail)
+                .multipartFiles(files)
+                .accountNumber(accountNumber)
+                .userId(userId)
+                .isGeneratePassword(isGeneratePassword)
+                .build();
+        CompanyResponse menuResponse = companyService.update(request);
+        DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
+                .message("successfully update company")
+                .statusCode(HttpStatus.OK.value())
+                .data(menuResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createCompany(
             @RequestParam String companyName,

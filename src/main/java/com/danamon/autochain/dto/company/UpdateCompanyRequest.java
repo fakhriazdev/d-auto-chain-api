@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,11 +22,7 @@ public class UpdateCompanyRequest {
     private String phoneNumber;
     private String companyEmail;
     private String accountNumber;
-    private Double financingLimit;
-    private Double reaminingLimit;
-    private List<FileResponse> files;
+    private List<MultipartFile> multipartFiles;
     private String userId;
-    private String username;
-    private String emailUser;
-    private String password;
+    private Boolean isGeneratePassword;
 }
