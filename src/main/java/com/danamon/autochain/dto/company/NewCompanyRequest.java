@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,21 +19,27 @@ import org.springframework.web.multipart.MultipartFile;
 public class NewCompanyRequest {
     @NotBlank(message = "company name is required")
     private String companyName;
-    @NotBlank(message = "province name is required")
+    @NotBlank(message = "province is required")
     private String province;
-    @NotBlank(message = "city name is required")
+    @NotBlank(message = "city is required")
     private String city;
-    @NotBlank(message = "address name is required")
+    @NotBlank(message = "address is required")
     private String address;
-    @NotBlank(message = "phone_number name is required")
+    @NotBlank(message = "phone_number is required")
     private String phoneNumber;
-    @NotBlank(message = "province name is required")
+    @NotBlank(message = "province is required")
     private String companyEmail;
+    @NotBlank(message = "account number is required")
     private String accountNumber;
+    @NotNull(message = "financing limit is required")
+    @Min(value = 0, message = "financing limit must be greater than or equal 0")
     private Double financingLimit;
+    @NotNull(message = "reamining limit is required")
+    @Min(value = 0, message = "reamining limit must be greater than or equal 0")
     private Double remainingLimit;
-    @NotNull(message = "price is required")
-    @Min(value = 0, message = "price must be greater than or equal 0")
-    private Double price;
-//    private MultipartFile image;
+    private List<MultipartFile> multipartFiles;
+    @NotBlank(message = "username is required")
+    private String username;
+    @NotBlank(message = "email user is required")
+    private String emailUser;
 }

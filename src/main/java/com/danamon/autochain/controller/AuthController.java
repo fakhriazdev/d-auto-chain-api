@@ -19,8 +19,6 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-//    ===================================== USER AUTH ===========================================
-
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest request){
         UserRegisterResponse user = authService.registerUser(request);
@@ -75,7 +73,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgetPassword(@RequestBody String email){
+    public ResponseEntity<?> forgetPassword(@RequestParam(name = "email") String email){
         String message = authService.getByEmail(email);
         DataResponse<String> response = DataResponse.<String>builder()
                 .data(message)
@@ -83,7 +81,7 @@ public class AuthController {
                 .message("Success get user data")
                 .build();
 
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/recovery-password/{id}")

@@ -15,6 +15,7 @@ public class OtpResponse {
     private String secret;
     private String code;
     private String period;
-//    private int digits;
+    private String email;
+    private String issuer;
     private URL url;
 }

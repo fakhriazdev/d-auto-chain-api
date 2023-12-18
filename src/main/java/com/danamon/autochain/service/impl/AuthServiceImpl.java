@@ -122,7 +122,12 @@ public class AuthServiceImpl implements AuthService {
 
         validationUtil.validate(request);
 
-        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid email"));
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                request.getEmail().toLowerCase(),
+                request.getPassword()
+        ));
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
 
         HashMap<String, String> info = new HashMap<>();
 
@@ -136,16 +141,32 @@ public class AuthServiceImpl implements AuthService {
         try {
             log.info("End login User");
 
-            String url = OTPGenerator.generateURL(request.getEmail());
-            OtpResponse otpResponse = OTPGenerator.getOtp();
+            OtpResponse otpResponse = OTPGenerator.generateOtp(user.getEmail());
 
-            info.put("Code", otpResponse.getCode()+"<br>");
-            info.put("Secret", otpResponse.getSecret()+"<br>");
-            info.put("counter", otpResponse.getPeriod()+"<br>");
-            info.put("url", url);
+            String otpEmail = "<html style='width: 100%;'>" +
+                    "<body style='width: 100%'>" +
+                    "<div style='width: 100%;'>" +
+                    "<header style='color:white; width: 100%; background: #F6833C; padding: 12px 10px; top:0;'>" +
+                        "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
+                    "</header>" +
+                        "<div style='margin: auto;'>" +
+                    "<div><h5><center><u>Your OTP code is</u></center></h5></div><br>" +
+                    "<div><h1><center><u>"+otpResponse.getCode()+"</u></center></h1></div><br>" +
+                            "<div style='width: fit-content; height: fit-content; margin: auto;'>" +
+                                "<a href='"+otpResponse.getUrl()+"' style='text-decoration:none; color:white;'>" +
+                                    "<div style='padding:10px 40px; height: 40px; background: #F6833C;'>" +
+                                        "<h2 style='text-align:center; margin:0'>Input OTP</h2>" +
+                                    "</div>" +
+                                "</a>" +
+                            "</div>"+
+                        "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+
+            info.put("emailBody", otpEmail);
 
             MailSender.mailer("OTP", info, user.getEmail());
-
             return "Please check your email to see OTP code";
         }catch (Exception e){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR");
