@@ -131,10 +131,6 @@ public class AuthServiceImpl implements AuthService {
 
         HashMap<String, String> info = new HashMap<>();
 
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                request.getEmail().toLowerCase(),
-                request.getPassword()
-        ));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
 
         // Generate OTP

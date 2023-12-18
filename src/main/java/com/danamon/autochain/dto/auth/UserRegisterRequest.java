@@ -2,6 +2,7 @@ package com.danamon.autochain.dto.auth;
 
 import com.danamon.autochain.entity.UserRole;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
