@@ -1,12 +1,15 @@
 package com.danamon.autochain.dto.auth;
 
-import jakarta.validation.constraints.Email;
+import com.danamon.autochain.entity.UserRole;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Builder
 @Data
@@ -29,5 +32,8 @@ public class UserRegisterRequest {
 
     @Size(max = 128, message = "must be less than 128 character")
     private String company_id;
+
+    @Size(max = 128, message = "must be less than 128 character")
+    private List<String> role_id;
 
 }

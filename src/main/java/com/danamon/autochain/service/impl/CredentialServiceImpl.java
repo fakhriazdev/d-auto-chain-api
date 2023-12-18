@@ -1,11 +1,14 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.dto.auth.CredentialResponse;
+import com.danamon.autochain.dto.user.UserRoleResponse;
 import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.repository.CredentialRepository;
 import com.danamon.autochain.service.CredentialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
@@ -14,6 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,11 +27,36 @@ public class CredentialServiceImpl implements CredentialService {
     private final CredentialRepository credentialRepository;
 
     @Override
-    public Credential loadUserByUserId(String id) {
+    public UserDetails loadUserByUserId(String id) {
         log.info("Start loadByUserId");
         Credential userCredential = credentialRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
         log.info("End loadByUserId");
+
+//        List<GrantedAuthority> roles = new ArrayList<>();
+//        userCredential.getRoles().forEach(userRole -> roles.add(
+//                new SimpleGrantedAuthority(userRole.getRole().getRoleName())
+//        ));
+//
+//
+//        return new org.springframework.security.core.userdetails.User(
+//                userCredential.getUsername(),
+//                userCredential.getPassword(),
+//                roles
+//        );
+
+//        return Credential.builder()
+//                .credentialId(userCredential.getCredentialId())
+//                .username(userCredential.getUsername())
+//                .password(userCredential.getPassword())
+//                .actor(userCredential.getActor())
+//                .email(userCredential.getEmail())
+//                .modifiedDate(userCredential.getModifiedDate())
+//                .modifiedBy(userCredential.getModifiedBy())
+//                .createdBy(userCredential.getCreatedBy())
+//                .createdDate(userCredential.getCreatedDate())
+//                .roles(userCredential.getRoles())
+//                .build();
         return userCredential;
     }
 
@@ -38,9 +69,12 @@ public class CredentialServiceImpl implements CredentialService {
         }
 
         Credential userCredential = (Credential) authentication.getPrincipal();
+        List<String> roles= new ArrayList<>();
+        userCredential.getRoles().forEach(userRole -> roles.add(userRole.getRole().getRoleName()));
+
         return CredentialResponse.builder()
                 .username(userCredential.getUsername())
-                .role(userCredential.getRole().getName())
+                .role(roles)
                 .build();
     }
 
@@ -51,15 +85,6 @@ public class CredentialServiceImpl implements CredentialService {
                 orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
         log.info("End loadUserByUsername");
 
-        return Credential.builder()
-                .credentialId(userCredential.getCredentialId())
-                .email(userCredential.getEmail())
-                .username(userCredential.getUsername())
-                .password(userCredential.getPassword())
-                .isManufacturer(userCredential.isManufacturer())
-                .isSupplier(userCredential.isSupplier())
-                .actor(userCredential.getActor())
-                .role(userCredential.getRole())
-                .build();
+        return userCredential;
     }
 }

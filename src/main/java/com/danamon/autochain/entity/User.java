@@ -1,11 +1,14 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.ActorType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Table;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,12 +23,15 @@ public class User {
     @Column(name = "userId", length = 128, nullable = false)
     private String user_id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "companyId")
     private Company company;
 
     @OneToOne
     @JoinColumn(name = "credentialId")
     private Credential credential;
+
+    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
+    private List<UserAccsess> userAccsess;
 
 }

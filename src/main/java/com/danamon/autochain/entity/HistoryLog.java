@@ -11,24 +11,24 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @MappedSuperclass
-@Getter
-@Setter
-@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
 public class HistoryLog {
 
     @CreatedBy
-    private String created_by;
+    private String createdBy;
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime created_data;
+    private LocalDateTime createdDate;
 
     @LastModifiedBy
-    private String modified_by;
+    private String modifiedBy;
 
     @LastModifiedDate
-    private LocalDateTime modified_date;
+    private LocalDateTime modifiedDate;
 
 }

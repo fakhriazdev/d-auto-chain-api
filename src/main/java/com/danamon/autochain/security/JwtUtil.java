@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -29,13 +28,15 @@ public class JwtUtil {
     public String generateTokenUser(Credential user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            List<String> roles = new ArrayList<>();
+            user.getRoles().forEach(userRole -> roles.add(userRole.getRole().getRoleName()));
             return JWT.create()
                     .withIssuer(appName)
                     .withSubject(user.getCredentialId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("actor", user.getActor().getName())
-                    .withClaim("role", user.getRole().getName())
+                    .withClaim("role", roles)
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             log.error("error while creating jwt token: {}", e.getMessage());
@@ -64,8 +65,10 @@ public class JwtUtil {
 
             Map<String, String> userInfo = new HashMap<>();
             userInfo.put("userId", decodedJWT.getSubject());
+
+            List<String> authoritiesList = decodedJWT.getClaim("role").asList(String.class);
             userInfo.put("actor", decodedJWT.getClaim("actor").asString());
-            userInfo.put("role", decodedJWT.getClaim("role").asString());
+            userInfo.put("role", (authoritiesList != null) ? Arrays.toString(authoritiesList.toArray()) : "[]");
 
             return userInfo;
         } catch (JWTVerificationException e) {
