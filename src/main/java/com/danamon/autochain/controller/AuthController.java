@@ -4,6 +4,8 @@ import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.auth.*;
 import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +45,11 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok("Logout successful");
     }
 
     @PostMapping("/verifyOtp")

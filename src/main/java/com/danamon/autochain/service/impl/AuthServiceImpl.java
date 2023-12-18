@@ -3,7 +3,6 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.dto.auth.*;
-import com.danamon.autochain.dto.user.UserRoleResponse;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
@@ -53,7 +52,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
-    private final BackOfficeRepository backOfficeRepository;
     private final RolesRepository rolesRepository;
     private final UserRolesRepository userRolesRepository;
 
@@ -150,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
 
             return "Please check your email to see OTP code";
         }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR");
         }
     }
 
@@ -224,8 +222,4 @@ public class AuthServiceImpl implements AuthService {
         credential.setModifiedDate(LocalDateTime.now());
         credentialRepository.saveAndFlush(credential);
     }
-
-//    public void logout(String id)
-
-
 }
