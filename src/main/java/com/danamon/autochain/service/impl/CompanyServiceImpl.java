@@ -171,8 +171,6 @@ public class CompanyServiceImpl implements CompanyService {
         companyOld.setPhoneNumber(request.getPhoneNumber());
         companyOld.setCompanyEmail(request.getCompanyEmail());
         companyOld.setAccountNumber(request.getAccountNumber());
-        companyOld.setFinancingLimit(request.getFinancingLimit());
-        companyOld.setRemainingLimit(request.getReaminingLimit());
         Company company = companyRepository.saveAndFlush(companyOld);
 
         // update user here
@@ -180,7 +178,18 @@ public class CompanyServiceImpl implements CompanyService {
         // update user password with generate util
         // update to company
 
+        if (request.getMultipartFiles().size() != 0) {
+            List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
+                    companyFileService.createFile(multipartFile)
+            ).collect(Collectors.toList());
 
+            if(companyOld.getCompanyFiles().size() != 0) {
+                List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
+                companyFiles.addAll(oldFiles);
+            }
+
+            company.setCompanyFiles(companyFiles);
+        }
 
         return mapToResponse(company);
     }

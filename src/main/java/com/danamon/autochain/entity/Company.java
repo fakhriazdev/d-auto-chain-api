@@ -9,7 +9,8 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -53,9 +54,7 @@ public class Company {
     @JoinColumn(name = "company_file_id")
     private List<CompanyFile> companyFiles;
 
-//    @OneToMany(mappedBy = "partner")
-    @OneToMany
-    @JoinColumn(name = "partner_id")
+    @OneToMany(mappedBy = "company")
     @JsonManagedReference
     private List<Partnership> partnerships;
 
