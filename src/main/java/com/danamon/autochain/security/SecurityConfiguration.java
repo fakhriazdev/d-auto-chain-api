@@ -49,7 +49,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(n -> n
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                            .anyRequest().authenticated()
+//                            .anyRequest().authenticated()
                 )
                 .exceptionHandling((exceptionHandling) ->
                         exceptionHandling.authenticationEntryPoint(authEntryPoint)
