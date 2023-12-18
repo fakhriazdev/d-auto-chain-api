@@ -122,7 +122,8 @@ public class AuthServiceImpl implements AuthService {
 
         validationUtil.validate(request);
 
-        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Found"));
+
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail().toLowerCase(),
                 request.getPassword()
@@ -177,7 +178,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
             }
         }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
         }
 
         Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -218,8 +219,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String getByEmail(String email) {
-        Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
-        User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+        Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Email Not Found"));
+        User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "User id Not Already Exist"));
 
         HashMap<String,String> info = new HashMap<>();
         String urlBuilder = "http://localhost:5432/user/forget/"+user.getUser_id();
@@ -234,7 +235,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void updatePassword(String id, String password) {
-        Credential credential = credentialRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        Credential credential = credentialRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT, "ID Not Found"));
         credential.setPassword(bCryptUtil.hashPassword(password));
         credential.setModifiedDate(LocalDateTime.now());
         credentialRepository.saveAndFlush(credential);
