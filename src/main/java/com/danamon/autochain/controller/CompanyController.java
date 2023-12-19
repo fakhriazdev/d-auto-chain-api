@@ -2,10 +2,7 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.PagingResponse;
-import com.danamon.autochain.dto.company.NewCompanyRequest;
-import com.danamon.autochain.dto.company.NewCompanyResponse;
-import com.danamon.autochain.dto.company.SearchCompanyRequest;
-import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.CompanyFile;
 import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
@@ -27,11 +24,47 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
-//@SecurityRequirement(name = "Bearer Authentication")
+@SecurityRequirement(name = "Bearer Authentication")
 public class CompanyController {
     private final CompanyService companyService;
     private final CompanyFileService companyFileService;
 
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateCompany(
+            @RequestParam String id,
+            @RequestParam String companyName,
+            @RequestParam String province,
+            @RequestParam String city,
+            @RequestParam String address,
+            @RequestParam String phoneNumber,
+            @RequestParam String companyEmail,
+            @RequestParam String accountNumber,
+            @RequestParam(required = false) List<MultipartFile> files,
+            @RequestParam Boolean isGeneratePassword
+    ) {
+        UpdateCompanyRequest request = UpdateCompanyRequest.builder()
+                .id(id)
+                .companyName(companyName)
+                .province(province)
+                .city(city)
+                .address(address)
+                .phoneNumber(phoneNumber)
+                .companyEmail(companyEmail)
+                .multipartFiles(files)
+                .accountNumber(accountNumber)
+                .isGeneratePassword(isGeneratePassword)
+                .build();
+
+        CompanyResponse menuResponse = companyService.update(request);
+        DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
+                .message("successfully update company")
+                .statusCode(HttpStatus.OK.value())
+                .data(menuResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createCompany(
             @RequestParam String companyName,
@@ -62,8 +95,8 @@ public class CompanyController {
                 .emailUser(emailUser)
                 .build();
 
-        NewCompanyResponse companyResponse = companyService.create(request);
-        DataResponse<NewCompanyResponse> response = DataResponse.<NewCompanyResponse>builder()
+        CompanyResponse companyResponse = companyService.create(request);
+        DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
                 .message("successfully create new company")
                 .statusCode(HttpStatus.CREATED.value())
                 .data(companyResponse)

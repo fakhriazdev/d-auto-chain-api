@@ -28,7 +28,7 @@ public class Credential extends HistoryLog implements UserDetails {
     @Column(name = "credentialId", length = 128, nullable = false)
     private String credentialId;
 
-    @Column
+    @Column(unique = true)
     @Email( message = "Invalid email format")
     private String email;
 

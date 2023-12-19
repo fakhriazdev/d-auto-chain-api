@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 public class UserController {
-
     @GetMapping
     @PreAuthorize("hasAnyAuthority('INVOICE_STAFF', 'SUPER_USER')")
     public ResponseEntity<?> dashboardUser(){

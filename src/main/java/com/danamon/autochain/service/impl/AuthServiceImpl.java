@@ -42,8 +42,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
-
-
     private final JwtUtil jwtUtil;
     private final BCryptUtil bCryptUtil;
     private final ValidationUtil validationUtil;
