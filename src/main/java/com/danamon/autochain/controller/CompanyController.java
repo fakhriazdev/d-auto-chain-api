@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
-//@SecurityRequirement(name = "Bearer Authentication")
+@SecurityRequirement(name = "Bearer Authentication")
 public class CompanyController {
     private final CompanyService companyService;
     private final CompanyFileService companyFileService;

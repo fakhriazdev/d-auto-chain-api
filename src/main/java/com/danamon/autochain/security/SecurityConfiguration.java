@@ -49,6 +49,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(n -> n
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+//                                .anyRequest().permitAll() //kode to unclock security
                             .anyRequest().authenticated()
                 )
                 .exceptionHandling((exceptionHandling) ->

@@ -45,6 +45,7 @@ public class PartnershipServiceImpl implements PartnershipService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
+
         log.info(authentication.getPrincipal().toString());
         Credential userCredential = (Credential) authentication.getPrincipal();
 
@@ -61,6 +62,7 @@ public class PartnershipServiceImpl implements PartnershipService {
         Partnership partnershipSaved = partnershipRepository.saveAndFlush(partnership);
 
         return mapToResponse(partnershipSaved);
+//        return null;
     }
     @Transactional(readOnly = true)
     @Override
