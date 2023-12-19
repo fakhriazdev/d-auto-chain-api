@@ -1,6 +1,7 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.dto.auth.UserRegisterResponse;
+import com.danamon.autochain.dto.user.UserRoleResponse;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
 import com.danamon.autochain.entity.User;
@@ -13,6 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +34,15 @@ public class UserServiceImpl implements UserService {
                     .company(company)
                     .credential(credential)
                     .build();
+
             userRepository.saveAndFlush(user);
+            List<String> roleType = new ArrayList<>();
+            credential.getRoles().forEach(userRole -> roleType.add(userRole.getRole().getRoleName()));
             log.info("End createNew");
             return UserRegisterResponse.builder()
                     .username(credential.getUsername())
                     .email(credential.getEmail())
-                    .roleType(credential.getRole().getName())
+                    .roleType(roleType)
                     .build();
         } catch (DataIntegrityViolationException e) {
             log.error("Error createNew: {}", e.getMessage());

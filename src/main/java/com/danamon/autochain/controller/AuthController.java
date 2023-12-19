@@ -4,6 +4,8 @@ import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.auth.*;
 import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,11 @@ public class AuthController {
                 .body(response);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok("Logout successful");
+    }
+
     @PostMapping("/verifyOtp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpRequest otpRequest){
         LoginResponse userLoginResponse = authService.verifyOneTimePassword(otpRequest);
@@ -53,10 +60,20 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request){
+        String message = authService.changePassword(request);
+        DataResponse<String> response = DataResponse.<String>builder()
+                .data(message)
+                .statusCode(HttpStatus.CREATED.value())
+                .message("Success!!")
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgetPassword(@RequestParam(name = "email") String email){
         String message = authService.getByEmail(email);
-
         DataResponse<String> response = DataResponse.<String>builder()
                 .data(message)
                 .statusCode(HttpStatus.OK.value())
@@ -66,10 +83,9 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/recovery-password/{id}")
-    public ResponseEntity<?> recoveryPassword(@PathVariable String id, @RequestBody String newPassword){
-        authService.updatePassword(id,newPassword);
-
+    @PutMapping("/recovery-password")
+    public ResponseEntity<?> recoveryPassword(@RequestBody RequestRecoveryPassword request){
+        authService.updatePassword(request.getId(), request.getNewPassword());
         return ResponseEntity.ok("Success fully update password");
     }
 }

@@ -1,7 +1,6 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.PartnershipStatus;
-import com.danamon.autochain.constant.UserRoleType;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.NewCompanyRequest;
 import com.danamon.autochain.dto.company.NewCompanyResponse;

@@ -12,6 +12,7 @@ public enum RoleType {
     FINANCE_STAFF,
     PAYMENT_STAFF;
 
+
     public String getName() {
         return this.name();
     }

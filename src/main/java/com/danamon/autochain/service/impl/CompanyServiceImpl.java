@@ -1,25 +1,18 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.constant.UserRoleType;
+import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.dto.FileResponse;
-import com.danamon.autochain.dto.auth.OtpResponse;
 import com.danamon.autochain.dto.company.*;
-import com.danamon.autochain.entity.Company;
-import com.danamon.autochain.entity.CompanyFile;
-import com.danamon.autochain.entity.User;
-import com.danamon.autochain.repository.CompanyRepository;
+import com.danamon.autochain.entity.*;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.MailSender;
-import com.danamon.autochain.util.OTPGenerator;
 import com.danamon.autochain.util.RandomPasswordUtil;
 import com.danamon.autochain.util.ValidationUtil;
-import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.mapping.Any;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,18 +20,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import javax.mail.MessagingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,8 +37,11 @@ public class CompanyServiceImpl implements CompanyService {
     private final ValidationUtil validationUtil;
     private final CompanyFileService companyFileService;
     private final PasswordEncoder passwordEncoder;
-    private final UserService userService;
+    private final UserRepository userRepository;
+    private final RolesRepository rolesRepository;
     private final RandomPasswordUtil randomPasswordUtil;
+    private final CredentialRepository credentialRepository;
+    private final UserRolesRepository userRolesRepository;
 
     @Override
     public List<CompanyResponse> getNonPartnership(String companyId) {
@@ -88,16 +79,31 @@ public class CompanyServiceImpl implements CompanyService {
 
         String password = randomPasswordUtil.generateRandomPassword(12);
 
-        User user = User.builder()
-                .company_id(company)
+        Credential credential = Credential.builder()
                 .email(request.getEmailUser())
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(password))
-                .user_type(UserRoleType.SUPER_ADMIN)
+                .actor(ActorType.USER)
                 .build();
-        userService.create(user);
 
-        companySaved.setUser(user);
+        credentialRepository.saveAndFlush(credential);
+
+        User user = User.builder()
+                .company(companySaved)
+                .credential(credential)
+                .build();
+
+        userRepository.saveAndFlush(user);
+
+        Roles role = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
+        UserRole userRole = UserRole.builder()
+                .role(role)
+                .credential(credential)
+                .build();
+
+        credential.setRoles(List.of(userRole));
+
+        userRolesRepository.saveAndFlush(userRole);
 
         HashMap<String, String> info = new HashMap<>();
 
@@ -186,8 +192,8 @@ public class CompanyServiceImpl implements CompanyService {
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
                 .userId(company.getUser().getUser_id())
-                .username(company.getUser().getUsername())
-                .emailUser(company.getUser().getEmail())
+                .username(company.getUser().getCredential().getUsername())
+                .emailUser(company.getUser().getCredential().getEmail())
                 .files(fileResponses)
                 .build();
     }
@@ -211,8 +217,8 @@ public class CompanyServiceImpl implements CompanyService {
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
                 .userId(company.getUser().getUser_id())
-                .username(company.getUser().getUsername())
-                .emailUser(company.getUser().getEmail())
+                .username(company.getUser().getCredential().getUsername())
+                .emailUser(company.getUser().getCredential().getEmail())
                 .password(password)
                 .files(fileResponses)
                 .build();

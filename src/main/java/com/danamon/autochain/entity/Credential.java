@@ -1,12 +1,10 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.ActorType;
-import com.danamon.autochain.constant.RoleType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,13 +14,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @Entity
 @Table(name = "m_credential")
-public class Credential implements UserDetails {
+public class Credential extends HistoryLog implements UserDetails {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
@@ -30,23 +29,19 @@ public class Credential implements UserDetails {
     private String credentialId;
 
     @Column
+    @Email( message = "Invalid email format")
     private String email;
 
     @Column
     private String username;
-
     @Column
     private String password;
-    @Column
-    private boolean isSupplier;
-    @Column
-    private boolean isManufacturer;
 
     @Enumerated(EnumType.STRING)
     private ActorType actor;
 
-    @Enumerated(EnumType.STRING)
-    private RoleType role;
+    @OneToMany(mappedBy = "credential", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<UserRole> roles;
 
     @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
 //    @JoinColumn(name = "backoffice_id" , foreignKey= @ForeignKey(name = "Fk_backoffice_id"))
@@ -58,9 +53,13 @@ public class Credential implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> simpleGrantedAuthorities = new ArrayList<>();
-        simpleGrantedAuthorities.add(new SimpleGrantedAuthority(role.getName()));
-        return simpleGrantedAuthorities;
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+        for (UserRole userRole : roles) {
+//            System.out.println("ALL ROLE USER "+ userRole.getRole().getRoleName());
+            authorities.add(new SimpleGrantedAuthority(userRole.getRole().getRoleName()));
+        }
+        return authorities;
     }
 
     @Override

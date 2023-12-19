@@ -21,6 +21,6 @@ public class BackOffice {
     private String backoffice_id;
 
     @OneToOne
-    @JoinColumn(name= "credential_id", nullable=false)
+    @JoinColumn(name= "credentialId", nullable=false)
     private Credential credential;
 }
