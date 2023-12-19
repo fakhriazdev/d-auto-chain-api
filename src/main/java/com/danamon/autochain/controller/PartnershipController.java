@@ -8,6 +8,7 @@ import com.danamon.autochain.dto.partnership.PartnershipResponse;
 import com.danamon.autochain.dto.partnership.SearchPartnershipRequest;
 import com.danamon.autochain.service.PartnershipService;
 import com.danamon.autochain.util.PagingUtil;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/partnerships")
 @RequiredArgsConstructor
-//@SecurityRequirement(name = "Bearer Authentication")
+@SecurityRequirement(name = "Bearer Authentication")
 public class PartnershipController {
     private final PartnershipService partnershipService;
 

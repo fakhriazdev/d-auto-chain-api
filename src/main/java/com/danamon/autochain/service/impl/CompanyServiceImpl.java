@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,120 +70,162 @@ public class CompanyServiceImpl implements CompanyService {
     }
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public NewCompanyResponse create(NewCompanyRequest request) {
-        validationUtil.validate(request);
-
-        List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
-                companyFileService.createFile(multipartFile)
-        ).collect(Collectors.toList());
-
-        Company company = Company.builder()
-                .companyName(request.getCompanyName())
-                .province(request.getProvince())
-                .city(request.getCity())
-                .address(request.getAddress())
-                .phoneNumber(request.getPhoneNumber())
-                .companyEmail(request.getCompanyEmail())
-                .accountNumber(request.getAccountNumber())
-                .financingLimit(request.getFinancingLimit())
-                .remainingLimit(request.getRemainingLimit())
-                .companyFiles(companyFiles)
-                .build();
-        Company companySaved = companyRepository.saveAndFlush(company);
-
-        String password = randomPasswordUtil.generateRandomPassword(12);
-
-        Credential credential = Credential.builder()
-                .email(request.getEmailUser())
-                .username(request.getUsername())
-                .password(bCryptUtil.hashPassword(password))
-                .actor(ActorType.USER)
-                .build();
-
-        credentialRepository.saveAndFlush(credential);
-
-        User user = User.builder()
-                .company(companySaved)
-                .credential(credential)
-                .build();
-
-        userRepository.saveAndFlush(user);
-        companySaved.setUser(user);
-
-        Roles role = rolesRepository.findByRoleName(RoleType.SUPER_USER.toString()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
-        UserRole userRole = UserRole.builder()
-                .role(role)
-                .credential(credential)
-                .build();
-
-        credential.setRoles(List.of(userRole));
-
-        userRolesRepository.saveAndFlush(userRole);
-
-        HashMap<String, String> info = new HashMap<>();
-
+    public CompanyResponse create(NewCompanyRequest request) {
         try {
-            info.put("Email: ",request.getCompanyEmail() +"<br>");
-            info.put("Password: ", password +"<br>");
+            validationUtil.validate(request);
+            List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
+                    companyFileService.createFile(multipartFile)
+            ).collect(Collectors.toList());
 
-            MailSender.mailer("Your Company Account", info, request.getEmailUser());
-        }  catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            Company company = Company.builder()
+                    .companyName(request.getCompanyName())
+                    .province(request.getProvince())
+                    .city(request.getCity())
+                    .address(request.getAddress())
+                    .phoneNumber(request.getPhoneNumber())
+                    .companyEmail(request.getCompanyEmail())
+                    .accountNumber(request.getAccountNumber())
+                    .financingLimit(request.getFinancingLimit())
+                    .remainingLimit(request.getRemainingLimit())
+                    .companyFiles(companyFiles)
+                    .build();
+
+                    Company companySaved = companyRepository.saveAndFlush(company);
+
+            String password = randomPasswordUtil.generateRandomPassword(12);
+
+            try {
+                Credential credential = Credential.builder()
+                        .email(request.getEmailUser())
+                        .username(request.getUsername())
+                        .password(bCryptUtil.hashPassword(password))
+                        .actor(ActorType.USER)
+                        .build();
+
+                credentialRepository.saveAndFlush(credential);
+
+                User user = User.builder()
+                        .company(companySaved)
+                        .credential(credential)
+                        .build();
+
+                userRepository.saveAndFlush(user);
+                companySaved.setUser(user);
+
+                Roles role = rolesRepository.findByRoleName(RoleType.SUPER_USER.toString()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
+                UserRole userRole = UserRole.builder()
+                        .role(role)
+                        .credential(credential)
+                        .build();
+
+                credential.setRoles(List.of(userRole));
+
+                userRolesRepository.saveAndFlush(userRole);
+            }  catch (DataIntegrityViolationException e){
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Email must be unique");
+            }
+
+            HashMap<String, String> info = new HashMap<>();
+
+            try {
+                String accountEmail = "<html style='width: 100%;'>" +
+                        "<body style='width: 100%'>" +
+                        "<div style='width: 100%;'>" +
+                        "<header style='color:white; width: 100%; background: #F6833C; padding: 12px 10px; top:0;'>" +
+                        "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
+                        "</header>" +
+                        "<div style='margin: auto;'>" +
+                        "<div><h5><center>Your Account</u></center></h5></div><br>" +
+                        "<div><h4><center>Email: "+request.getEmailUser()+"</center></h4></div><br>" +
+                        "</div>" +
+                        "<div><h4><center>Password: "+password+"</center></h4></div><br>" +
+                        "</div>" +
+                        "</div>" +
+                        "</body>" +
+                        "</html>";
+
+                info.put("emailBody", accountEmail);
+
+                MailSender.mailer("Here Your Company Super Account", info, request.getEmailUser());
+            }  catch (Exception e){
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            return mapToResponse(companySaved);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
-
-        return newMapToResponse(companySaved, password);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public CompanyResponse update(UpdateCompanyRequest request) {
-        validationUtil.validate(request);
+        try {
+            validationUtil.validate(request);
 
-        Company companyOld = findByIdOrThrowNotFound(request.getId());
-        companyOld.setCompanyName(request.getCompanyName());
-        companyOld.setProvince(request.getProvince());
-        companyOld.setCity(request.getCity());
-        companyOld.setAddress(request.getAddress());
-        companyOld.setPhoneNumber(request.getPhoneNumber());
-        companyOld.setCompanyEmail(request.getCompanyEmail());
-        companyOld.setAccountNumber(request.getAccountNumber());
-        Company company = companyRepository.saveAndFlush(companyOld);
+            Company companyOld = findByIdOrThrowNotFound(request.getId());
+            companyOld.setCompanyName(request.getCompanyName());
+            companyOld.setProvince(request.getProvince());
+            companyOld.setCity(request.getCity());
+            companyOld.setAddress(request.getAddress());
+            companyOld.setPhoneNumber(request.getPhoneNumber());
+            companyOld.setCompanyEmail(request.getCompanyEmail());
+            companyOld.setAccountNumber(request.getAccountNumber());
+            Company company = companyRepository.saveAndFlush(companyOld);
 
-        if (request.getIsGeneratePassword()) {
-            Credential credential = credentialRepository.findByEmail(request.getEmailUser()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if (request.getIsGeneratePassword()) {
+                Credential credential = credentialRepository.findByEmail(companyOld.getUser().getCredential().getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-            String newPassword = randomPasswordUtil.generateRandomPassword(12);
+                String newPassword = randomPasswordUtil.generateRandomPassword(12);
 
-            credential.setPassword(bCryptUtil.hashPassword(newPassword));
-            credential.setModifiedDate(LocalDateTime.now());
-            credentialRepository.saveAndFlush(credential);
+                credential.setPassword(bCryptUtil.hashPassword(newPassword));
+                credential.setModifiedDate(LocalDateTime.now());
+                credentialRepository.saveAndFlush(credential);
 
-            HashMap<String, String> info = new HashMap<>();
+                HashMap<String, String> info = new HashMap<>();
 
-            try {
-                info.put("Email: ",request.getCompanyEmail() +"<br>");
-                info.put("Password: ", newPassword +"<br>");
+                try {
+                    String accountEmail = "<html style='width: 100%;'>" +
+                            "<body style='width: 100%'>" +
+                            "<div style='width: 100%;'>" +
+                            "<header style='color:white; width: 100%; background: #F6833C; padding: 12px 10px; top:0;'>" +
+                            "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
+                            "</header>" +
+                            "<div style='margin: auto;'>" +
+                            "<div><h5><center>Your Account</u></center></h5></div><br>" +
+                            "<div><h4><center>Email: "+companyOld.getUser().getCredential().getEmail()+"</center></h4></div><br>" +
+                            "</div>" +
+                            "<div><h4><center>Password: "+newPassword+"</center></h4></div><br>" +
+                            "</div>" +
+                            "</div>" +
+                            "</body>" +
+                            "</html>";
 
-                MailSender.mailer("Your Company Account", info, request.getEmailUser());
-            }  catch (Exception e){
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+                    info.put("emailBody", accountEmail);
+
+                    MailSender.mailer("New Password for Company Account", info, companyOld.getUser().getCredential().getEmail());
+                }  catch (Exception e){
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
             }
-        }
 
-        if (request.getMultipartFiles() != null) {
-            List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
-                    companyFileService.createFile(multipartFile)
-            ).collect(Collectors.toList());
+            if (request.getMultipartFiles() != null) {
+                List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
+                        companyFileService.createFile(multipartFile)
+                ).collect(Collectors.toList());
 
-            if(companyOld.getCompanyFiles().size() != 0) {
-                List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
-                companyFiles.addAll(oldFiles);
+                if(companyOld.getCompanyFiles().size() != 0) {
+                    List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
+                    companyFiles.addAll(oldFiles);
+                }
+
+                company.setCompanyFiles(companyFiles);
             }
 
-            company.setCompanyFiles(companyFiles);
+            return mapToResponse(company);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
-
-        return mapToResponse(company);
     }
 
     @Transactional(readOnly = true)
@@ -239,31 +282,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .reaminingLimit(company.getRemainingLimit())
                 .username(company.getUser().getCredential().getUsername())
                 .emailUser(company.getUser().getCredential().getEmail())
-                .files(fileResponses)
-                .build();
-    }
-
-    private NewCompanyResponse newMapToResponse(Company company, String password) {
-        List<FileResponse> fileResponses = company.getCompanyFiles().stream().map(
-                companyFiles -> FileResponse.builder()
-                        .filename(companyFiles.getName())
-                        .url("/api/companies/" + companyFiles.getId() + "/file")
-                        .build()
-        ).collect(Collectors.toList());
-        return NewCompanyResponse.builder()
-                .companyId(company.getCompany_id())
-                .companyName(company.getCompanyName())
-                .province(company.getProvince())
-                .city(company.getCity())
-                .address(company.getAddress())
-                .phoneNumber(company.getPhoneNumber())
-                .companyEmail(company.getCompanyEmail())
-                .accountNumber(company.getAccountNumber())
-                .financingLimit(company.getFinancingLimit())
-                .reaminingLimit(company.getRemainingLimit())
-                .username(company.getUser().getCredential().getUsername())
-                .emailUser(company.getUser().getCredential().getEmail())
-                .password(password)
                 .files(fileResponses)
                 .build();
     }

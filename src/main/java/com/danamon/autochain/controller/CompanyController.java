@@ -40,7 +40,6 @@ public class CompanyController {
             @RequestParam String companyEmail,
             @RequestParam String accountNumber,
             @RequestParam(required = false) List<MultipartFile> files,
-            @RequestParam String emailUSer,
             @RequestParam Boolean isGeneratePassword
     ) {
         UpdateCompanyRequest request = UpdateCompanyRequest.builder()
@@ -53,7 +52,6 @@ public class CompanyController {
                 .companyEmail(companyEmail)
                 .multipartFiles(files)
                 .accountNumber(accountNumber)
-                .emailUser(emailUSer)
                 .isGeneratePassword(isGeneratePassword)
                 .build();
 
@@ -97,8 +95,8 @@ public class CompanyController {
                 .emailUser(emailUser)
                 .build();
 
-        NewCompanyResponse companyResponse = companyService.create(request);
-        DataResponse<NewCompanyResponse> response = DataResponse.<NewCompanyResponse>builder()
+        CompanyResponse companyResponse = companyService.create(request);
+        DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
                 .message("successfully create new company")
                 .statusCode(HttpStatus.CREATED.value())
                 .data(companyResponse)

@@ -46,13 +46,11 @@ public class Partnership {
     @Column(name = "partner_confirmation_date", length = 128)
     private LocalDateTime partnerConfirmationDate;
 
-    @ManyToOne
-    @JoinColumn(name = "requested_by")
-    @JsonBackReference
-    private Company requestedBy;
+    @OneToOne
+    @JoinColumn(name= "requested_by")
+    private Credential requestedBy;
 
-    @ManyToOne
-    @JoinColumn(name = "confirmed_by")
-    @JsonBackReference
-    private Company confirmedBy;
+    @OneToOne
+    @JoinColumn(name= "confirmed_by")
+    private Credential confirmedBy;
 }
