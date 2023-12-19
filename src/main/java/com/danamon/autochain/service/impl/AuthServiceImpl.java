@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,15 +125,17 @@ public class AuthServiceImpl implements AuthService {
 
         Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential"));
 
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                request.getEmail().toLowerCase(),
-                request.getPassword()
-        ));
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
-
+        try{
+            Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    request.getEmail().toLowerCase(),
+                    request.getPassword()
+            ));
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
+        }catch (AuthenticationException e){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential");
+        }
         HashMap<String, String> info = new HashMap<>();
-
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
 
         // Generate OTP
         try {
@@ -166,7 +169,7 @@ public class AuthServiceImpl implements AuthService {
             MailSender.mailer("OTP", info, user.getEmail());
             return "Please check your email to see OTP code";
         }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR, Cannot Generate OTP Code, Please Contact Administrator");
         }
     }
 
@@ -181,7 +184,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
         }
 
-        Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Exist"));
 
         String token = jwtUtil.generateTokenUser(user);
 
@@ -220,16 +223,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String getByEmail(String email) {
         Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Email Not Found"));
-        User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "User id Not Already Exist"));
+        /*User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "User id Not Exist"));*/
 
         HashMap<String,String> info = new HashMap<>();
-        String urlBuilder = "http://localhost:5432/user/forget/"+user.getUser_id();
-        try{    URL url = new URI(urlBuilder).toURL();
+        String urlBuilder = "http://localhost:5432/user/forget/"+credential.getCredentialId();
+        try{
+            URL url = new URI(urlBuilder).toURL();
             info.put("url", url.toString());
             MailSender.mailer("Password Recovery Link", info, email);
             return "Success send link for email recovery";
-        }catch (MessagingException e){    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (MalformedURLException | URISyntaxException e) {    throw new RuntimeException(e);
+        }catch (MessagingException e){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Send Email, Please Check Your Connection");
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot Generate URL, Please Contact Administrator");
         }
     }
 

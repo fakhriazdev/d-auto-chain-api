@@ -84,9 +84,9 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/recovery-password/{id}")
-    public ResponseEntity<?> recoveryPassword(@PathVariable String id, @RequestBody String newPassword){
-        authService.updatePassword(id,newPassword);
+    @PutMapping("/recovery-password")
+    public ResponseEntity<?> recoveryPassword(@RequestBody RequestRecoveryPassword request){
+        authService.updatePassword(request.getId(), request.getNewPassword());
         return ResponseEntity.ok("Success fully update password");
     }
 }
