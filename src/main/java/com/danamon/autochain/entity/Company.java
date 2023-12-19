@@ -54,7 +54,9 @@ public class Company {
     @JoinColumn(name = "company_file_id")
     private List<CompanyFile> companyFiles;
 
-    @OneToMany(mappedBy = "company")
+//    @OneToMany(mappedBy = "partner")
+    @OneToMany
+    @JoinColumn(name = "partner_id")
     @JsonManagedReference
     private List<Partnership> partnerships;
 
