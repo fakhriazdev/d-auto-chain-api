@@ -39,8 +39,8 @@ public class CompanyController {
             @RequestParam String phoneNumber,
             @RequestParam String companyEmail,
             @RequestParam String accountNumber,
-            @RequestParam List<MultipartFile> files,
-            @RequestParam String userId,
+            @RequestParam(required = false) List<MultipartFile> files,
+            @RequestParam String emailUSer,
             @RequestParam Boolean isGeneratePassword
     ) {
         UpdateCompanyRequest request = UpdateCompanyRequest.builder()
@@ -53,9 +53,10 @@ public class CompanyController {
                 .companyEmail(companyEmail)
                 .multipartFiles(files)
                 .accountNumber(accountNumber)
-                .userId(userId)
+                .emailUser(emailUSer)
                 .isGeneratePassword(isGeneratePassword)
                 .build();
+
         CompanyResponse menuResponse = companyService.update(request);
         DataResponse<CompanyResponse> response = DataResponse.<CompanyResponse>builder()
                 .message("successfully update company")
