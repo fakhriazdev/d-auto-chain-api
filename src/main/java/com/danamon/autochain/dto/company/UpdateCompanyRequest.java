@@ -23,6 +23,6 @@ public class UpdateCompanyRequest {
     private String companyEmail;
     private String accountNumber;
     private List<MultipartFile> multipartFiles;
-    private String userId;
+    private String emailUser;
     private Boolean isGeneratePassword;
 }

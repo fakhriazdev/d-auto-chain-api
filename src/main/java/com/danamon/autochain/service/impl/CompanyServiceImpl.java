@@ -1,10 +1,12 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.ActorType;
+import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.dto.FileResponse;
 import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
+import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyFileService;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.util.MailSender;
@@ -20,10 +22,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,12 +44,12 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final ValidationUtil validationUtil;
     private final CompanyFileService companyFileService;
-    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RolesRepository rolesRepository;
     private final RandomPasswordUtil randomPasswordUtil;
     private final CredentialRepository credentialRepository;
     private final UserRolesRepository userRolesRepository;
+    private final BCryptUtil bCryptUtil;
 
     @Override
     public List<CompanyResponse> getNonPartnership(String companyId) {
@@ -87,7 +95,7 @@ public class CompanyServiceImpl implements CompanyService {
         Credential credential = Credential.builder()
                 .email(request.getEmailUser())
                 .username(request.getUsername())
-                .password(passwordEncoder.encode(password))
+                .password(bCryptUtil.hashPassword(password))
                 .actor(ActorType.USER)
                 .build();
 
@@ -99,8 +107,9 @@ public class CompanyServiceImpl implements CompanyService {
                 .build();
 
         userRepository.saveAndFlush(user);
+        companySaved.setUser(user);
 
-        Roles role = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
+        Roles role = rolesRepository.findByRoleName(RoleType.SUPER_USER.toString()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
         UserRole userRole = UserRole.builder()
                 .role(role)
                 .credential(credential)
@@ -122,6 +131,58 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return newMapToResponse(companySaved, password);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public CompanyResponse update(UpdateCompanyRequest request) {
+        validationUtil.validate(request);
+
+        Company companyOld = findByIdOrThrowNotFound(request.getId());
+        companyOld.setCompanyName(request.getCompanyName());
+        companyOld.setProvince(request.getProvince());
+        companyOld.setCity(request.getCity());
+        companyOld.setAddress(request.getAddress());
+        companyOld.setPhoneNumber(request.getPhoneNumber());
+        companyOld.setCompanyEmail(request.getCompanyEmail());
+        companyOld.setAccountNumber(request.getAccountNumber());
+        Company company = companyRepository.saveAndFlush(companyOld);
+
+        if (request.getIsGeneratePassword()) {
+            Credential credential = credentialRepository.findByEmail(request.getEmailUser()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+            String newPassword = randomPasswordUtil.generateRandomPassword(12);
+
+            credential.setPassword(bCryptUtil.hashPassword(newPassword));
+            credential.setModifiedDate(LocalDateTime.now());
+            credentialRepository.saveAndFlush(credential);
+
+            HashMap<String, String> info = new HashMap<>();
+
+            try {
+                info.put("Email: ",request.getCompanyEmail() +"<br>");
+                info.put("Password: ", newPassword +"<br>");
+
+                MailSender.mailer("Your Company Account", info, request.getEmailUser());
+            }  catch (Exception e){
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        if (request.getMultipartFiles() != null) {
+            List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
+                    companyFileService.createFile(multipartFile)
+            ).collect(Collectors.toList());
+
+            if(companyOld.getCompanyFiles().size() != 0) {
+                List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
+                companyFiles.addAll(oldFiles);
+            }
+
+            company.setCompanyFiles(companyFiles);
+        }
+
+        return mapToResponse(company);
     }
 
     @Transactional(readOnly = true)
@@ -158,42 +219,6 @@ public class CompanyServiceImpl implements CompanyService {
         return companyFileService.findByPath(companyFile.getPath());
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public CompanyResponse update(UpdateCompanyRequest request) {
-        validationUtil.validate(request);
-
-        Company companyOld = findByIdOrThrowNotFound(request.getId());
-        companyOld.setCompanyName(request.getCompanyName());
-        companyOld.setProvince(request.getProvince());
-        companyOld.setCity(request.getCity());
-        companyOld.setAddress(request.getAddress());
-        companyOld.setPhoneNumber(request.getPhoneNumber());
-        companyOld.setCompanyEmail(request.getCompanyEmail());
-        companyOld.setAccountNumber(request.getAccountNumber());
-        Company company = companyRepository.saveAndFlush(companyOld);
-
-        // update user here
-        // get by id user
-        // update user password with generate util
-        // update to company
-
-        if (request.getMultipartFiles().size() != 0) {
-            List<CompanyFile> companyFiles = request.getMultipartFiles().stream().map(multipartFile ->
-                    companyFileService.createFile(multipartFile)
-            ).collect(Collectors.toList());
-
-            if(companyOld.getCompanyFiles().size() != 0) {
-                List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
-                companyFiles.addAll(oldFiles);
-            }
-
-            company.setCompanyFiles(companyFiles);
-        }
-
-        return mapToResponse(company);
-    }
-
     private CompanyResponse mapToResponse(Company company) {
         List<FileResponse> fileResponses = company.getCompanyFiles().stream().map(
                 companyFiles -> FileResponse.builder()
@@ -212,7 +237,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
-                .userId(company.getUser().getUser_id())
                 .username(company.getUser().getCredential().getUsername())
                 .emailUser(company.getUser().getCredential().getEmail())
                 .files(fileResponses)
@@ -237,7 +261,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
-                .userId(company.getUser().getUser_id())
                 .username(company.getUser().getCredential().getUsername())
                 .emailUser(company.getUser().getCredential().getEmail())
                 .password(password)
