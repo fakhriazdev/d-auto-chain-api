@@ -52,10 +52,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
                 UserDetails user = credentialService.loadUserByUserId(userInfo.get("userId"));
 
-//                System.out.println(userInfo);
+                System.out.println(userInfo);
 //                System.out.println(user.getAuthorities());
 //                System.out.println(user.getUsername());
-//                System.out.println("======== USER DETAILS====== \n"+ user.toString());
+                System.out.println("======== USER DETAILS====== \n"+ user.toString());
 
 
                 // validasi/authentication by token

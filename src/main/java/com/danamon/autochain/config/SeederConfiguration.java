@@ -26,7 +26,7 @@ public class SeederConfiguration implements CommandLineRunner {
     private final UserRolesRepository userRolesRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "erwinperdana2@gmail.com";
+    private final String email = "rizdaagisa@gmail.com";
     private final String userame= "rizda";
     private final String password = "string";
 
