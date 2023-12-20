@@ -52,8 +52,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .status(requestInvoice.getStatus())
                 .amount(requestInvoice.getAmount())
                 .type(requestInvoice.getType())
-                .createdDate(LocalDateTime.now())
-                .createdBy(principal)
                 .build();
 
         invoiceRepository.saveAndFlush(invoice);

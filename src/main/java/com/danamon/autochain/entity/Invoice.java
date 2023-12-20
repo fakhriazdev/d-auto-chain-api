@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -14,10 +15,10 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @Entity
 @Table(name = "t_invoice")
-public class Invoice {
+public class Invoice extends HistoryLog {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
@@ -37,14 +38,4 @@ public class Invoice {
     private Integer amount;
     @Column(nullable = false)
     private String type;
-    @Column(name = "created_date", nullable = false)
-    private LocalDateTime createdDate;
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private Credential createdBy;
-    @Column(name = "modified_date")
-    private Date modifiedDate;
-    @ManyToOne
-    @JoinColumn(name = "modified_by")
-    private Credential modifiedBy;
 }
