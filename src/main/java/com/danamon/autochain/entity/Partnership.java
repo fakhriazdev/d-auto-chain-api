@@ -1,11 +1,11 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.PartnershipStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -13,7 +13,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -27,12 +28,12 @@ public class Partnership {
 
     @ManyToOne
     @JoinColumn(name = "company_id")
-    @JsonIgnore
+    @JsonBackReference
     private Company company;
 
     @ManyToOne
     @JoinColumn(name = "partner_id")
-    @JsonIgnore
+    @JsonBackReference
     private Company partner;
 
     @Column(name = "partner_status", length = 128, nullable = false)
@@ -45,13 +46,11 @@ public class Partnership {
     @Column(name = "partner_confirmation_date", length = 128)
     private LocalDateTime partnerConfirmationDate;
 
-    @ManyToOne
-    @JoinColumn(name = "requested_by")
-    @JsonIgnore
-    private Company requestedBy;
+    @OneToOne
+    @JoinColumn(name= "requested_by")
+    private Credential requestedBy;
 
-    @ManyToOne
-    @JoinColumn(name = "confirmed_by")
-    @JsonIgnore
-    private Company confirmedBy;
+    @OneToOne
+    @JoinColumn(name= "confirmed_by")
+    private Credential confirmedBy;
 }

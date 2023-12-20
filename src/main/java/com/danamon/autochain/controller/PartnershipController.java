@@ -8,6 +8,7 @@ import com.danamon.autochain.dto.partnership.PartnershipResponse;
 import com.danamon.autochain.dto.partnership.SearchPartnershipRequest;
 import com.danamon.autochain.service.PartnershipService;
 import com.danamon.autochain.util.PagingUtil;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/partnerships")
 @RequiredArgsConstructor
-//@SecurityRequirement(name = "Bearer Authentication")
+@SecurityRequirement(name = "Bearer Authentication")
 public class PartnershipController {
     private final PartnershipService partnershipService;
 
@@ -37,12 +38,13 @@ public class PartnershipController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-    @GetMapping
+    @GetMapping("/{id}")
     public ResponseEntity<?> getAllPartnerships(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "company") String sortBy
+            @RequestParam(required = false, defaultValue = "company") String sortBy,
+            @PathVariable String id
     ) {
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -55,7 +57,7 @@ public class PartnershipController {
                 .sortBy(sortBy)
                 .build();
 
-        Page<PartnershipResponse> companyResponse = partnershipService.getAll(request);
+        Page<PartnershipResponse> companyResponse = partnershipService.getAll(id, request);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(companyResponse.getTotalElements())
                 .totalPages(companyResponse.getTotalPages())
