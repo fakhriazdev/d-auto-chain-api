@@ -2,6 +2,7 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.PagingResponse;
+import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
 import com.danamon.autochain.dto.partnership.NewPartnershipRequest;
 import com.danamon.autochain.dto.partnership.PartnershipResponse;
@@ -25,6 +26,31 @@ import java.util.List;
 @SecurityRequirement(name = "Bearer Authentication")
 public class PartnershipController {
     private final PartnershipService partnershipService;
+
+    @GetMapping("/{idPartnership}/reject")
+    public ResponseEntity<?> rejectPartnership(@PathVariable String idPartnership) {
+        String partnershipResponse = partnershipService.rejectPartnership(idPartnership);
+        DataResponse<PartnershipResponse> response = DataResponse.<PartnershipResponse>builder()
+                .message(partnershipResponse)
+                .statusCode(HttpStatus.OK.value())
+                .data(null)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+    @GetMapping("/{idPartnership}/accept")
+    public ResponseEntity<?> acceptPartnership(@PathVariable String idPartnership) {
+        PartnershipResponse partnershipResponse = partnershipService.acceptPartnership(idPartnership);
+        DataResponse<PartnershipResponse> response = DataResponse.<PartnershipResponse>builder()
+                .message("successfully accept partnerships")
+                .statusCode(HttpStatus.OK.value())
+                .data(partnershipResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addingPartnerships(@RequestBody NewPartnershipRequest request) {

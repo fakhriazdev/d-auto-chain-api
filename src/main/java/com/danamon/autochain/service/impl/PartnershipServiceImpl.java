@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,13 +33,45 @@ public class PartnershipServiceImpl implements PartnershipService {
     private final ValidationUtil validationUtil;
     private final CompanyService companyService;
 
+    @Override
+    public String rejectPartnership(String partnershipId) {
+        Partnership partnership = findByIdOrThrowNotFound(partnershipId);
+
+        partnershipRepository.delete(partnership);
+
+        return "Rejected partnership";
+    }
+
+    @Override
+    public PartnershipResponse acceptPartnership(String partnershipId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        Credential userCredential = (Credential) authentication.getPrincipal();
+
+        Partnership partnership = findByIdOrThrowNotFound(partnershipId);
+        partnership.setPartnerStatus(PartnershipStatus.IN_PARTNER);
+        partnership.setPartnerConfirmationDate(LocalDateTime.now());
+        partnership.setConfirmedBy(userCredential);
+        Partnership partnershipUpdated = partnershipRepository.saveAndFlush(partnership);
+
+        return mapToResponse(partnershipUpdated);
+    }
+
+    private Partnership findByIdOrThrowNotFound(String id) {
+        return partnershipRepository.findById(id).orElseThrow(() -> new RuntimeException("partnerships not found"));
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public PartnershipResponse addPartnership(NewPartnershipRequest request) {
         validationUtil.validate(request);
 
         Company company = companyService.getById(request.getCompanyId());
-        Company partner = companyService.getById(request.getPartnershipId());
+        Company partner = companyService.getById(request.getPartnerId());
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

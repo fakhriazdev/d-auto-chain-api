@@ -18,6 +18,6 @@ import java.util.List;
 public class NewPartnershipRequest {
     @NotBlank(message = "company id is required")
     private String companyId;
-    @NotBlank(message = "partnership id is required")
-    private String partnershipId;
+    @NotBlank(message = "partner id is required")
+    private String partnerId;
 }
