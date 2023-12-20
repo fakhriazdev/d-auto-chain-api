@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 
 import com.danamon.autochain.constant.ActorType;
+import com.danamon.autochain.constant.UserActivity;
 import com.danamon.autochain.dto.auth.*;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
@@ -12,6 +13,7 @@ import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
 import com.danamon.autochain.util.ValidationUtil;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
     private final CredentialRepository credentialRepository;
     private final RolesRepository rolesRepository;
     private final UserRolesRepository userRolesRepository;
+    private final UserActivityLogRepository userActivityLogRepository;
 
     @Override
     public UserRegisterResponse registerUser(UserRegisterRequest request) {
@@ -84,14 +87,12 @@ public class AuthServiceImpl implements AuthService {
                     .modifiedDate(LocalDateTime.now())
                     .build();
 
-
             getRoles.forEach(roles -> userRoles.add(
                     UserRole.builder()
                             .role(roles)
                             .credential(credential)
                             .build()
             ));
-
 
             credentialRepository.saveAndFlush(credential);
             userService.createNew(credential, company);
@@ -243,5 +244,31 @@ public class AuthServiceImpl implements AuthService {
         credential.setPassword(bCryptUtil.hashPassword(password));
         credential.setModifiedDate(LocalDateTime.now());
         credentialRepository.saveAndFlush(credential);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String logout() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+            log.info(authentication.getPrincipal().toString());
+            Credential userCredential = (Credential) authentication.getPrincipal();
+
+            UserActivityLog activityLog = UserActivityLog.builder()
+                    .user_id(userCredential.getCredentialId())
+                    .timestamp(System.currentTimeMillis())
+                    .activity(UserActivity.LOGOUT)
+                    .build();
+
+            userActivityLogRepository.save(activityLog);
+
+            return "Logout success";
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 }
