@@ -35,7 +35,9 @@ public class Invoice extends HistoryLog {
     @Column(nullable = false)
     private String status;
     @Column(nullable = false)
-    private Integer amount;
+    private Long amount;
     @Column(nullable = false)
     private String type;
+    @Column(columnDefinition = "TEXT")
+    private String itemList;
 }

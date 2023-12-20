@@ -1,8 +1,8 @@
 package com.danamon.autochain.service;
 
-import com.danamon.autochain.dto.Invoice.RequestInvoice;
-import com.danamon.autochain.entity.Invoice;
+import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.response.ResponseInvoice;
 
 public interface InvoiceService {
-    Invoice invoiceGeneration(RequestInvoice requestInvoice);
+    ResponseInvoice invoiceGeneration(RequestInvoice requestInvoice);
 }
