@@ -33,30 +33,6 @@ public class CredentialServiceImpl implements CredentialService {
                 .orElseThrow(() -> new UsernameNotFoundException("invalid credential"));
         log.info("End loadByUserId");
 
-//        List<GrantedAuthority> roles = new ArrayList<>();
-//        userCredential.getRoles().forEach(userRole -> roles.add(
-//                new SimpleGrantedAuthority(userRole.getRole().getRoleName())
-//        ));
-//
-//
-//        return new org.springframework.security.core.userdetails.User(
-//                userCredential.getUsername(),
-//                userCredential.getPassword(),
-//                roles
-//        );
-
-//        return Credential.builder()
-//                .credentialId(userCredential.getCredentialId())
-//                .username(userCredential.getUsername())
-//                .password(userCredential.getPassword())
-//                .actor(userCredential.getActor())
-//                .email(userCredential.getEmail())
-//                .modifiedDate(userCredential.getModifiedDate())
-//                .modifiedBy(userCredential.getModifiedBy())
-//                .createdBy(userCredential.getCreatedBy())
-//                .createdDate(userCredential.getCreatedDate())
-//                .roles(userCredential.getRoles())
-//                .build();
         return userCredential;
     }
 

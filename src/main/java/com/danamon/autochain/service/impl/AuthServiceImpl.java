@@ -8,6 +8,7 @@ import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
+import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
@@ -22,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final UserService userService;
+    private final CredentialService credentialService;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
@@ -187,6 +190,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Exist"));
+
+        UserDetails userDetails = credentialService.loadUserByUserId(user.getCredentialId());
+
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
         String token = jwtUtil.generateTokenUser(user);
 

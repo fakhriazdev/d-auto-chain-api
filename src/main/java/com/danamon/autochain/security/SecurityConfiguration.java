@@ -42,7 +42,6 @@ public class SecurityConfiguration {
         http
                 .httpBasic(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-//                .cors(Customizer.withDefaults())
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -58,23 +57,12 @@ public class SecurityConfiguration {
                 .logout(n -> n
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            // Handle successful logout
-                            // e.g., redirect or send a response
                             response.setStatus(HttpStatus.OK.value());
                             response.getWriter().flush();
                         })
-                        .invalidateHttpSession(true) // Invalidate session
+                        .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 );
         return http.build();
     }
-
-/*    @Bean
-    public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userService::loadUserByUsername);
-        authenticationProvider.setPasswordEncoder(passwordEncoder);
-
-        return authenticationProvider;
-    }*/
 }
