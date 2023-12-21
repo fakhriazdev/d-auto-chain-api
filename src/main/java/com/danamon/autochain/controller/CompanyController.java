@@ -124,6 +124,7 @@ public class CompanyController {
                 .sortBy(sortBy)
                 .name(name)
                 .build();
+
         Page<CompanyResponse> companyResponse = companyService.getAll(request);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(companyResponse.getTotalElements())
@@ -131,12 +132,14 @@ public class CompanyController {
                 .page(page)
                 .size(size)
                 .build();
+
         DataResponse<List<CompanyResponse>> response = DataResponse.<List<CompanyResponse>>builder()
                 .message("successfully get all company")
                 .statusCode(HttpStatus.OK.value())
                 .data(companyResponse.getContent())
                 .paging(pagingResponse)
                 .build();
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
