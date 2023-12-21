@@ -1,6 +1,8 @@
 package com.danamon.autochain.service.impl;
 
 
+import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.Type;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.response.ResponseInvoice;
 import com.danamon.autochain.entity.*;
@@ -25,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final UserRepository userRepository;
     private final CompanyService companyService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResponseInvoice invoiceGeneration(RequestInvoice requestInvoice) {
@@ -52,9 +54,9 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .senderId(currentUserLogin.getCompany())
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
-                .status(requestInvoice.getStatus())
+                .status(Status.valueOf(requestInvoice.getStatus()))
                 .amount(requestInvoice.getAmount())
-                .type(requestInvoice.getType())
+                .type(Type.valueOf(requestInvoice.getType()))
                 .createdDate(LocalDateTime.now())
                 .createdBy(principal.getCredentialId())
                 .itemList(requestInvoice.getItemList())
@@ -62,30 +64,23 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         invoiceRepository.saveAndFlush(invoice);
 
-//        Gson gson = new Gson();
-//
-//        JsonArray asJsonArray = JsonParser.parseString(invoice.getItemList()).getAsJsonArray();
-//
-//        Type type = new TypeToken<List<ItemList>>(){}.getType();
-//
-//        List<ItemList> itemLists = gson.fromJson(asJsonArray, type);
-
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<ItemList> itemLists = null;
         try {
-            itemLists = objectMapper.readValue(invoice.getItemList(), new TypeReference<List<ItemList>>() {});
+            itemLists = objectMapper.readValue(invoice.getItemList(), new TypeReference<List<ItemList>>() {
+            });
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while converting string to JSON. Please contact administrator");
         }
 
         return ResponseInvoice.builder()
                 .companyName(invoice.getRecipientId().getCompanyName())
-                .Status(invoice.getStatus())
+                .Status(String.valueOf(invoice.getStatus()))
                 .invNumber(invoice.getInvoiceId())
                 .dueDate(invoice.getDueDate())
                 .amount(invoice.getAmount())
-                .type(invoice.getType())
+                .type(String.valueOf(invoice.getType()))
                 .itemList(itemLists)
                 .build();
     }

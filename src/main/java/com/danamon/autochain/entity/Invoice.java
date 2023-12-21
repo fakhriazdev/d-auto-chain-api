@@ -1,5 +1,7 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.Type;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.google.gson.JsonArray;
@@ -10,7 +12,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import java.util.Date;
 import java.util.List;
@@ -36,11 +37,13 @@ public class Invoice extends HistoryLog {
     @Column(nullable = false)
     private Date dueDate;
     @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
     @Column(nullable = false)
     private Long amount;
     @Column(nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private Type type;
     @Column(columnDefinition = "TEXT")
     private String itemList;
 }
