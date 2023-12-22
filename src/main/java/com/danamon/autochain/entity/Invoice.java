@@ -31,6 +31,8 @@ public class Invoice extends HistoryLog {
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
     private Company senderId;
+    @Column(name = "inv_date", nullable = false)
+    private Date invDate;
     @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false)
     private Company recipientId;
