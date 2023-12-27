@@ -22,9 +22,10 @@ import java.util.List;
 @Table(name = "t_partnership")
 public class Partnership {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
-    private String partnership_no;
+//    @GenericGenerator(name = "uuid", strategy = "uuid")
+//    @GeneratedValue(generator = "uuid")
+    @Column(name = "partnership_no")
+    private String partnershipNo;
 
     @ManyToOne
     @JoinColumn(name = "company_id")
@@ -46,11 +47,17 @@ public class Partnership {
     @Column(name = "partner_confirmation_date", length = 128)
     private LocalDateTime partnerConfirmationDate;
 
-    @OneToOne
-    @JoinColumn(name= "requested_by")
+//    @OneToOne
+//    @JoinColumn(name= "requested_by")
+    @ManyToOne
+    @JoinColumn(name = "requested_by")
+    @JsonBackReference
     private Credential requestedBy;
 
-    @OneToOne
-    @JoinColumn(name= "confirmed_by")
+//    @OneToOne
+//    @JoinColumn(name= "confirmed_by")
+    @ManyToOne
+    @JoinColumn(name = "confirmed_by")
+    @JsonBackReference
     private Credential confirmedBy;
 }

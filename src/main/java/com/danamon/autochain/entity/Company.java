@@ -18,8 +18,8 @@ import java.util.List;
 @Table(name = "m_company")
 public class Company {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
+//    @GenericGenerator(name = "uuid", strategy = "uuid")
+//    @GeneratedValue(generator = "uuid")
     @Column(name = "companyId", nullable = false)
     private String company_id;
 

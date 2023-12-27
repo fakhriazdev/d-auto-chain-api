@@ -20,4 +20,5 @@ public interface AuthService {
 //    LoginResponse loginBackOffice(LoginRequest request);
     String getByEmail(String email);
     void updatePassword(String id, String Password);
+    String logout();
 }

@@ -9,7 +9,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface PartnershipRepository extends JpaRepository<Partnership, String>, JpaSpecificationExecutor<Partnership> {
+    Optional<Partnership> findPartnershipByPartnershipNo(@Param("partnership_no") String id);
     @Query("SELECT p FROM Partnership p WHERE p.company.company_id = :companyId")
     Page<Partnership> findAllByCompanyId(@Param("companyId") String id, Pageable pageable);
 }

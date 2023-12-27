@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,7 +78,10 @@ public class CompanyServiceImpl implements CompanyService {
                     companyFileService.createFile(multipartFile)
             ).collect(Collectors.toList());
 
+            String id = generateCompanyId(request);
+
             Company company = Company.builder()
+                    .company_id(id)
                     .companyName(request.getCompanyName())
                     .province(request.getProvince())
                     .city(request.getCity())
@@ -155,6 +159,28 @@ public class CompanyServiceImpl implements CompanyService {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private String generateCompanyId(NewCompanyRequest request) {
+        String kode = "";
+        String companyCode = "";
+        while (true) {
+            String[] words = request.getCompanyName().split(" ");
+            companyCode = words[1].substring(0, 3).toUpperCase();
+            int min = 1;
+            int max = 999;
+
+            int randomNumber = (int) (Math.random() * (max - min + 1)) + min;
+
+            kode = String.format("%03d", randomNumber);
+
+            Optional<Company> availableCompany = companyRepository.findById(companyCode + kode);
+            if(availableCompany.isEmpty()) {
+                break;
+            }
+        }
+
+        return companyCode + kode;
     }
 
     @Transactional(rollbackFor = Exception.class)

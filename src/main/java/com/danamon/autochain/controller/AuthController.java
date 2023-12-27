@@ -4,11 +4,15 @@ import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.auth.*;
 import com.danamon.autochain.service.AuthService;
 import com.danamon.autochain.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,8 +49,33 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok("Logout successful");
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        String logoutMessage = authService.logout();
+
+        request.getSession().invalidate();
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("JSESSIONID".equals(cookie.getName())) {
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                    break;
+                }
+            }
+        }
+
+        new SecurityContextLogoutHandler().logout(request, response, null);
+
+        DataResponse<String> responseLogout = DataResponse.<String>builder()
+                .message(logoutMessage)
+                .statusCode(HttpStatus.OK.value())
+                .data(null)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseLogout);
     }
 
     @PostMapping("/verifyOtp")

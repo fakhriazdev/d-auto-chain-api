@@ -1,6 +1,8 @@
 package com.danamon.autochain.service.impl;
 
+import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.PartnershipStatus;
+import com.danamon.autochain.dto.company.NewCompanyRequest;
 import com.danamon.autochain.dto.partnership.NewPartnershipRequest;
 import com.danamon.autochain.dto.partnership.PartnershipResponse;
 import com.danamon.autochain.dto.partnership.SearchPartnershipRequest;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,35 +35,82 @@ public class PartnershipServiceImpl implements PartnershipService {
     private final ValidationUtil validationUtil;
     private final CompanyService companyService;
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public PartnershipResponse addPartnership(NewPartnershipRequest request) {
-        validationUtil.validate(request);
+    public String rejectPartnership(String partnershipId) {
+        Partnership partnership = findByIdOrThrowNotFound(partnershipId);
 
-        Company company = companyService.getById(request.getCompanyId());
-        Company partner = companyService.getById(request.getPartnershipId());
+        partnershipRepository.delete(partnership);
 
+        return "Rejected partnership";
+    }
+
+    @Override
+    public PartnershipResponse acceptPartnership(String partnershipId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
-        log.info(authentication.getPrincipal().toString());
+
         Credential userCredential = (Credential) authentication.getPrincipal();
 
-        Partnership partnership = Partnership.builder()
-                .company(company)
-                .partner(partner)
-                .partnerStatus(PartnershipStatus.PENDING)
-                .partnerRequestedDate(LocalDateTime.now())
-                .partnerConfirmationDate(null)
-                .requestedBy(userCredential)
-                .confirmedBy(null)
-                .build();
+        Partnership partnership = findByIdOrThrowNotFound(partnershipId);
+        partnership.setPartnerStatus(PartnershipStatus.IN_PARTNER);
+        partnership.setPartnerConfirmationDate(LocalDateTime.now());
+        partnership.setConfirmedBy(userCredential);
+        Partnership partnershipUpdated = partnershipRepository.saveAndFlush(partnership);
 
-        Partnership partnershipSaved = partnershipRepository.saveAndFlush(partnership);
+        return mapToResponse(partnershipUpdated);
+    }
 
-        return mapToResponse(partnershipSaved);
+    private Partnership findByIdOrThrowNotFound(String id) {
+        return partnershipRepository.findById(id).orElseThrow(() -> new RuntimeException("partnerships not found"));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public PartnershipResponse addPartnership(NewPartnershipRequest request) {
+        try {
+            validationUtil.validate(request);
+
+            Company company = companyService.getById(request.getCompanyId());
+            Company partner = companyService.getById(request.getPartnerId());
+
+            String id = "CP/" + request.getCompanyId() + "/" +request.getPartnerId();
+            // check by id partnership
+            Optional<Partnership> partnershipByPartnershipNo = partnershipRepository.findPartnershipByPartnershipNo(id);
+            if (partnershipByPartnershipNo.isPresent()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Partnership already exist");
+
+            // check by reverse company and partner (indicator partner)
+            Page<Partnership> allByPartnerId = partnershipRepository.findAllByCompanyId(request.getPartnerId(), null);
+            Optional<Partnership> partnershipByPartner = allByPartnerId.stream().findFirst().filter(partnership -> partnership.getPartner().getCompany_id() == request.getCompanyId());
+            if (partnershipByPartner.isPresent()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Partnership already exist");
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+
+            Credential userCredential = (Credential) authentication.getPrincipal();
+            System.out.println();
+            Partnership partnership = Partnership.builder()
+                    .partnershipNo(id)
+                    .company(company)
+                    .partner(partner)
+                    .partnerStatus(userCredential.getActor() == ActorType.BACKOFFICE ? PartnershipStatus.IN_PARTNER : PartnershipStatus.PENDING)
+                    .partnerRequestedDate(LocalDateTime.now())
+                    .partnerConfirmationDate(null)
+                    .requestedBy(userCredential)
+                    .confirmedBy(null)
+                    .build();
+
+            Partnership partnershipSaved = partnershipRepository.saveAndFlush(partnership);
+
+            return mapToResponse(partnershipSaved);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
     @Transactional(readOnly = true)
     @Override
@@ -73,7 +123,7 @@ public class PartnershipServiceImpl implements PartnershipService {
 
     private PartnershipResponse mapToResponse(Partnership partnership) {
         return PartnershipResponse.builder()
-                .partnershipId(partnership.getPartnership_no())
+                .partnershipId(partnership.getPartnershipNo())
                 .companyId(partnership.getCompany().getCompany_id())
                 .partnerId(partnership.getPartner().getCompany_id())
                 .partnerStatus(partnership.getPartnerStatus().toString())
