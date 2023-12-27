@@ -21,5 +21,6 @@ public class InvoiceDetailResponse {
     private CompanyResponse companyRecipient;
     private CompanyResponse companyFrom;
     private String processingStatus;
+    private String type;
     private List<ItemList> itemList;
 }

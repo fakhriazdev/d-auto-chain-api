@@ -33,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -82,11 +83,26 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public InvoiceDetailResponse getInvoiceDetail(String id) {
-        // get invoice by id
-        Invoice invoice = invoiceRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        //get current user login
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "User Not Found"));
+
+        // get invoice by recipient and id
+        Optional<Invoice> invoiceByRecipientIdAndInvoiceId = invoiceRepository.findInvoiceByRecipientIdAndInvoiceId(user.getCompany(), id);
+
+        if (invoiceByRecipientIdAndInvoiceId.isEmpty()){
+            Invoice invoice = invoiceRepository.findInvoiceBySenderIdAndInvoiceId(user.getCompany(), id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Invoice Not Found"));
+
+            InvoiceDetailResponse invoiceDetailResponse = mapToInvoiceDetailResponse(invoice);
+            invoiceDetailResponse.setType("Receivable");
+            return invoiceDetailResponse;
+        }
 
         // map json to string
-        return mapToInvoiceDetailResponse(invoice);
+        InvoiceDetailResponse invoiceDetailResponse = mapToInvoiceDetailResponse(invoiceByRecipientIdAndInvoiceId.get());
+        invoiceDetailResponse.setType("Payable");
+
+        return invoiceDetailResponse;
     }
 
     @Override
@@ -149,16 +165,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 );
                 predicates.add(status);
             }
-
-/*
-            if (request.getType() != null) {
-                Predicate type = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("type")),
-                        request.getType().toLowerCase()
-                );
-                predicates.add(type);
-            }
-*/
 
             String column = "senderId";
             assert request.getType() != null;
