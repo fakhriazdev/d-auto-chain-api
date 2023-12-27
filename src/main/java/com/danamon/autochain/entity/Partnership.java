@@ -22,9 +22,10 @@ import java.util.List;
 @Table(name = "t_partnership")
 public class Partnership {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
-    private String partnership_no;
+//    @GenericGenerator(name = "uuid", strategy = "uuid")
+//    @GeneratedValue(generator = "uuid")
+    @Column(name = "partnership_no")
+    private String partnershipNo;
 
     @ManyToOne
     @JoinColumn(name = "company_id")
