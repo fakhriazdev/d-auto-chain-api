@@ -1,17 +1,22 @@
 package com.danamon.autochain.service.impl;
 
 
-import com.danamon.autochain.dto.Invoice.InvoiceResponse;
-import com.danamon.autochain.dto.Invoice.RequestInvoice;
-import com.danamon.autochain.dto.Invoice.SearchInvoiceRequest;
-import com.danamon.autochain.entity.Company;
-import com.danamon.autochain.entity.Credential;
-import com.danamon.autochain.entity.Invoice;
-import com.danamon.autochain.entity.User;
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
+import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.dto.Invoice.ItemList;
+import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
+import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
+import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
+import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.InvoiceRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,10 +38,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceRepository invoiceRepository;
-    private final CredentialService credentialService;
     private final CompanyService companyService;
     private final UserRepository userRepository;
-    private final CompanyService companyService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -68,7 +72,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         List<ItemList> itemLists = mapStringToJson(invoice.getItemList());
         return InvoiceResponse.builder()
                 .companyName(invoice.getRecipientId().getCompanyName())
-                .Status(String.valueOf(invoice.getStatus()))
+                .status(String.valueOf(invoice.getStatus()))
                 .invNumber(invoice.getInvoiceId())
                 .dueDate(invoice.getDueDate())
                 .amount(invoice.getAmount())
@@ -146,13 +150,15 @@ public class InvoiceServiceImpl implements InvoiceService {
                 predicates.add(status);
             }
 
-//            if (request.getType() != null) {
-//                Predicate type = criteriaBuilder.equal(
-//                        criteriaBuilder.lower(root.get("type")),
-//                        request.getType().toLowerCase()
-//                );
-//                predicates.add(type);
-//            }
+/*
+            if (request.getType() != null) {
+                Predicate type = criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("type")),
+                        request.getType().toLowerCase()
+                );
+                predicates.add(type);
+            }
+*/
 
             String column = "senderId";
             assert request.getType() != null;
@@ -185,20 +191,20 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private InvoiceResponse mapToResponsePayable(Invoice invoice) {
         return InvoiceResponse.builder()
-                .invoice_id(invoice.getInvoiceId())
+                .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
-                .company(invoice.getSenderId().getCompanyName())
-                .status(invoice.getStatus())
+                .companyName(invoice.getRecipientId().getCompanyName())
+                .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
     }
 
     private InvoiceResponse mapToResponseReceivable(Invoice invoice) {
         return InvoiceResponse.builder()
-                .invoice_id(invoice.getInvoiceId())
+                .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
-                .company(invoice.getRecipientId().getCompanyName())
-                .status(invoice.getStatus())
+                .companyName(invoice.getRecipientId().getCompanyName())
+                .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
     }

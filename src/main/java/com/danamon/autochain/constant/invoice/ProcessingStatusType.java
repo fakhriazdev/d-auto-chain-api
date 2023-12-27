@@ -5,4 +5,5 @@ public enum ProcessingStatusType {
     REJECT_INVOICE,
     RESOLVE_INVOICE,
     APPROVE_INVOICE
+
 }

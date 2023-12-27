@@ -9,11 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SearchInvoiceRequest {
-    private Integer page;
-    private Integer size;
-    private String direction;
-    private String status;
-    private String type;
+public class ItemList {
+    private String itemsName;
+    private Integer itemsQuantity;
+    private Long unitPrice;
 }
-

@@ -3,14 +3,9 @@ package com.danamon.autochain.controller;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
-import com.danamon.autochain.service.InvoiceService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import lombok.Data;
-import com.danamon.autochain.dto.Invoice.InvoiceResponse;
-import com.danamon.autochain.dto.Invoice.RequestInvoice;
-import com.danamon.autochain.dto.Invoice.SearchInvoiceRequest;
 import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.entity.Invoice;
 import com.danamon.autochain.service.InvoiceService;
@@ -43,40 +38,13 @@ public class InvoiceController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "id")String id){
-        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(id);
-        DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Success Get Invoice Data")
-                .data(invoiceDetail)
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/update")
-    public ResponseEntity<?> updateInvoiceProcessingStatus(@RequestParam(name = "id")String id,@RequestParam(name = "type")String processingType){
-        try{
-            InvoiceDetailResponse invoiceDetailResponse = invoiceService.updateInvoiceStatus(id, ProcessingStatusType.valueOf(processingType.toUpperCase()));
-
-            DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
-                    .data(invoiceDetailResponse)
-                    .message("Success Updating Invoice")
-                    .statusCode(HttpStatus.OK.value())
-                    .build();
-            return ResponseEntity.ok(processingType);
-        }catch (IllegalArgumentException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Type");
-        }
-    }
-
     @GetMapping
     @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
     public ResponseEntity<?> getAllInvoice(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false) String type,
+            @RequestParam(required = false, defaultValue = "payable") String type,
             @RequestParam(required = false) String status
     ){
         page = PagingUtil.validatePage(page);
@@ -107,6 +75,33 @@ public class InvoiceController {
                 .statusCode(HttpStatus.CREATED.value())
                 .build();
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateInvoiceProcessingStatus(@RequestParam(name = "id")String id,@RequestParam(name = "type")String processingType){
+        try{
+            InvoiceDetailResponse invoiceDetailResponse = invoiceService.updateInvoiceStatus(id, ProcessingStatusType.valueOf(processingType.toUpperCase()));
+
+            DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
+                    .data(invoiceDetailResponse)
+                    .message("Success Updating Invoice")
+                    .statusCode(HttpStatus.OK.value())
+                    .build();
+            return ResponseEntity.ok(response);
+        }catch (IllegalArgumentException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Type");
+        }
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "id")String id){
+        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(id);
+        DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success Get Invoice Data")
+                .data(invoiceDetail)
+                .build();
         return ResponseEntity.ok(response);
     }
 }
