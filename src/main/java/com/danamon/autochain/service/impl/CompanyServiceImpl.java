@@ -269,6 +269,7 @@ public class CompanyServiceImpl implements CompanyService {
                         .url("/api/companies/" + companyFiles.getId() + "/file")
                         .build()
         ).collect(Collectors.toList());
+
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())
                 .companyName(company.getCompanyName())

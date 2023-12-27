@@ -12,7 +12,8 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.Date;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -22,18 +23,21 @@ public class Invoice extends HistoryLog {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "invoice_id", nullable = false)
+    @Column(name = "invoiceId", nullable = false)
     private String invoiceId;
+
     @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "senderId", nullable = false)
     private Company senderId;
     @Column(name = "inv_date", nullable = false)
     private Date invDate;
     @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
+    @JoinColumn(name = "recipientId", nullable = false)
     private Company recipientId;
+
     @Column(nullable = false)
     private Date dueDate;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status;

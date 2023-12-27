@@ -1,6 +1,5 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.ActorType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
