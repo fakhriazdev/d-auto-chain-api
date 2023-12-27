@@ -11,7 +11,6 @@ import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.InvoiceRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.service.InvoiceService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -36,32 +35,97 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final CredentialService credentialService;
     private final CompanyService companyService;
     private final UserRepository userRepository;
+    private final CompanyService companyService;
+    private final ObjectMapper objectMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Invoice invoiceGeneration(RequestInvoice requestInvoice) {
+    public InvoiceResponse invoiceGeneration(RequestInvoice requestInvoice) {
         //get current user login
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        //validation user id in request invoice
-        Credential userDetails = (Credential) credentialService.loadUserByUserId(requestInvoice.getRecipientId());
+        //Get company data from request
+        Company recipientCompany = companyService.getById(requestInvoice.getRecipientId());
 
         //get userDetails data (include company) by user current login
         User currentUserLogin = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User Not Found"));
 
-        //get userDetails data (include company) by recipient
-        User recipientData = userRepository.findUserByCredential(userDetails.getUser().getCredential()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User Not Found"));
-
         //setup Invoice
         Invoice invoice = Invoice.builder()
                 .senderId(currentUserLogin.getCompany())
-                .recipientId(recipientData.getCompany())
+                .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
-                .status(requestInvoice.getStatus())
+                .status(Status.PENDING)
+                .invDate(requestInvoice.getInvDate())
                 .amount(requestInvoice.getAmount())
+                .createdDate(LocalDateTime.now())
+                .createdBy(principal.getCredentialId())
+                .itemList(requestInvoice.getItemList())
                 .build();
 
         invoiceRepository.saveAndFlush(invoice);
-        return null;
+
+        List<ItemList> itemLists = mapStringToJson(invoice.getItemList());
+        return InvoiceResponse.builder()
+                .companyName(invoice.getRecipientId().getCompanyName())
+                .Status(String.valueOf(invoice.getStatus()))
+                .invNumber(invoice.getInvoiceId())
+                .dueDate(invoice.getDueDate())
+                .amount(invoice.getAmount())
+                .itemList(itemLists)
+                .build();
+    }
+
+    @Override
+    public InvoiceDetailResponse getInvoiceDetail(String id) {
+        // get invoice by id
+        Invoice invoice = invoiceRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        // map json to string
+        return mapToInvoiceDetailResponse(invoice);
+    }
+
+    @Override
+    public InvoiceDetailResponse updateInvoiceStatus(String id, ProcessingStatusType processingStatusType) {
+
+        Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        if (invoice.getProcessingStatus()!= null){
+            if (invoice.getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice With Status CANCEL Cannot Be Updated");
+            }
+        }
+        invoice.setProcessingStatus(processingStatusType);
+        invoiceRepository.saveAndFlush(invoice);
+
+        return mapToInvoiceDetailResponse(invoice);
+    }
+
+    private InvoiceDetailResponse mapToInvoiceDetailResponse(Invoice invoice) {
+        // map json to string
+        List<ItemList> itemLists = mapStringToJson(invoice.getItemList());
+
+        CompanyResponse companySender = companyService.findById(invoice.getSenderId().getCompany_id());
+        CompanyResponse companyRecipient = companyService.findById(invoice.getRecipientId().getCompany_id());
+
+        return InvoiceDetailResponse.builder()
+                .companyFrom(companySender)
+                .companyRecipient(companyRecipient)
+                .invoiceId(invoice.getInvoiceId())
+                .date(invoice.getInvDate())
+                .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .itemList(itemLists)
+                .build();
+    }
+
+    private List<ItemList> mapStringToJson(String itemList) {
+        try {
+            return objectMapper.readValue(itemList, new TypeReference<List<ItemList>>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while converting string to JSON. Please contact administrator");
+        }
     }
 
     @Override
