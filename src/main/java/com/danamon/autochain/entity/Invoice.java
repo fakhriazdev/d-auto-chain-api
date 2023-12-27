@@ -40,6 +40,6 @@ public class Invoice extends HistoryLog {
     @Column(nullable = false)
     private Integer amount;
 
-    @Column(nullable = false)
-    private String type;
+//    @Column(nullable = false)
+//    private String type;
 }

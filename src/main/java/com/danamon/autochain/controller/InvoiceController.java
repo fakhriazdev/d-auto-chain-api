@@ -41,7 +41,7 @@ public class InvoiceController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "payable") String type,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) String status
     ){
         page = PagingUtil.validatePage(page);
