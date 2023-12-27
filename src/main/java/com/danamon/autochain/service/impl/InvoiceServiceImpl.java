@@ -12,7 +12,6 @@ import com.danamon.autochain.repository.InvoiceRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -147,13 +146,13 @@ public class InvoiceServiceImpl implements InvoiceService {
                 predicates.add(status);
             }
 
-            if (request.getType() != null) {
-                Predicate type = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("type")),
-                        request.getType().toLowerCase()
-                );
-                predicates.add(type);
-            }
+//            if (request.getType() != null) {
+//                Predicate type = criteriaBuilder.equal(
+//                        criteriaBuilder.lower(root.get("type")),
+//                        request.getType().toLowerCase()
+//                );
+//                predicates.add(type);
+//            }
 
             String column = "senderId";
             assert request.getType() != null;
@@ -174,7 +173,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "type");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
         Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
 
         if(request.getType().equals("payable")){
@@ -190,7 +189,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .company(invoice.getSenderId().getCompanyName())
                 .status(invoice.getStatus())
-                .type(invoice.getType())
                 .dueDate(invoice.getDueDate())
                 .build();
     }
@@ -201,7 +199,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .company(invoice.getRecipientId().getCompanyName())
                 .status(invoice.getStatus())
-                .type(invoice.getType())
                 .dueDate(invoice.getDueDate())
                 .build();
     }
