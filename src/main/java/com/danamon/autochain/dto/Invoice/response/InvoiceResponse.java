@@ -17,6 +17,5 @@ public class InvoiceResponse {
     private Long amount;
     private Date dueDate;
     private String Status;
-    private String type;
     private List<ItemList> itemList;
 }

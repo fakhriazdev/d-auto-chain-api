@@ -1,6 +1,7 @@
 package com.danamon.autochain.service.impl;
 
 
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.constant.invoice.Type;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
@@ -53,7 +54,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .status(Status.PENDING)
                 .invDate(requestInvoice.getInvDate())
                 .amount(requestInvoice.getAmount())
-                .type(Type.PAYABLE)
                 .createdDate(LocalDateTime.now())
                 .createdBy(principal.getCredentialId())
                 .itemList(requestInvoice.getItemList())
@@ -68,7 +68,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .invNumber(invoice.getInvoiceId())
                 .dueDate(invoice.getDueDate())
                 .amount(invoice.getAmount())
-                .type(String.valueOf(invoice.getType()))
                 .itemList(itemLists)
                 .build();
     }
@@ -79,20 +78,43 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
         // map json to string
+        return mapToInvoiceDetailResponse(invoice);
+    }
+
+    @Override
+    public InvoiceDetailResponse updateInvoiceStatus(String id, ProcessingStatusType processingStatusType) {
+
+        Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        if (invoice.getProcessingStatus()!= null){
+            if (invoice.getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice With Status CANCEL Cannot Be Updated");
+            }
+        }
+        invoice.setProcessingStatus(processingStatusType);
+        invoiceRepository.saveAndFlush(invoice);
+
+        return mapToInvoiceDetailResponse(invoice);
+    }
+
+    private InvoiceDetailResponse mapToInvoiceDetailResponse(Invoice invoice) {
+        // map json to string
         List<ItemList> itemLists = mapStringToJson(invoice.getItemList());
 
         CompanyResponse companySender = companyService.findById(invoice.getSenderId().getCompany_id());
         CompanyResponse companyRecipient = companyService.findById(invoice.getRecipientId().getCompany_id());
 
-        // return response
         return InvoiceDetailResponse.builder()
                 .companyFrom(companySender)
                 .companyRecipient(companyRecipient)
                 .invoiceId(invoice.getInvoiceId())
                 .date(invoice.getInvDate())
                 .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .itemList(itemLists)
                 .build();
     }
+
     private List<ItemList> mapStringToJson(String itemList) {
         try {
             return objectMapper.readValue(itemList, new TypeReference<List<ItemList>>() {
@@ -101,5 +123,4 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while converting string to JSON. Please contact administrator");
         }
     }
-
 }

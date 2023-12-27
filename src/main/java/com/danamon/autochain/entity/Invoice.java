@@ -1,11 +1,7 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.Status;
-import com.danamon.autochain.constant.invoice.Type;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -43,9 +39,8 @@ public class Invoice extends HistoryLog {
     private Status status;
     @Column(nullable = false)
     private Long amount;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Type type;
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String itemList;
+    @Enumerated(EnumType.STRING)
+    private ProcessingStatusType processingStatus;
 }

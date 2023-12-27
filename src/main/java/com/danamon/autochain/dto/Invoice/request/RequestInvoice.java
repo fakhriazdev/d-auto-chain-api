@@ -18,14 +18,10 @@ public class RequestInvoice {
     private String recipientId; // company id
     @NotBlank(message = "Due Date is require")
     private Date dueDate;
-//    @NotBlank(message = "Status is require")
-//    private String status;
     @NotNull(message = "Amount is require")
     @Min(value = 1, message = "amount must greater then 0")
     private Long amount;
     private Date invDate;
-//    @NotBlank(message = "Type is require")
-//    private String type;
     @NotNull(message = "Item List is require")
     private String itemList;
 }

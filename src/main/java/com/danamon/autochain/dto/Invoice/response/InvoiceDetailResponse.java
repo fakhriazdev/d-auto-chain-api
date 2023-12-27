@@ -20,5 +20,6 @@ public class InvoiceDetailResponse {
     private Date dueDate;
     private CompanyResponse companyRecipient;
     private CompanyResponse companyFrom;
+    private String processingStatus;
     private List<ItemList> itemList;
 }
