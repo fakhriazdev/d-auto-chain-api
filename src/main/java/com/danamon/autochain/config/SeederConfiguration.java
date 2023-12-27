@@ -23,44 +23,41 @@ public class SeederConfiguration implements CommandLineRunner {
     private final BackOfficeRepository backOfficeRepository;
     private final CompanyRepository companyRepository;
     private final RolesRepository rolesRepository;
+    private final UserRepository userRepository;
     private final UserRolesRepository userRolesRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "erwinperdana2@gmail.com";
-    private final String userame= "rizda";
-    private final String password = "string";
+    private final String email = "wiryamn@gmail.com";
+    private final String username = "wiryaa";
+    private final String password = "12345678";
 
     @Override
     public void run(String... args) {
         Optional<Credential> byUsername = credentialRepository.findByEmail(email);
-        if(byUsername.isEmpty()){
+        if (byUsername.isEmpty()) {
             rolesSeeder();
             companySeeder();
             backofficeSeeder();
+            userSeeder();
         }
     }
 
-    public void backofficeSeeder(){
+    public void backofficeSeeder() {
 
         Roles superadmin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
-
-        UserRole userRole = UserRole.builder()
-                .role(superadmin)
-                .build();
 
         List<UserRole> role = new ArrayList<>();
         // Create and save seed data for Credential entity
         Credential adminCredential = new Credential();
-        adminCredential.setCredentialId("1");
         adminCredential.setEmail(email);
-        adminCredential.setUsername(userame);
+        adminCredential.setUsername(username);
         adminCredential.setPassword(bCryptUtil.hashPassword(password));
         adminCredential.setActor(ActorType.BACKOFFICE);
         adminCredential.setRoles(role);
         adminCredential.setModifiedDate(LocalDateTime.now());
         adminCredential.setCreatedDate(LocalDateTime.now());
-        adminCredential.setCreatedBy(userame);
-        adminCredential.setModifiedBy(userame);
+        adminCredential.setCreatedBy(username);
+        adminCredential.setModifiedBy(username);
 
         BackOffice backOffice = new BackOffice();
         backOffice.setCredential(adminCredential);
@@ -72,28 +69,64 @@ public class SeederConfiguration implements CommandLineRunner {
                         .build()
         );
 
-//        userRolesRepository.saveAllAndFlush(role);
         credentialRepository.saveAndFlush(adminCredential);
         backOfficeRepository.saveAndFlush(backOffice);
+
     }
 
-    public void companySeeder(){
+    public void userSeeder(){
+        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Company company = companyRepository.findBycompanyName("root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
+
+
+        Credential userCredential = Credential.builder()
+                .email("oreofinalprojectdtt@gmail.com")
+                .username("oreo")
+                .password(bCryptUtil.hashPassword("test12345"))
+                .actor(ActorType.BACKOFFICE)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy("oreo")
+                .modifiedBy("oreo")
+                .build();
+
+        credentialRepository.saveAndFlush(userCredential);
+
+        User user = new User();
+        user.setCompany(company);
+        user.setCredential(userCredential);
+
+        userRepository.saveAndFlush(user);
+
+        List<UserRole> roleUser = new ArrayList<>();
+        roleUser.add(
+                UserRole.builder()
+                        .role(superUser)
+                        .credential(userCredential)
+                        .build()
+        );
+
+        userCredential.setRoles(roleUser);
+
+    }
+
+    public void companySeeder() {
         Company company = new Company();
         company.setCompany_id("0");
-        company.setCompanyName("string");
-        company.setCompanyEmail("string");
-        company.setCity("string");
-        company.setAddress("string");
-        company.setAccountNumber("string");
+        company.setCompanyName("root");
+        company.setCompanyEmail("root");
+        company.setCity("root");
+        company.setAddress("root");
+        company.setAccountNumber("root");
         company.setFinancingLimit(12313d);
         company.setRemainingLimit(123513d);
-        company.setPhoneNumber("string");
-        company.setProvince("string");
+        company.setPhoneNumber("root");
+        company.setProvince("root");
 
         companyRepository.saveAndFlush(company);
     }
 
-    public void rolesSeeder(){
+    public void rolesSeeder() {
         List<Roles> allRole = List.of(
 //                ====================== BACK OFFICE ROLE ===============
                 Roles.builder().roleName(RoleType.SUPER_ADMIN.getName()).build(),

@@ -44,11 +44,9 @@ public class Credential extends HistoryLog implements UserDetails {
     private List<UserRole> roles;
 
     @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
-//    @JoinColumn(name = "backoffice_id" , foreignKey= @ForeignKey(name = "Fk_backoffice_id"))
     private BackOffice backOffice;
 
     @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
-//    @JoinColumn(name = "user_id" , foreignKey= @ForeignKey(name = "Fk_user_id"))
     private User user;
 
     @Override

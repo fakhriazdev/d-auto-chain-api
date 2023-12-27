@@ -9,6 +9,7 @@ import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.security.JwtUtil;
 import com.danamon.autochain.service.AuthService;
+import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.service.UserService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.OTPGenerator;
@@ -24,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final UserService userService;
+    private final CredentialService credentialService;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final CredentialRepository credentialRepository;
@@ -65,13 +68,15 @@ public class AuthServiceImpl implements AuthService {
 
             Optional<Credential> username = credentialRepository.findByUsername(request.getUsername());
             Optional<Credential> email = credentialRepository.findByEmail(request.getEmail());
-            Company company = companyRepository.findById(request.getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company not exist, invalid with ID "+ request.getCompany_id()));
+            Company company = companyRepository.findById(request.getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company not exist, invalid with ID " + request.getCompany_id()));
 
-            if (username.isPresent() || email.isPresent()) throw new ResponseStatusException(HttpStatus.CONFLICT, "username / email already exist");
+            if (username.isPresent() || email.isPresent())
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "username / email already exist");
 
             List<Roles> getRoles = rolesRepository.findAllById(request.getRole_id());
 
-            if(getRoles.size() != request.getRole_id().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "please check role ID is not exist");
+            if (getRoles.size() != request.getRole_id().size())
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "please check role ID is not exist");
 
             List<UserRole> userRoles = new ArrayList<>();
 
@@ -124,14 +129,14 @@ public class AuthServiceImpl implements AuthService {
 
         Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential"));
 
-        try{
+        try {
             Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     request.getEmail().toLowerCase(),
                     request.getPassword()
             ));
             SecurityContextHolder.getContext().setAuthentication(authenticate);
             SecurityContextHolder.getContext().setAuthentication(authenticate);
-        }catch (AuthenticationException e){
+        } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential");
         }
         HashMap<String, String> info = new HashMap<>();
@@ -146,19 +151,19 @@ public class AuthServiceImpl implements AuthService {
                     "<body style='width: 100%'>" +
                     "<div style='width: 100%;'>" +
                     "<header style='color:white; width: 100%; background: #F6833C; padding: 12px 10px; top:0;'>" +
-                        "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
+                    "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
                     "</header>" +
-                        "<div style='margin: auto;'>" +
+                    "<div style='margin: auto;'>" +
                     "<div><h5><center><u>Your OTP code is</u></center></h5></div><br>" +
-                    "<div><h1><center><u>"+otpResponse.getCode()+"</u></center></h1></div><br>" +
-                            "<div style='width: fit-content; height: fit-content; margin: auto;'>" +
-                                "<a href='"+otpResponse.getUrl()+"' style='text-decoration:none; color:white;'>" +
-                                    "<div style='padding:10px 40px; height: 40px; background: #F6833C;'>" +
-                                        "<h2 style='text-align:center; margin:0'>Input OTP</h2>" +
-                                    "</div>" +
-                                "</a>" +
-                            "</div>"+
-                        "</div>" +
+                    "<div><h1><center><u>" + otpResponse.getCode() + "</u></center></h1></div><br>" +
+                    "<div style='width: fit-content; height: fit-content; margin: auto;'>" +
+                    "<a href='" + otpResponse.getUrl() + "' style='text-decoration:none; color:white;'>" +
+                    "<div style='padding:10px 40px; height: 40px; background: #F6833C;'>" +
+                    "<h2 style='text-align:center; margin:0'>Input OTP</h2>" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
                     "</div>" +
                     "</body>" +
                     "</html>";
@@ -167,8 +172,8 @@ public class AuthServiceImpl implements AuthService {
 
             MailSender.mailer("OTP", info, user.getEmail());
             return "Please check your email to see OTP code";
-        }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"INTERNAL SERVER ERROR, Cannot Generate OTP Code, Please Contact Administrator");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR, Cannot Generate OTP Code, Please Contact Administrator");
         }
     }
 
@@ -179,11 +184,17 @@ public class AuthServiceImpl implements AuthService {
             if (!verifyOtp) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "INVALID OTP");
         }
 
         Credential user = credentialRepository.findByEmail(otpRequest.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Exist"));
+
+        UserDetails userDetails = credentialService.loadUserByUserId(user.getCredentialId());
+
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
         String token = jwtUtil.generateTokenUser(user);
 
@@ -191,17 +202,17 @@ public class AuthServiceImpl implements AuthService {
         user.getRoles().forEach(roles -> roleResponses.add(roles.getRole().getRoleName()));
 
         return LoginResponse.builder()
-                    .username(user.getUsername())
-                    .credential_id(user.getCredentialId())
-                    .roleType(roleResponses)
-                    .actorType(user.getActor().getName().toUpperCase())
-                    .token(token)
-                    .build();
+                .username(user.getUsername())
+                .credential_id(user.getCredentialId())
+                .roleType(roleResponses)
+                .actorType(user.getActor().getName().toUpperCase())
+                .token(token)
+                .build();
     }
 
     @Override
-    public String changePassword(ChangePasswordRequest request){
-        Credential credential = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"EMAIL NOT FOUND"));
+    public String changePassword(ChangePasswordRequest request) {
+        Credential credential = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "EMAIL NOT FOUND"));
 
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail().toLowerCase(),
@@ -209,7 +220,8 @@ public class AuthServiceImpl implements AuthService {
         ));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
 
-        if (!authenticate.isAuthenticated()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "INVALID PASSWORD");
+        if (!authenticate.isAuthenticated())
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "INVALID PASSWORD");
 
         credential.setPassword(bCryptUtil.hashPassword(request.getNewPassword()));
         credential.setModifiedDate(LocalDateTime.now());
@@ -222,16 +234,35 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String getByEmail(String email) {
         Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Email Not Found"));
-        /*User user = userRepository.findByCredential_credentialId(credential.getCredentialId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "User id Not Exist"));*/
 
-        HashMap<String,String> info = new HashMap<>();
-        String urlBuilder = "http://localhost:5432/user/forget/"+credential.getCredentialId();
-        try{
+        HashMap<String, String> info = new HashMap<>();
+        String urlBuilder = "http://localhost:5432/user/forget/" + credential.getCredentialId();
+        try {
             URL url = new URI(urlBuilder).toURL();
-            info.put("url", url.toString());
+            String recoveryPassword = "<html style='width: 100%;'>" +
+                    "<body style='width: 100%'>" +
+                    "<div style='width: 100%;'>" +
+                    "<header style='color:white; width: 100%; background: #F6833C; padding: 12px 10px; top:0;'>" +
+                    "<span><h2 style='text-align: center;'>D-Auto Chain</h2></span>" +
+                    "</header>" +
+                    "<div style='margin: auto;'>" +
+                    "<div><h5><center><u>Click Button To Recovery Password</u></center></h5></div><br>" +
+                    "<div><h1><center><u>" + " " + "</u></center></h1></div><br>" +
+                    "<div style='width: fit-content; height: fit-content; margin: auto;'>" +
+                    "<a href='" + url + "' style='text-decoration:none; color:white;'>" +
+                    "<div style='padding:10px 40px; height: 40px; background: #F6833C;'>" +
+                    "<h2 style='text-align:center; margin:0'>Click Me</h2>" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+            info.put("url", recoveryPassword);
             MailSender.mailer("Password Recovery Link", info, email);
             return "Success send link for email recovery";
-        }catch (MessagingException e){
+        } catch (MessagingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Send Email, Please Check Your Connection");
         } catch (MalformedURLException | URISyntaxException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot Generate URL, Please Contact Administrator");
@@ -240,7 +271,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void updatePassword(String id, String password) {
-        Credential credential = credentialRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT, "ID Not Found"));
+        Credential credential = credentialRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "ID Not Found"));
         credential.setPassword(bCryptUtil.hashPassword(password));
         credential.setModifiedDate(LocalDateTime.now());
         credentialRepository.saveAndFlush(credential);

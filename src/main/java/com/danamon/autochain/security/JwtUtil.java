@@ -22,7 +22,7 @@ public class JwtUtil {
     private String jwtSecret;
     @Value("${app.autochain.app-name}")
     private String appName;
-    @Value("${app.autochain.jwtExpirationInSecond}")
+    @Value("604800")
     private long jwtExpirationInSecond;
 
     public String generateTokenUser(Credential user) {

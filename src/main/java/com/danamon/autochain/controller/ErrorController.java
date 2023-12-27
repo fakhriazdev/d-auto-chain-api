@@ -23,7 +23,6 @@ public class ErrorController {
         );
     }
 
-
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<DataResponse<?>> dataIntegrity(ConstraintViolationException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(

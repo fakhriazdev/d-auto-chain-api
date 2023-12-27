@@ -57,7 +57,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 //                System.out.println(user.getUsername());
                 System.out.println("======== USER DETAILS====== \n"+ user.toString());
 
-
                 // validasi/authentication by token
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         user,
