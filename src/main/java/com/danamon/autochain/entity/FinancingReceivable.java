@@ -4,18 +4,20 @@ import com.danamon.autochain.constant.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.Date;
 import java.util.List;
 
-@Entity
-@Table(name = "t_financing_receivable")
+
 @NoArgsConstructor
 @Getter
 @Setter
 @AllArgsConstructor
 @SuperBuilder
+@Entity
+@Table(name = "t_financing_receivable")
 public class FinancingReceivable extends HistoryLog {
     @Id
     @UuidGenerator
@@ -34,7 +36,10 @@ public class FinancingReceivable extends HistoryLog {
     private FinancingStatus status;
 
     @Column
-    private Integer periodNumber;
+    private Double fee;
+
+    @Column
+    private Double total;
 
     @Column
     private Long amount;

@@ -1,9 +1,14 @@
 package com.danamon.autochain.dto.financing;
 
-import com.danamon.autochain.entity.Company;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Date;
 
+@Builder
+@Data
+@AllArgsConstructor
 public class FinancingResponse {
     String financing_id;
     Date date;
