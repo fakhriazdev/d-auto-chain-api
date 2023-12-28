@@ -48,6 +48,19 @@ public class AuthController {
                 .body(response);
     }
 
+    @PostMapping("/shortcut-login")
+    public ResponseEntity<?> shortcutLogin(@RequestBody LoginRequest request){
+        LoginResponse data = authService.shortcutLogin(request);
+        DataResponse<LoginResponse> response = DataResponse.<LoginResponse>builder()
+                .message("User Successfully login")
+                .statusCode(HttpStatus.OK.value())
+                .data(data)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
     @PostMapping("/logout")
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {

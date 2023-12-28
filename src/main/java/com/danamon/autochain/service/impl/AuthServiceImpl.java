@@ -303,4 +303,42 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
+
+    @Override
+    public LoginResponse shortcutLogin(LoginRequest request) {
+        validationUtil.validate(request);
+
+        Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential"));
+
+        try {
+            Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    request.getEmail().toLowerCase(),
+                    request.getPassword()
+            ));
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
+        } catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential");
+        }
+
+        UserDetails userDetails = credentialService.loadUserByUserId(user.getCredentialId());
+
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+
+        String token = jwtUtil.generateTokenUser(user);
+
+        List<String> roleResponses = new ArrayList<>();
+        user.getRoles().forEach(roles -> roleResponses.add(roles.getRole().getRoleName()));
+
+        return LoginResponse.builder()
+                .username(user.getUsername())
+                .credential_id(user.getCredentialId())
+                .roleType(roleResponses)
+                .actorType(user.getActor().getName().toUpperCase())
+                .token(token)
+                .companyId(user.getActor() == ActorType.BACKOFFICE ? null : user.getUser().getCompany().getCompany_id())
+                .build();
+    }
 }

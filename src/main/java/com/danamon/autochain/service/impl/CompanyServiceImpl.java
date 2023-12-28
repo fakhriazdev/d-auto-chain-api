@@ -78,7 +78,12 @@ public class CompanyServiceImpl implements CompanyService {
                     companyFileService.createFile(multipartFile)
             ).collect(Collectors.toList());
 
-            String id = generateCompanyId(request);
+            String id = "";
+            try {
+                id = generateCompanyId(request);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company name format invalid");
+            }
 
             Company company = Company.builder()
                     .company_id(id)
