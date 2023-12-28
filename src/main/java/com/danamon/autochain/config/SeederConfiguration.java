@@ -127,18 +127,18 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void rolesSeeder() {
-//        List<Roles> allRole = List.of(
-////                ====================== BACK OFFICE ROLE ===============
-//                Roles.builder().roleName(RoleType.SUPER_ADMIN.getName()).build(),
-//                Roles.builder().roleName(RoleType.ADMIN.getName()).build(),
-//                Roles.builder().roleName(RoleType.RELATIONSHIP_MANAGER.getName()).build(),
-//                Roles.builder().roleName(RoleType.CREDIT_ANALYST.getName()).build(),
-////                ========================= USER ROLE ====================
-//                Roles.builder().roleName(RoleType.SUPER_USER.getName()).build(),
-//                Roles.builder().roleName(RoleType.FINANCE_STAFF.getName()).build(),
-//                Roles.builder().roleName(RoleType.INVOICE_STAFF.getName()).build(),
-//                Roles.builder().roleName(RoleType.PAYMENT_STAFF.getName()).build()
-//        );
-//        rolesRepository.saveAllAndFlush(allRole);
+        List<Roles> allRole = List.of(
+//                ====================== BACK OFFICE ROLE ===============
+                Roles.builder().roleName(RoleType.SUPER_ADMIN.getName()).build(),
+                Roles.builder().roleName(RoleType.ADMIN.getName()).build(),
+                Roles.builder().roleName(RoleType.RELATIONSHIP_MANAGER.getName()).build(),
+                Roles.builder().roleName(RoleType.CREDIT_ANALYST.getName()).build(),
+//                ========================= USER ROLE ====================
+                Roles.builder().roleName(RoleType.SUPER_USER.getName()).build(),
+                Roles.builder().roleName(RoleType.FINANCE_STAFF.getName()).build(),
+                Roles.builder().roleName(RoleType.INVOICE_STAFF.getName()).build(),
+                Roles.builder().roleName(RoleType.PAYMENT_STAFF.getName()).build()
+        );
+        rolesRepository.saveAllAndFlush(allRole);
     }
 }
