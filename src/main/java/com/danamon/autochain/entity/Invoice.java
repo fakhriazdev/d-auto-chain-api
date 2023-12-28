@@ -41,10 +41,11 @@ public class Invoice extends HistoryLog {
     @Column(nullable = false)
     private Long amount;
 
-    @Column(columnDefinition = "TEXT", nullable = true)
+    @Column(columnDefinition = "TEXT")
     private String itemList;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ProcessingStatusType processingStatus;
 
     @OneToOne(mappedBy = "invoiceId" ,cascade = CascadeType.ALL)

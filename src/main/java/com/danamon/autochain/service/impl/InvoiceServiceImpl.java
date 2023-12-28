@@ -33,6 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +67,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
                 .status(Status.PENDING)
+                .processingStatus(ProcessingStatusType.WAITING_STATUS)
                 .amount(requestInvoice.getAmount())
                 .createdDate(LocalDateTime.now())
                 .createdBy(principal.getCredentialId())
@@ -175,7 +178,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .companyFrom(companySender)
                 .companyRecipient(companyRecipient)
                 .invoiceId(invoice.getInvoiceId())
-                .date(invoice.getCreatedDate())
+                .date(Date.valueOf(invoice.getCreatedDate().toLocalDate()))
                 .dueDate(invoice.getDueDate())
                 .processingStatus(invoice.getProcessingStatus().name())
                 .itemList(itemLists)

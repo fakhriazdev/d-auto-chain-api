@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 public class InvoiceDetailResponse {
     private String invoiceId;
-    private LocalDateTime date;
+    private Date date;
     private Date dueDate;
     private CompanyResponse companyRecipient;
     private CompanyResponse companyFrom;
