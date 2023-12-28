@@ -18,4 +18,5 @@ public class LoginResponse {
     private String username;
     private String actorType;
     private List<String> roleType;
+    private String companyId;
 }

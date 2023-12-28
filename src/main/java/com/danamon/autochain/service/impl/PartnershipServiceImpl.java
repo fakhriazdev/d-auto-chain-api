@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.PartnershipStatus;
+import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.NewCompanyRequest;
 import com.danamon.autochain.dto.partnership.NewPartnershipRequest;
 import com.danamon.autochain.dto.partnership.PartnershipResponse;
@@ -76,7 +77,7 @@ public class PartnershipServiceImpl implements PartnershipService {
             Company company = companyService.getById(request.getCompanyId());
             Company partner = companyService.getById(request.getPartnerId());
 
-            String id = "CP/" + request.getCompanyId() + "/" +request.getPartnerId();
+            String id = "CP-" + request.getCompanyId() + "-" +request.getPartnerId();
             // check by id partnership
             Optional<Partnership> partnershipByPartnershipNo = partnershipRepository.findPartnershipByPartnershipNo(id);
             if (partnershipByPartnershipNo.isPresent()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Partnership already exist");
@@ -124,8 +125,40 @@ public class PartnershipServiceImpl implements PartnershipService {
     private PartnershipResponse mapToResponse(Partnership partnership) {
         return PartnershipResponse.builder()
                 .partnershipId(partnership.getPartnershipNo())
-                .companyId(partnership.getCompany().getCompany_id())
-                .partnerId(partnership.getPartner().getCompany_id())
+                .company(
+                        CompanyResponse.builder()
+                                .companyId(partnership.getCompany().getCompany_id())
+                                .companyName(partnership.getCompany().getCompanyName())
+                                .province(partnership.getCompany().getProvince())
+                                .city(partnership.getCompany().getCity())
+                                .address(partnership.getCompany().getAddress())
+                                .phoneNumber(partnership.getCompany().getPhoneNumber())
+                                .companyEmail(partnership.getCompany().getCompanyEmail())
+                                .accountNumber(partnership.getCompany().getAccountNumber())
+                                .financingLimit(partnership.getCompany().getFinancingLimit())
+                                .reaminingLimit(partnership.getCompany().getRemainingLimit())
+                                .username(partnership.getCompany().getUser().getCredential().getUsername())
+                                .emailUser(partnership.getCompany().getUser().getCredential().getEmail())
+                                .files(null)
+                                .build()
+                )
+                .partner(
+                        CompanyResponse.builder()
+                                .companyId(partnership.getPartner().getCompany_id())
+                                .companyName(partnership.getPartner().getCompanyName())
+                                .province(partnership.getPartner().getProvince())
+                                .city(partnership.getPartner().getCity())
+                                .address(partnership.getPartner().getAddress())
+                                .phoneNumber(partnership.getPartner().getPhoneNumber())
+                                .companyEmail(partnership.getPartner().getCompanyEmail())
+                                .accountNumber(partnership.getPartner().getAccountNumber())
+                                .financingLimit(partnership.getPartner().getFinancingLimit())
+                                .reaminingLimit(partnership.getPartner().getRemainingLimit())
+                                .username(partnership.getPartner().getUser().getCredential().getUsername())
+                                .emailUser(partnership.getPartner().getUser().getCredential().getEmail())
+                                .files(null)
+                                .build()
+                )
                 .partnerStatus(partnership.getPartnerStatus().toString())
                 .partnerRequestedDate(partnership.getPartnerRequestedDate().toString())
                 .partnerConfirmationDate(partnership.getPartnerConfirmationDate() != null ? partnership.getPartnerConfirmationDate().toString() : null)
