@@ -27,9 +27,9 @@ import java.util.List;
 public class PartnershipController {
     private final PartnershipService partnershipService;
 
-    @GetMapping("/{idPartnership}/reject")
-    public ResponseEntity<?> rejectPartnership(@PathVariable String idPartnership) {
-        String partnershipResponse = partnershipService.rejectPartnership(idPartnership);
+    @GetMapping("/{partnershipNo}/reject")
+    public ResponseEntity<?> rejectPartnership(@PathVariable String partnershipNo) {
+        String partnershipResponse = partnershipService.rejectPartnership(partnershipNo);
         DataResponse<PartnershipResponse> response = DataResponse.<PartnershipResponse>builder()
                 .message(partnershipResponse)
                 .statusCode(HttpStatus.OK.value())
@@ -39,9 +39,9 @@ public class PartnershipController {
                 .status(HttpStatus.OK)
                 .body(response);
     }
-    @GetMapping("/{idPartnership}/accept")
-    public ResponseEntity<?> acceptPartnership(@PathVariable String idPartnership) {
-        PartnershipResponse partnershipResponse = partnershipService.acceptPartnership(idPartnership);
+    @GetMapping("/{partnershipNo}/accept")
+    public ResponseEntity<?> acceptPartnership(@PathVariable String partnershipNo) {
+        PartnershipResponse partnershipResponse = partnershipService.acceptPartnership(partnershipNo);
         DataResponse<PartnershipResponse> response = DataResponse.<PartnershipResponse>builder()
                 .message("successfully accept partnerships")
                 .statusCode(HttpStatus.OK.value())

@@ -1,6 +1,8 @@
 package com.danamon.autochain.dto.partnership;
 
 import com.danamon.autochain.dto.FileResponse;
+import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.entity.Company;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +16,8 @@ import java.util.List;
 @Builder
 public class PartnershipResponse {
     private String partnershipId;
-    private String companyId;
-    private String partnerId;
+    private CompanyResponse company;
+    private CompanyResponse partner;
     private String partnerStatus;
     private String partnerRequestedDate;
     private String partnerConfirmationDate;
