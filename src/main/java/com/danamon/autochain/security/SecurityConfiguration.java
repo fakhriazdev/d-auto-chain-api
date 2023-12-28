@@ -47,11 +47,11 @@ public class SecurityConfiguration {
                 )
                 .authorizeHttpRequests(n -> n
                                 .requestMatchers("/api/auth/logout").authenticated()
-                            .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/locations/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-//                                .anyRequest().permitAll() //kode to unclock security
-                            .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .anyRequest().permitAll() //kode to unclock security
+//                            .anyRequest().authenticated()
                 )
                 .exceptionHandling((exceptionHandling) ->
                         exceptionHandling.authenticationEntryPoint(authEntryPoint)

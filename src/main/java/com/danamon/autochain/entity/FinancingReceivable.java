@@ -4,32 +4,31 @@ import com.danamon.autochain.constant.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.validator.constraints.UUID;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
-@Table(name = "t_financing")
+@Table(name = "t_financing_receivable")
 @NoArgsConstructor
 @Getter
 @Setter
 @AllArgsConstructor
 @SuperBuilder
-public class Financing extends HistoryLog {
+public class FinancingReceivable extends HistoryLog {
     @Id
     @UuidGenerator
     @Column(name = "financingId", length = 128, nullable = false)
     private String financingId;
 
-    @JoinColumn
+    @JoinColumn(name = "invoiceId")
     @OneToOne
-    private Invoice invoiceId;
+    private Invoice invoice;
 
-    @JoinColumn
+    @JoinColumn(name = "companyId")
     @ManyToOne
-    private  Company companyId;
+    private  Company company;
 
     @Enumerated(EnumType.STRING)
     private FinancingStatus status;
@@ -41,8 +40,9 @@ public class Financing extends HistoryLog {
     private Long amount;
 
     @Column
-    Date disbursment_date;
+    private Date disbursment_date;
 
     @Column
     private String  financingType;
+
 }

@@ -19,16 +19,32 @@ public class Payment {
     @GeneratedValue(generator = "uuid")
     private String transactionId;
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "invoiceId")
     private Invoice invoice;
 
-    // tambahin entity financing
+    @ManyToOne
+    @JoinColumn(name = "financingPayableId")
+    private FinancingPayable financingPayable;
 
+    @Column
     private Long amount;
+
+    @Column
     private String type;
+
+    @Column
     private String dueDate;
+
+    @Column
     private String paidDate;
+
+    @Column
     private Boolean method;
+
+    @Column
     private Boolean source;
+
+    @Column
     private Boolean outstandingFlag;
 }
