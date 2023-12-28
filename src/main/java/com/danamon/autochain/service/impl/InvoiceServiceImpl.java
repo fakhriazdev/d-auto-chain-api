@@ -2,14 +2,17 @@ package com.danamon.autochain.service.impl;
 
 
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
+import com.danamon.autochain.constant.invoice.ReasonType;
 import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.entity.*;
+import com.danamon.autochain.repository.InvoiceIssueLogRepository;
 import com.danamon.autochain.repository.InvoiceRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
@@ -42,6 +45,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final CompanyService companyService;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final InvoiceIssueLogRepository invoiceIssueLogRepository;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -80,6 +84,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public InvoiceDetailResponse getInvoiceDetail(String id) {
         //get current user login
@@ -104,16 +109,55 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceDetailResponse;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Deprecated
     @Override
-    public InvoiceDetailResponse updateInvoiceStatus(String id, ProcessingStatusType processingStatusType) {
+    public void updateInvoiceIssueLog(RequestInvoiceStatus requestInvoiceStatus) {
+        invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
-        Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        updateInvoiceStatus(requestInvoiceStatus);
+    }
 
-        if (invoice.getProcessingStatus()!= null){
-            if (invoice.getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)){
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public InvoiceDetailResponse updateInvoiceStatus(RequestInvoiceStatus requestInvoiceStatus) {
+
+        Invoice invoice = invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        if (invoice.getProcessingStatus() != null) {
+            if (invoice.getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice With Status CANCEL Cannot Be Updated");
             }
         }
+        ProcessingStatusType processingStatusType;
+        try {
+            processingStatusType = ProcessingStatusType.valueOf(requestInvoiceStatus.getProcessingType());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Status Type");
+        }
+
+        if (processingStatusType.equals(ProcessingStatusType.CANCEL_INVOICE)) {
+            // cancel by seller
+            invoice.setProcessingStatus(ProcessingStatusType.CANCEL_INVOICE);
+            invoice.setStatus(Status.CANCELLED);
+        } else if (processingStatusType.equals(ProcessingStatusType.REJECT_INVOICE)) {
+            // rejected by buyer
+            // create invoice issue log
+            InvoiceIssueLog invoiceIssueLog = InvoiceIssueLog.builder()
+                    .issueType(ReasonType.valueOf(requestInvoiceStatus.getReasonType()))
+                    .invoice(invoice)
+                    .reason(requestInvoiceStatus.getReason())
+                    .build();
+            invoiceIssueLogRepository.save(invoiceIssueLog);
+            // update invoice
+            invoice.setProcessingStatus(ProcessingStatusType.REJECT_INVOICE);
+            invoice.setStatus(Status.DISPUTED);
+        } else if (processingStatusType.equals(ProcessingStatusType.APPROVE_INVOICE)) {
+            // approve
+            invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
+            invoice.setStatus(Status.UNPAID);
+        }
+
         invoice.setProcessingStatus(processingStatusType);
         invoiceRepository.saveAndFlush(invoice);
 
