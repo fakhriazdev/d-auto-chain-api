@@ -1,9 +1,7 @@
 package com.danamon.autochain.repository;
 
-import com.danamon.autochain.entity.Financing;
+import com.danamon.autochain.entity.FinancingReceivable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
-public interface FinancingRepository  extends JpaRepository<Financing, String> {
+public interface FinancingRepository  extends JpaRepository<FinancingReceivable, String> {
 }

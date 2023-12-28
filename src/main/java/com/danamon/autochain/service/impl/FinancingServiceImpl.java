@@ -4,7 +4,7 @@ import com.danamon.autochain.constant.FinancingStatus;
 import com.danamon.autochain.dto.financing.ReceivableRequest;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
-import com.danamon.autochain.entity.Financing;
+import com.danamon.autochain.entity.FinancingReceivable;
 import com.danamon.autochain.entity.User;
 import com.danamon.autochain.repository.CompanyRepository;
 import com.danamon.autochain.repository.FinancingRepository;
@@ -46,11 +46,11 @@ public class FinancingServiceImpl implements FinancingService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
-        List<Financing> financings = new ArrayList<>();
-        request.forEach(receivableRequest -> financings.add(
-                        Financing.builder()
-                                .invoiceId(invoiceRepository.findById(receivableRequest.getInvoice_number()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid invoice id")))
-                                .companyId(company)
+        List<FinancingReceivable> financingReceivables = new ArrayList<>();
+        request.forEach(receivableRequest -> financingReceivables.add(
+                        FinancingReceivable.builder()
+                                .invoice(invoiceRepository.findById(receivableRequest.getInvoice_number()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid invoice id")))
+                                .company(company)
                                 .status(FinancingStatus.PENDING)
                                 .financingType("RECEIVABLE")
                                 .amount(receivableRequest.getAmount())
@@ -60,7 +60,7 @@ public class FinancingServiceImpl implements FinancingService {
                                 .build()
                 )
         );
-        financingRepository.saveAllAndFlush(financings);
+        financingRepository.saveAllAndFlush(financingReceivables);
         return request;
     }
 

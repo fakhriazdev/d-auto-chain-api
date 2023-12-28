@@ -2,10 +2,8 @@ package com.danamon.autochain.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.util.List;
 
@@ -63,6 +61,9 @@ public class Company {
     @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
     private User user;
 
-    @OneToMany(mappedBy = "companyId" ,cascade = CascadeType.ALL)
-    private List<Financing> financing;
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<FinancingReceivable> financingReceivable;
+
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<FinancingPayable> financingPayable;
 }

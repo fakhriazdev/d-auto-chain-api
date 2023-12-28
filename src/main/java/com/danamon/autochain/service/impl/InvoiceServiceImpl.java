@@ -221,7 +221,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             Predicate id = criteriaBuilder.equal(
                     criteriaBuilder.lower(root.get(column)),
-                    recipientCompany.getCompany_id()
+                    recipientCompany.getCompany_id().toLowerCase()
             );
             predicates.add(id);
 
@@ -257,7 +257,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .company_id(invoice.getRecipientId().getCompany_id())
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
-                .companyName(invoice.getRecipientId().getCompanyName())
+                .companyName(invoice.getSenderId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
