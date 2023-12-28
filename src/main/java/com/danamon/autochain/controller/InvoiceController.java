@@ -3,11 +3,11 @@ package com.danamon.autochain.controller;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.PagingResponse;
-import com.danamon.autochain.entity.Invoice;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -78,10 +78,9 @@ public class InvoiceController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/update")
-    public ResponseEntity<?> updateInvoiceProcessingStatus(@RequestParam(name = "id")String id,@RequestParam(name = "type")String processingType){
-        try{
-            InvoiceDetailResponse invoiceDetailResponse = invoiceService.updateInvoiceStatus(id, ProcessingStatusType.valueOf(processingType.toUpperCase()));
+    @PutMapping("/update")
+    public ResponseEntity<?> updateInvoiceProcessingStatus(@RequestBody RequestInvoiceStatus requestInvoiceStatus){
+            InvoiceDetailResponse invoiceDetailResponse = invoiceService.updateInvoiceStatus(requestInvoiceStatus);
 
             DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
                     .data(invoiceDetailResponse)
@@ -89,9 +88,6 @@ public class InvoiceController {
                     .statusCode(HttpStatus.OK.value())
                     .build();
             return ResponseEntity.ok(response);
-        }catch (IllegalArgumentException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Type");
-        }
     }
     
     @GetMapping("/{id}")
