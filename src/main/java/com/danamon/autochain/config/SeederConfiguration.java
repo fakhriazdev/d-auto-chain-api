@@ -27,9 +27,9 @@ public class SeederConfiguration implements CommandLineRunner {
     private final UserRolesRepository userRolesRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "wiryamn@gmail.com";
-    private final String username = "wiryaa";
-    private final String password = "12345678";
+    private final String email = "rizdaagisa@gmail.com";
+    private final String username = "rizda";
+    private final String password = "string";
 
     @Override
     public void run(String... args) {

@@ -22,6 +22,9 @@ public class User {
     @Column(name = "userId", length = 128, nullable = false)
     private String user_id;
 
+    @Column
+    private String name;
+
     @ManyToOne
     @JoinColumn(name = "companyId")
     private Company company;
