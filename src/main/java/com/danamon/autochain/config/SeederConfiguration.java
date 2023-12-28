@@ -27,7 +27,7 @@ public class SeederConfiguration implements CommandLineRunner {
     private final UserRolesRepository userRolesRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "rizdaagisa@gmail.com";
+    private final String email = "erwinperdana2@gmail.com";
     private final String username = "rizda";
     private final String password = "string";
 
@@ -43,7 +43,6 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void backofficeSeeder() {
-
         Roles superadmin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
 
         List<UserRole> role = new ArrayList<>();
@@ -127,18 +126,22 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void rolesSeeder() {
-        List<Roles> allRole = List.of(
+        List<Roles> roles = rolesRepository.findAll();
+
+        if (roles.isEmpty()) {
+            List<Roles> allRole = List.of(
 //                ====================== BACK OFFICE ROLE ===============
-                Roles.builder().roleName(RoleType.SUPER_ADMIN.getName()).build(),
-                Roles.builder().roleName(RoleType.ADMIN.getName()).build(),
-                Roles.builder().roleName(RoleType.RELATIONSHIP_MANAGER.getName()).build(),
-                Roles.builder().roleName(RoleType.CREDIT_ANALYST.getName()).build(),
+                    Roles.builder().roleName(RoleType.SUPER_ADMIN.getName()).build(),
+                    Roles.builder().roleName(RoleType.ADMIN.getName()).build(),
+                    Roles.builder().roleName(RoleType.RELATIONSHIP_MANAGER.getName()).build(),
+                    Roles.builder().roleName(RoleType.CREDIT_ANALYST.getName()).build(),
 //                ========================= USER ROLE ====================
-                Roles.builder().roleName(RoleType.SUPER_USER.getName()).build(),
-                Roles.builder().roleName(RoleType.FINANCE_STAFF.getName()).build(),
-                Roles.builder().roleName(RoleType.INVOICE_STAFF.getName()).build(),
-                Roles.builder().roleName(RoleType.PAYMENT_STAFF.getName()).build()
-        );
-        rolesRepository.saveAllAndFlush(allRole);
+                    Roles.builder().roleName(RoleType.SUPER_USER.getName()).build(),
+                    Roles.builder().roleName(RoleType.FINANCE_STAFF.getName()).build(),
+                    Roles.builder().roleName(RoleType.INVOICE_STAFF.getName()).build(),
+                    Roles.builder().roleName(RoleType.PAYMENT_STAFF.getName()).build()
+            );
+            rolesRepository.saveAllAndFlush(allRole);
+        }
     }
 }

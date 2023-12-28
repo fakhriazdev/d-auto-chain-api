@@ -21,4 +21,6 @@ public interface AuthService {
     String getByEmail(String email);
     void updatePassword(String id, String Password);
     String logout();
+
+    LoginResponse shortcutLogin(LoginRequest request);
 }
