@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class InvoiceResponse {
+    private String company_id;
     private String companyName;
     private String invNumber;
     private Long amount;

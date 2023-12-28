@@ -27,9 +27,6 @@ public class Invoice extends HistoryLog {
     @JoinColumn(name = "senderId", nullable = false)
     private Company senderId;
 
-    @Column(name = "inv_date", nullable = false)
-    private Date invDate;
-
     @ManyToOne
     @JoinColumn(name = "recipientId", nullable = false)
     private Company recipientId;
@@ -44,9 +41,12 @@ public class Invoice extends HistoryLog {
     @Column(nullable = false)
     private Long amount;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = true)
     private String itemList;
 
     @Enumerated(EnumType.STRING)
     private ProcessingStatusType processingStatus;
+
+    @OneToOne(mappedBy = "invoiceId" ,cascade = CascadeType.ALL)
+    private Financing financing;
 }

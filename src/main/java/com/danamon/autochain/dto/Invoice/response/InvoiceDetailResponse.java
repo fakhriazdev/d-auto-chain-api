@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @Builder
 public class InvoiceDetailResponse {
     private String invoiceId;
-    private Date date;
+    private LocalDateTime date;
     private Date dueDate;
     private CompanyResponse companyRecipient;
     private CompanyResponse companyFrom;

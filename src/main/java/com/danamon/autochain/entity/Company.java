@@ -62,4 +62,7 @@ public class Company {
 
     @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
     private User user;
+
+    @OneToMany(mappedBy = "companyId" ,cascade = CascadeType.ALL)
+    private List<Financing> financing;
 }

@@ -61,7 +61,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
                 .status(Status.PENDING)
-                .invDate(requestInvoice.getInvDate())
                 .amount(requestInvoice.getAmount())
                 .createdDate(LocalDateTime.now())
                 .createdBy(principal.getCredentialId())
@@ -132,7 +131,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .companyFrom(companySender)
                 .companyRecipient(companyRecipient)
                 .invoiceId(invoice.getInvoiceId())
-                .date(invoice.getInvDate())
+                .date(invoice.getCreatedDate())
                 .dueDate(invoice.getDueDate())
                 .processingStatus(invoice.getProcessingStatus().name())
                 .itemList(itemLists)
@@ -197,6 +196,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private InvoiceResponse mapToResponsePayable(Invoice invoice) {
         return InvoiceResponse.builder()
+                .company_id(invoice.getSenderId().getCompany_id())
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
                 .companyName(invoice.getRecipientId().getCompanyName())
@@ -207,6 +207,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private InvoiceResponse mapToResponseReceivable(Invoice invoice) {
         return InvoiceResponse.builder()
+                .company_id(invoice.getRecipientId().getCompany_id())
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
                 .companyName(invoice.getRecipientId().getCompanyName())
