@@ -7,6 +7,9 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.danamon.autochain.entity.Credential;
+import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,6 +20,7 @@ import java.util.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JwtUtil {
     @Value("${app.autochain.jwt-secret}")
     private String jwtSecret;
@@ -25,8 +29,11 @@ public class JwtUtil {
     @Value("604800")
     private long jwtExpirationInSecond;
 
+//    private final UserRepository userRepository;
+
     public String generateTokenUser(Credential user) {
         try {
+//            userRepository.findById();
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             List<String> roles = new ArrayList<>();
             user.getRoles().forEach(userRole -> roles.add(userRole.getRole().getRoleName()));
@@ -36,6 +43,7 @@ public class JwtUtil {
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("actor", user.getActor().getName())
+                    .withClaim("company_id", user.getUser().getCompany().getCompany_id())
                     .withClaim("role", roles)
                     .sign(algorithm);
         } catch (JWTCreationException e) {
@@ -43,7 +51,6 @@ public class JwtUtil {
             throw new RuntimeException(e);
         }
     }
-
 
     public boolean verifyJwtToken(String token) {
         try {

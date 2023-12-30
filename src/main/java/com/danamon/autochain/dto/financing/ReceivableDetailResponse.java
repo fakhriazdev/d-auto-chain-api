@@ -3,16 +3,19 @@ package com.danamon.autochain.dto.financing;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class ReceivableRequest {
+public class ReceivableDetailResponse {
     String invoice_number;
+    Date created_date;
+    Map<String,String> recipient;
+    Map<String,String> sender;
     Long amount;
-    Date disbursment_date;
+    Double Fee;
+    Double total;
 }
