@@ -262,4 +262,11 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .dueDate(invoice.getDueDate())
                 .build();
     }
+
+    @Override
+    public List<Invoice> getInvoiceByRecepientId(String id) {
+        Company company = companyService.getById(id);
+
+        return invoiceRepository.findAllByRecipientId(company);
+    }
 }
