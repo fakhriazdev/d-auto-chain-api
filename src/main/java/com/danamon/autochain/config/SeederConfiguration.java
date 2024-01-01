@@ -121,7 +121,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .email("root2@gmail.com")
                 .username("oreo")
                 .password(bCryptUtil.hashPassword("string"))
-                .actor(ActorType.BACKOFFICE)
+                .actor(ActorType.USER)
                 .modifiedDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
                 .createdBy("oreo")
@@ -131,8 +131,8 @@ public class SeederConfiguration implements CommandLineRunner {
         credentialRepository.saveAndFlush(userCredential2);
 
         User user2 = new User();
-        user.setCompany(company2);
-        user.setCredential(userCredential2);
+        user2.setCompany(company2);
+        user2.setCredential(userCredential2);
 
         userRepository.saveAndFlush(user2);
 
