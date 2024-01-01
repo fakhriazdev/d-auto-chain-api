@@ -1,10 +1,7 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.FinancingStatus;
-import com.danamon.autochain.dto.financing.FinancingResponse;
-import com.danamon.autochain.dto.financing.ReceivableDetailResponse;
-import com.danamon.autochain.dto.financing.ReceivableRequest;
-import com.danamon.autochain.dto.financing.SearchFinancingRequest;
+import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.CompanyRepository;
 import com.danamon.autochain.repository.FinancingReceivableRepository;
@@ -166,6 +163,51 @@ public class FinancingServiceImpl implements FinancingService {
                 .build();
     }
 
+
+//    ====================================== BACK OFFICE ===========================================
+
+    @Override
+    public Page<FinancingResponse> backoffice_getAll(SearchFinancingRequest request) {
+
+        Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (request.getStatus() != null) {
+                Predicate status = criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("status")),
+                        request.getStatus().toLowerCase()
+                );
+                predicates.add(status);
+            }
+
+            return query
+                    .where(predicates.toArray(new Predicate[]{}))
+                    .getRestriction();
+        };
+
+        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Page<FinancingReceivable> financing = financingReceivableRepository.findAll(specification, pageable);
+
+        return financing.map(this::mapToResponseReceivable);
+    }
+
+    @Override
+    public AcceptResponse backoffice_accept(String financing_id) {
+        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+        financingReceivable.setStatus(FinancingStatus.ONGOING);
+        financingReceivableRepository.saveAndFlush(financingReceivable);
+        return AcceptResponse.builder().build();
+    }
+
+    @Override
+    public RejectResponse backoffice_reject(String financing_id) {
+        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+        financingReceivable.setStatus(FinancingStatus.REJECTED);
+        financingReceivableRepository.saveAndFlush(financingReceivable);
+        return RejectResponse.builder().build();
+    }
+
     private FinancingResponse mapToResponseReceivable(FinancingReceivable data) {
         return FinancingResponse.builder()
                 .financing_id(data.getFinancingId())
@@ -176,4 +218,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .date(data.getDisbursment_date())
                 .build();
     }
+
+
+
 }
