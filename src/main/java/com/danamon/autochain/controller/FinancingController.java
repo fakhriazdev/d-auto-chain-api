@@ -116,7 +116,7 @@ public class FinancingController {
     }
 
     @GetMapping("/receivable/{financing_id}")
-    public ResponseEntity<?> request_financing_receivable(@PathVariable(name = "financing_id") String financing_id){
+    public ResponseEntity<?> get_detail_financing_receivable(@PathVariable(name = "financing_id") String financing_id){
         ReceivableDetailResponse data = financingService.get_detail_receivable(financing_id);
         DataResponse<ReceivableDetailResponse> response = DataResponse.<ReceivableDetailResponse>builder()
                 .message("Success get details")
