@@ -32,7 +32,7 @@ public class RequestInvoice {
     @NotNull(message = "Amount is require")
     @Min(value = 1, message = "amount must greater then 0")
     private Long amount;
-    private Date invDate;
+//    private Date invDate;
     @NotNull(message = "Item List is require")
     private String itemList;
 
