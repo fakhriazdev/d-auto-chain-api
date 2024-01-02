@@ -137,14 +137,14 @@ public class SeederConfiguration implements CommandLineRunner {
         userRepository.saveAndFlush(user2);
 
         List<UserRole> roleUser2 = new ArrayList<>();
-        roleUser.add(
+        roleUser2.add(
                 UserRole.builder()
                         .role(superUser)
                         .credential(userCredential2)
                         .build()
         );
 
-        userCredential.setRoles(roleUser2);
+        userCredential2.setRoles(roleUser2);
     }
 
     public void companySeeder() {
