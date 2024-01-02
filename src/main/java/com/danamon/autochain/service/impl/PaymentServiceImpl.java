@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 
 import com.danamon.autochain.constant.PaymentMethod;
+import com.danamon.autochain.constant.PaymentType;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.ReasonType;
 import com.danamon.autochain.constant.invoice.Status;
@@ -60,58 +61,90 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public Page<PaymentResponse> getOngoingPayments(SearchPaymentRequest request) {
-//    public List<PaymentResponse> getOngoingPayments(SearchPaymentRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         // get invoices
-        List<Invoice> invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
+        List<Invoice> invoices;
+        if (request.getGroupBy().equals("payable")) {
+            invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
+        } else {
+            invoices = invoiceService.getInvoiceBySenderId(user.getCompany().getCompany_id());
+        }
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "outstandingFlag", "type");
-        // get payments by invoice
-//        List<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.UNPAID, Status.LATE_UNPAID));
-        Page<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.UNPAID, Status.LATE_UNPAID), pageable);
-        //        Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
-//            List<Predicate> predicates = new ArrayList<>();
-//
-//            if (request.getStatus() != null) {
-//                Predicate status = criteriaBuilder.equal(
-//                        criteriaBuilder.lower(root.get("status")),
-//                        request.getStatus().toLowerCase()
-//                );
-//                predicates.add(status);
-//            }
-//
-//            String column = "senderId";
-//            assert request.getType() != null;
-//
-//            if(request.getType().equals("payable")){
-//                column = "recipientId";
-//            }
-//
-//            Predicate id = criteriaBuilder.equal(
-//                    criteriaBuilder.lower(root.get(column)),
-//                    recipientCompany.getCompany_id().toLowerCase()
-//            );
-//            predicates.add(id);
-//
-//            return query
-//                    .where(predicates.toArray(new Predicate[]{}))
-//                    .getRestriction();
-//        };
-//
-//        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-//        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
-//        Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
-//
-//        if(request.getType().equals("payable")){
-//            return invoices.map(this::mapToResponsePayable);
-//        } else {
-//            return invoices.map(this::mapToResponseReceivable);
-//        }
 
-//        return payments.stream().map(payment -> mapToResponsePayment(payment)).collect(Collectors.toList());
+        // get payments by invoice
+        List<Status> statuses = getOngoingStatuses(request);
+        List<PaymentType> types = getTypes(request);
+
+        Page<Payment> payments = paymentRepository.findAll(
+                withInvoiceAndStatus(invoices, statuses, types, request.getTransactionId()),
+                pageable
+        );
+
         return payments.map(payment -> mapToResponsePayment(payment));
+    }
+
+    private static List<PaymentType> getTypes(SearchPaymentRequest request) {
+        List<PaymentType> types = new ArrayList<>();
+        if (request.getType() != null) {
+            switch (request.getType()) {
+                case "INVOICING":
+                    types.add(PaymentType.INVOICING);
+                    break;
+                case "FINANCING":
+                    types.add(PaymentType.FINANCING);
+                    break;
+                default:
+                    types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING));
+                    break;
+            }
+        } else {
+            types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING));
+        }
+
+        return types;
+    }
+
+    private static List<Status> getOngoingStatuses(SearchPaymentRequest request) {
+        List<Status> statuses = new ArrayList<>();
+        if (request.getStatus() != null) {
+            switch (request.getStatus()) {
+                case "UNPAID":
+                    statuses.add(Status.UNPAID);
+                    break;
+                case "LATE_UNPAID":
+                    statuses.add(Status.LATE_UNPAID);
+                    break;
+                default:
+                    statuses.addAll(Arrays.asList(Status.UNPAID, Status.LATE_UNPAID));
+                    break;
+            }
+        } else {
+            statuses.addAll(Arrays.asList(Status.UNPAID, Status.LATE_UNPAID));
+        }
+
+        return statuses;
+    }
+
+    public static Specification<Payment> withInvoiceAndStatus(List<Invoice> invoices, List<Status> statuses, List<PaymentType> types, String transactionId) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(root.get("invoice").in(invoices));
+            predicates.add(root.get("outstandingFlag").in(statuses));
+            predicates.add(root.get("type").in(types));
+
+            if (transactionId != null) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("transactionId")),
+                        "%" + transactionId.toLowerCase() + "%"
+                ));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     @Override
@@ -120,7 +153,7 @@ public class PaymentServiceImpl implements PaymentService {
 //    public List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
-        // get invoices
+        // get invoices by groupBy
         List<Invoice> invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
@@ -129,23 +162,23 @@ public class PaymentServiceImpl implements PaymentService {
 //        List<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.PAID, Status.LATE_PAID));
         Page<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.PAID, Status.LATE_PAID), pageable);
 
-        //        Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
+//        Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
 //            List<Predicate> predicates = new ArrayList<>();
 //
-//            if (request.getStatus() != null) {
-//                Predicate status = criteriaBuilder.equal(
-//                        criteriaBuilder.lower(root.get("status")),
-//                        request.getStatus().toLowerCase()
-//                );
-//                predicates.add(status);
-//            }
+////            if (request.getStatus() != null) {
+////                Predicate status = criteriaBuilder.equal(
+////                        criteriaBuilder.lower(root.get("status")),
+////                        request.getStatus().toLowerCase()
+////                );
+////                predicates.add(status);
+////            }
 //
-//            String column = "senderId";
-//            assert request.getType() != null;
+//            String column = "transactionId";
+////            assert request.getType() != null;
 //
-//            if(request.getType().equals("payable")){
-//                column = "recipientId";
-//            }
+////            if(request.getGroupBy().equals("payable")){
+////                column = "recipientId";
+////            }
 //
 //            Predicate id = criteriaBuilder.equal(
 //                    criteriaBuilder.lower(root.get(column)),

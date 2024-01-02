@@ -34,6 +34,7 @@ public class Payment {
     private Long amount;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private PaymentType type;
 
     @Column
@@ -43,11 +44,13 @@ public class Payment {
     private String paidDate;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
 
     @Column
     private Boolean source;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private Status outstandingFlag;
 }

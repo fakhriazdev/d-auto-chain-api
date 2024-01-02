@@ -13,5 +13,6 @@ import java.util.Optional;
 public interface InvoiceRepository extends JpaRepository<Invoice, String>, JpaSpecificationExecutor<Invoice> {
     Optional<Invoice> findInvoiceByRecipientIdAndInvoiceId(Company recipientId, String invoiceId);
     Optional<Invoice> findInvoiceBySenderIdAndInvoiceId(Company recipientId, String invoiceId);
-    List<Invoice> findAllByRecipientId(Company recepientId);
+    List<Invoice> findAllByRecipientId(Company recepient);
+    List<Invoice> findAllBySenderId(Company sender);
 }

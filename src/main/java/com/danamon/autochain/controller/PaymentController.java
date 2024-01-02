@@ -40,8 +40,10 @@ public class PaymentController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "type") String type,
-            @RequestParam(required = false, defaultValue = "outstandingFlag") String status
+            @RequestParam(required = false, defaultValue = "payable") String groupBy,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String transactionid
     ){
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -51,8 +53,10 @@ public class PaymentController {
                 .page(page)
                 .size(size)
                 .direction(direction)
+                .groupBy(groupBy)
                 .status(status)
                 .type(type)
+                .transactionId(transactionid)
                 .build();
 
         Page<PaymentResponse> ongoingPayments = paymentService.getOngoingPayments(request);
@@ -70,7 +74,7 @@ public class PaymentController {
                 .paging(pagingResponse)
 //                .data(ongoingPayments)
                 .message("Success get ongoing payments")
-                .statusCode(HttpStatus.CREATED.value())
+                .statusCode(HttpStatus.OK.value())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -82,8 +86,8 @@ public class PaymentController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "type") String type,
-            @RequestParam(required = false, defaultValue = "outstandingFlag") String status
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status
     ){
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -111,8 +115,8 @@ public class PaymentController {
                 .data(ongoingPayments.getContent())
                 .paging(pagingResponse)
 //                .data(ongoingPayments)
-                .message("Success get ongoing payments")
-                .statusCode(HttpStatus.CREATED.value())
+                .message("Success get history payments")
+                .statusCode(HttpStatus.OK.value())
                 .build();
 
         return ResponseEntity.ok(response);

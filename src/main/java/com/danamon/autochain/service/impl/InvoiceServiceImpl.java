@@ -269,4 +269,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         return invoiceRepository.findAllByRecipientId(company);
     }
+
+    @Override
+    public List<Invoice> getInvoiceBySenderId(String id) {
+        Company company = companyService.getById(id);
+
+        return invoiceRepository.findAllBySenderId(company);
+    }
 }

@@ -22,4 +22,5 @@ public interface InvoiceService {
 
     InvoiceDetailResponse getInvoiceDetail(String id);
     List<Invoice> getInvoiceByRecepientId(String id);
+    List<Invoice> getInvoiceBySenderId(String id);
 }
