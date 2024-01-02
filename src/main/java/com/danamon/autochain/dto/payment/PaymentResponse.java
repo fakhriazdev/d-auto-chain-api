@@ -21,7 +21,7 @@ public class PaymentResponse {
     private String type;
     private String dueDate;
     private String paidDate;
-    private Boolean method;
+    private String method;
     private Boolean source;
-    private Boolean outstandingFlag;
+    private String outstandingFlag;
 }
