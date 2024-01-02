@@ -150,7 +150,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request) {
-//    public List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         // get invoices by groupBy
@@ -158,51 +157,38 @@ public class PaymentServiceImpl implements PaymentService {
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "outstandingFlag", "type");
+
         // get payments by invoice
-//        List<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.PAID, Status.LATE_PAID));
-        Page<Payment> payments = paymentRepository.findAllByInvoiceInAndOutstandingFlagIn(invoices, Arrays.asList(Status.PAID, Status.LATE_PAID), pageable);
+        List<Status> statuses = getHistoryStatuses(request);
+        List<PaymentType> types = getTypes(request);
 
-//        Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
-//            List<Predicate> predicates = new ArrayList<>();
-//
-////            if (request.getStatus() != null) {
-////                Predicate status = criteriaBuilder.equal(
-////                        criteriaBuilder.lower(root.get("status")),
-////                        request.getStatus().toLowerCase()
-////                );
-////                predicates.add(status);
-////            }
-//
-//            String column = "transactionId";
-////            assert request.getType() != null;
-//
-////            if(request.getGroupBy().equals("payable")){
-////                column = "recipientId";
-////            }
-//
-//            Predicate id = criteriaBuilder.equal(
-//                    criteriaBuilder.lower(root.get(column)),
-//                    recipientCompany.getCompany_id().toLowerCase()
-//            );
-//            predicates.add(id);
-//
-//            return query
-//                    .where(predicates.toArray(new Predicate[]{}))
-//                    .getRestriction();
-//        };
-//
-//        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-//        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
-//        Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
-//
-//        if(request.getType().equals("payable")){
-//            return invoices.map(this::mapToResponsePayable);
-//        } else {
-//            return invoices.map(this::mapToResponseReceivable);
-//        }
+        Page<Payment> payments = paymentRepository.findAll(
+                withInvoiceAndStatus(invoices, statuses, types, request.getTransactionId()),
+                pageable
+        );
 
-//        return payments.stream().map(payment -> mapToResponsePayment(payment)).collect(Collectors.toList());
         return payments.map(payment -> mapToResponsePayment(payment));
+    }
+
+    private static List<Status> getHistoryStatuses(SearchPaymentRequest request) {
+        List<Status> statuses = new ArrayList<>();
+        if (request.getStatus() != null) {
+            switch (request.getStatus()) {
+                case "PAID":
+                    statuses.add(Status.PAID);
+                    break;
+                case "LATE_PAID":
+                    statuses.add(Status.LATE_PAID);
+                    break;
+                default:
+                    statuses.addAll(Arrays.asList(Status.PAID, Status.LATE_PAID));
+                    break;
+            }
+        } else {
+            statuses.addAll(Arrays.asList(Status.PAID, Status.LATE_PAID));
+        }
+
+        return statuses;
     }
 
     private PaymentResponse mapToResponsePayment(Payment payment) {
@@ -233,7 +219,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .paidDate(payment.getPaidDate())
                 .method(payment.getMethod().toString())
                 .source(payment.getSource())
-                .outstandingFlag(payment.getOutstandingFlag().toString())
+                .status(payment.getOutstandingFlag().toString())
                 .build();
 
         return paymentResponse;

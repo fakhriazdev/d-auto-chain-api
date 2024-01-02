@@ -87,7 +87,8 @@ public class PaymentController {
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String transactionid
     ){
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -99,6 +100,7 @@ public class PaymentController {
                 .direction(direction)
                 .status(status)
                 .type(type)
+                .transactionId(transactionid)
                 .build();
 
         Page<PaymentResponse> ongoingPayments = paymentService.getHistoryPayments(request);
