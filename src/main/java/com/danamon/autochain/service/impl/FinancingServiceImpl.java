@@ -117,7 +117,7 @@ public class FinancingServiceImpl implements FinancingService {
             }
 
             Predicate id = criteriaBuilder.equal(
-                    criteriaBuilder.lower(root.get("companyId")),
+                    criteriaBuilder.lower(root.get("company")),
                     company.getCompany_id().toLowerCase()
             );
             predicates.add(id);
