@@ -27,9 +27,15 @@ public class SeederConfiguration implements CommandLineRunner {
     private final UserRolesRepository userRolesRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "erwinperdana2@gmail.com";
+//   ============================== SUPER ADMIN ===================================
+    private final String email = "rizdaagisa@gmail.com";
     private final String username = "rizda";
     private final String password = "string";
+
+//    ============================ SUPER USER =====================================
+    private final String superUserEmail = "oreofinalprojectdtt@gmail.com";
+    private final String superUserUsername = "oreo";
+    private final String superUserPassword = "test12345";
 
     @Override
     public void run(String... args) {
@@ -77,25 +83,24 @@ public class SeederConfiguration implements CommandLineRunner {
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Company company = companyRepository.findBycompanyName("root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
+        List<UserRole> roles = new ArrayList<>();
 
         Credential userCredential = Credential.builder()
-                .email("oreofinalprojectdtt@gmail.com")
-                .username("oreo")
-                .password(bCryptUtil.hashPassword("test12345"))
+                .email(superUserEmail)
+                .username(superUserUsername)
+                .password(bCryptUtil.hashPassword(superUserPassword))
                 .actor(ActorType.BACKOFFICE)
                 .modifiedDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
+                .roles(roles)
                 .createdBy("oreo")
                 .modifiedBy("oreo")
                 .build();
 
-        credentialRepository.saveAndFlush(userCredential);
 
         User user = new User();
         user.setCompany(company);
         user.setCredential(userCredential);
-
-        userRepository.saveAndFlush(user);
 
         List<UserRole> roleUser = new ArrayList<>();
         roleUser.add(
@@ -107,6 +112,8 @@ public class SeederConfiguration implements CommandLineRunner {
 
         userCredential.setRoles(roleUser);
 
+        userRepository.saveAndFlush(user);
+        credentialRepository.saveAndFlush(userCredential);
     }
 
     public void companySeeder() {

@@ -338,7 +338,7 @@ public class AuthServiceImpl implements AuthService {
                 .roleType(roleResponses)
                 .actorType(user.getActor().getName().toUpperCase())
                 .token(token)
-                .companyId(user.getActor() == ActorType.BACKOFFICE ? null : user.getUser().getCompany().getCompany_id())
+                .company_id(user.getActor() == ActorType.BACKOFFICE ? null : user.getUser().getCompany().getCompany_id())
                 .build();
     }
 }
