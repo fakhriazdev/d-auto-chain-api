@@ -1,5 +1,8 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.PaymentMethod;
+import com.danamon.autochain.constant.PaymentType;
+import com.danamon.autochain.constant.invoice.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +34,7 @@ public class Payment {
     private Long amount;
 
     @Column
-    private String type;
+    private PaymentType type;
 
     @Column
     private String dueDate;
@@ -40,11 +43,11 @@ public class Payment {
     private String paidDate;
 
     @Column
-    private Boolean method;
+    private PaymentMethod method;
 
     @Column
     private Boolean source;
 
     @Column
-    private Boolean outstandingFlag;
+    private Status outstandingFlag;
 }

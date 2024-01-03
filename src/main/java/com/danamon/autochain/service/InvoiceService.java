@@ -6,7 +6,10 @@ import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
+import com.danamon.autochain.entity.Invoice;
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 public interface InvoiceService {
     InvoiceResponse invoiceGeneration(RequestInvoice requestInvoice);
@@ -18,4 +21,5 @@ public interface InvoiceService {
     Page<InvoiceResponse> getAll(SearchInvoiceRequest request);
 
     InvoiceDetailResponse getInvoiceDetail(String id);
+    List<Invoice> getInvoiceByRecepientId(String id);
 }
