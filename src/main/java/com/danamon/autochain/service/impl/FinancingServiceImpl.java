@@ -52,7 +52,7 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public List<FinancingReceivable> receivable_financing(List<ReceivableRequest> request) {
+    public void receivable_financing(List<ReceivableRequest> request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
@@ -97,7 +97,6 @@ public class FinancingServiceImpl implements FinancingService {
             );
         });
         financingReceivableRepository.saveAllAndFlush(financingReceivables);
-        return financingReceivables;
     }
 
     @Override

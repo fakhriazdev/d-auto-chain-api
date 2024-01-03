@@ -52,11 +52,10 @@ public class FinancingController {
 
     @PostMapping("/receivable")
     public ResponseEntity<?> request_financing_receivable(@RequestBody List<ReceivableRequest> list_financing){
-        List<FinancingReceivable> receivableRequests = financingService.receivable_financing(list_financing);
+        financingService.receivable_financing(list_financing);
         DataResponse<List<FinancingReceivable>> response = DataResponse.<List<FinancingReceivable>>builder()
-                .message("successfully get all company")
+                .message("financing successfully created")
                 .statusCode(HttpStatus.OK.value())
-                .data(receivableRequests)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -65,11 +64,10 @@ public class FinancingController {
 
     @PostMapping("/payable")
     public ResponseEntity<?> request_financing_payable(List<ReceivableRequest> list_financing){
-        List<FinancingReceivable> receivableRequests = financingService.receivable_financing(list_financing);
+        financingService.receivable_financing(list_financing);
         DataResponse<List<FinancingReceivable>> response = DataResponse.<List<FinancingReceivable>>builder()
                 .message("successfully get all company")
                 .statusCode(HttpStatus.OK.value())
-                .data(receivableRequests)
                 .build();
 
         return ResponseEntity
