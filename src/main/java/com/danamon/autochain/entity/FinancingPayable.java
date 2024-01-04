@@ -11,13 +11,13 @@ import org.hibernate.annotations.UuidGenerator;
 import java.util.Date;
 import java.util.List;
 
-@Entity
-@Table(name = "t_financing_payable")
 @NoArgsConstructor
 @Getter
 @Setter
 @AllArgsConstructor
 @SuperBuilder
+@Entity
+@Table(name = "t_financing_payable")
 public class FinancingPayable extends HistoryLog{
     @Id
     @UuidGenerator
@@ -57,7 +57,7 @@ public class FinancingPayable extends HistoryLog{
     @Column
     private Integer period_number;
 
-    @OneToMany(mappedBy = "financingPayable")
-    private List<Payment> payment;
+    @OneToOne(mappedBy = "financingPayable")
+    private Payment payment;
 
 }

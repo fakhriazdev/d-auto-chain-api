@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -22,13 +23,13 @@ public class Payment {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    private String transactionId;
+    private String paymentId;
 
     @ManyToOne
     @JoinColumn(name = "invoiceId")
     private Invoice invoice;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "financingPayableId")
     private FinancingPayable financingPayable;
 
@@ -58,4 +59,6 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @OneToMany(mappedBy = "paymentId")
+    private List<Tenure> tenures;
 }

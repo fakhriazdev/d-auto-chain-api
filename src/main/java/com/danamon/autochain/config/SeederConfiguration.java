@@ -35,7 +35,7 @@ public class SeederConfiguration implements CommandLineRunner {
     private final PaymentRepository paymentRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "erwinperdana2@gmail.com";
+    private final String email = "rizdaagisa@gmail.com";
     private final String username = "rizda";
     private final String password = "string";
 

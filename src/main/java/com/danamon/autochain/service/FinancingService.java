@@ -11,7 +11,7 @@ public interface FinancingService {
 //    =========================== PAYABLE ======================================
     Map<String,Double> get_limit();
     Page<FinancingResponse> getAllPayable(SearchFinancingRequest request);
-    ReceivableDetailResponse get_detail_payable(String financing_id);
+    PayableDetailResponse get_detail_payable(String financing_id);
 
 //    =========================== RECEIVABLE ===================================
     void receivable_financing(List<ReceivableRequest> request);

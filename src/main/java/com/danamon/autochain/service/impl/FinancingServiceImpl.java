@@ -29,6 +29,7 @@ import java.util.*;
 public class FinancingServiceImpl implements FinancingService {
     private final FinancingReceivableRepository financingReceivableRepository;
     private final FinancingPayableRepository financingPayableRepository;
+    private final TenureRepository tenureRepository;
     private final InvoiceRepository invoiceRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
@@ -83,30 +84,40 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public ReceivableDetailResponse get_detail_payable(String financing_id) {
-        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
+    public PayableDetailResponse get_detail_payable(String financing_id) {
+        FinancingPayable financingPayable = financingPayableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
+        List<Tenure> tenures = tenureRepository.findAllByPaymentId(financingPayable.getPayment());
         Map<String,String> sender = new HashMap<>();
-        sender.put("company_name", financingReceivable.getInvoice().getSenderId().getCompanyName());
-        sender.put("email", financingReceivable.getInvoice().getSenderId().getCompanyEmail());
-        sender.put("phone_number", financingReceivable.getInvoice().getSenderId().getPhoneNumber());
-        sender.put("city", financingReceivable.getInvoice().getSenderId().getCity());
-        sender.put("province", financingReceivable.getInvoice().getSenderId().getProvince());
+        sender.put("company_name", financingPayable.getInvoice().getSenderId().getCompanyName());
+        sender.put("email", financingPayable.getInvoice().getSenderId().getCompanyEmail());
+        sender.put("phone_number", financingPayable.getInvoice().getSenderId().getPhoneNumber());
+        sender.put("city", financingPayable.getInvoice().getSenderId().getCity());
+        sender.put("province", financingPayable.getInvoice().getSenderId().getProvince());
 
         Map<String,String> recipient = new HashMap<>();
-        recipient.put("company_name", financingReceivable.getInvoice().getRecipientId().getCompanyName());
-        recipient.put("email", financingReceivable.getInvoice().getRecipientId().getCompanyEmail());
-        recipient.put("phone_number", financingReceivable.getInvoice().getRecipientId().getPhoneNumber());
-        recipient.put("city", financingReceivable.getInvoice().getRecipientId().getCity());
-        recipient.put("province", financingReceivable.getInvoice().getRecipientId().getProvince());
+        recipient.put("company_name", financingPayable.getInvoice().getRecipientId().getCompanyName());
+        recipient.put("email", financingPayable.getInvoice().getRecipientId().getCompanyEmail());
+        recipient.put("phone_number", financingPayable.getInvoice().getRecipientId().getPhoneNumber());
+        recipient.put("city", financingPayable.getInvoice().getRecipientId().getCity());
+        recipient.put("province", financingPayable.getInvoice().getRecipientId().getProvince());
 
-        return ReceivableDetailResponse.builder()
-                .invoice_number(financingReceivable.getInvoice().getInvoiceId())
+        List<TenureDetailResponse> listTenure = new ArrayList<>();
+        tenures.forEach(tenure -> {
+            listTenure.add(TenureDetailResponse.builder()
+                            .tenure_id(tenure.getTenureId())
+                            .due_date(tenure.getDueDate())
+                            .amount(tenure.getAmount())
+                            .status(tenure.getStatus().name())
+                    .build());
+        });
+        return PayableDetailResponse.builder()
+                .payment_number(financingPayable.getPayment().getPaymentId())
+                .invoice_number(financingPayable.getInvoice().getInvoiceId())
                 .recipient(recipient)
                 .sender(sender)
-                .amount(financingReceivable.getAmount())
-                .Fee(financingReceivable.getFee())
-                .total(financingReceivable.getTotal())
-                .created_date(financingReceivable.getDisbursment_date())
+                .total_amount(financingPayable.getAmount())
+                .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
+                .tenure_list(listTenure)
                 .build();
     }
 
