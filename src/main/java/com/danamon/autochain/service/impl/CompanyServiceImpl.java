@@ -33,10 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,7 +116,7 @@ public class CompanyServiceImpl implements CompanyService {
                         .build();
 
                 userRepository.saveAndFlush(user);
-                companySaved.setUser(user);
+                companySaved.setUser(Arrays.asList(user));
 
                 Roles role = rolesRepository.findByRoleName(RoleType.SUPER_USER.toString()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ROLE not found"));
                 UserRole userRole = UserRole.builder()
@@ -205,7 +202,7 @@ public class CompanyServiceImpl implements CompanyService {
             Company company = companyRepository.saveAndFlush(companyOld);
 
             if (request.getIsGeneratePassword()) {
-                Credential credential = credentialRepository.findByEmail(companyOld.getUser().getCredential().getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                Credential credential = credentialRepository.findByEmail(companyOld.getUser().get(0).getCredential().getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
                 String newPassword = randomPasswordUtil.generateRandomPassword(12);
 
@@ -224,7 +221,7 @@ public class CompanyServiceImpl implements CompanyService {
                             "</header>" +
                             "<div style='margin: auto;'>" +
                             "<div><h5><center>Your Account</u></center></h5></div><br>" +
-                            "<div><h4><center>Email: "+companyOld.getUser().getCredential().getEmail()+"</center></h4></div><br>" +
+                            "<div><h4><center>Email: "+companyOld.getUser().get(0).getCredential().getEmail()+"</center></h4></div><br>" +
                             "</div>" +
                             "<div><h4><center>Password: "+newPassword+"</center></h4></div><br>" +
                             "</div>" +
@@ -234,7 +231,7 @@ public class CompanyServiceImpl implements CompanyService {
 
                     info.put("emailBody", accountEmail);
 
-                    MailSender.mailer("New Password for Company Account", info, companyOld.getUser().getCredential().getEmail());
+                    MailSender.mailer("New Password for Company Account", info, companyOld.getUser().get(0).getCredential().getEmail());
                 }  catch (Exception e){
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
                 }
@@ -313,8 +310,8 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
-                .username(company.getUser().getCredential().getUsername())
-                .emailUser(company.getUser().getCredential().getEmail())
+                .username(company.getUser().get(0).getCredential().getUsername())
+                .emailUser(company.getUser().get(0).getCredential().getEmail())
                 .files(fileResponses)
                 .build();
     }

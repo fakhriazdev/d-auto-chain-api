@@ -72,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "outstandingFlag", "type");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
 
         // get payments by invoice
         List<Status> statuses = getOngoingStatuses(request);
@@ -133,7 +133,7 @@ public class PaymentServiceImpl implements PaymentService {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(root.get("invoice").in(invoices));
-            predicates.add(root.get("outstandingFlag").in(statuses));
+            predicates.add(root.get("status").in(statuses));
             predicates.add(root.get("type").in(types));
 
             if (transactionId != null) {
@@ -156,7 +156,7 @@ public class PaymentServiceImpl implements PaymentService {
         List<Invoice> invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "outstandingFlag", "type");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
 
         // get payments by invoice
         List<Status> statuses = getHistoryStatuses(request);
@@ -215,11 +215,10 @@ public class PaymentServiceImpl implements PaymentService {
                 )
                 .amount(payment.getAmount())
                 .type(payment.getType().toString())
-                .dueDate(payment.getDueDate())
-                .paidDate(payment.getPaidDate())
+                .dueDate(payment.getDueDate().toString())
+                .paidDate(payment.getPaidDate().toString())
                 .method(payment.getMethod().toString())
-                .source(payment.getSource())
-                .status(payment.getOutstandingFlag().toString())
+                .status(payment.getStatus().toString())
                 .build();
 
         return paymentResponse;
