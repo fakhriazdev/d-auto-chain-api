@@ -69,10 +69,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         List<Status> statuses = getOngoingStatuses(request);
         List<PaymentType> types = getTypes(request);
-        Optional<Company> recipient = companyService.getCompanyNameLike(request.getRecipient());
+        List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipient),
+                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipients),
                 pageable
         );
 
@@ -90,17 +90,17 @@ public class PaymentServiceImpl implements PaymentService {
 
         List<Status> statuses = getHistoryStatuses(request);
         List<PaymentType> types = getTypes(request);
-        Optional<Company> recipient = companyService.getCompanyNameLike(request.getRecipient());
+        List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipient),
+                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipients),
                 pageable
         );
 
         return payments.map(payment -> mapToResponsePayment(payment, request));
     }
 
-    private static Specification<Payment> withInvoiceAndStatus(User user, List<Status> statuses, List<PaymentType> types, String groupBy, Optional<Company> recipient) {
+    private static Specification<Payment> withInvoiceAndStatus(User user, List<Status> statuses, List<PaymentType> types, String groupBy, List<Company> recipients) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -110,11 +110,8 @@ public class PaymentServiceImpl implements PaymentService {
                         user.getCompany()
                 ));
 
-                if (recipient.isPresent()) {
-                    predicates.add(criteriaBuilder.equal(
-                            root.get("senderId"),
-                            recipient.get()
-                    ));
+                if (recipients != null) {
+                    predicates.add(root.get("senderId").in(recipients));
                 }
             } else {
                 predicates.add(criteriaBuilder.equal(
@@ -122,11 +119,8 @@ public class PaymentServiceImpl implements PaymentService {
                         user.getCompany()
                 ));
 
-                if (recipient.isPresent()) {
-                    predicates.add(criteriaBuilder.equal(
-                            root.get("recipientId"),
-                            recipient.get()
-                    ));
+                if (recipients != null) {
+                    predicates.add(root.get("recipientId").in(recipients));
                 }
             }
 
