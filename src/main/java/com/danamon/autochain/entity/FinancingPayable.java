@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,8 +37,8 @@ public class FinancingPayable extends HistoryLog{
 //    @JoinColumn(name = "paymentId")
 //    private List<Payment> payment;
 
-    @Column
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private FinancingStatus status;
 
     @Column
     private Long amount;

@@ -6,6 +6,7 @@ import com.danamon.autochain.constant.PaymentType;
 import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
+import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
@@ -43,6 +44,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final InvoiceService invoiceService;
     private final ObjectMapper objectMapper;
+
+    @Override
+    @Transactional
+    public void createPayment(CreatePaymentRequest request){
+
+    }
 
     @Override
     @Transactional(readOnly = true)
