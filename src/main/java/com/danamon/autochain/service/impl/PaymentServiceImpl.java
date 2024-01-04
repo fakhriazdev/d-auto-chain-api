@@ -3,25 +3,15 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.PaymentMethod;
 import com.danamon.autochain.constant.PaymentType;
-import com.danamon.autochain.constant.invoice.ProcessingStatusType;
-import com.danamon.autochain.constant.invoice.ReasonType;
 import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.dto.Invoice.ItemList;
-import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
-import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
-import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
-import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
-import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
 import com.danamon.autochain.entity.*;
-import com.danamon.autochain.repository.InvoiceIssueLogRepository;
-import com.danamon.autochain.repository.InvoiceRepository;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
-import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,13 +31,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.sql.Date;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -195,23 +181,24 @@ public class PaymentServiceImpl implements PaymentService {
         List<ItemList> itemLists;
 
         try {
-            itemLists = objectMapper.readValue(payment.getInvoice().getItemList(), new TypeReference<List<ItemList>>() {});
+            itemLists = objectMapper.readValue(payment.getInvoice().getItemList(), new TypeReference<List<ItemList>>() {
+            });
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while converting string to JSON. Please contact administrator");
         }
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
-                .transactionId(payment.getTransactionId())
+                .payment_id(payment.getPaymentId())
                 .invoice(
                         InvoiceResponse.builder()
                                 .company_id(payment.getInvoice().getRecipientId().getCompany_id())
-                        .companyName(payment.getInvoice().getRecipientId().getCompanyName())
-                        .status(String.valueOf(payment.getInvoice().getStatus()))
-                        .invNumber(payment.getInvoice().getInvoiceId())
-                        .dueDate(payment.getInvoice().getDueDate())
-                        .amount(payment.getInvoice().getAmount())
-                        .itemList(itemLists)
-                        .build()
+                                .companyName(payment.getInvoice().getRecipientId().getCompanyName())
+                                .status(String.valueOf(payment.getInvoice().getStatus()))
+                                .invNumber(payment.getInvoice().getInvoiceId())
+                                .dueDate(payment.getInvoice().getDueDate())
+                                .amount(payment.getInvoice().getAmount())
+                                .itemList(itemLists)
+                                .build()
                 )
                 .amount(payment.getAmount())
                 .type(payment.getType().toString())

@@ -1,12 +1,14 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.TenureStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "t_tenure")
@@ -22,11 +24,17 @@ public class Tenure {
 
     @ManyToOne
     @JoinColumn(name = "paymentId")
-    private Payment payment;
+    private Payment paymentId;
 
     @Column
     private Long Amount;
 
     @Column
-    private Status status;
+    private Date dueDate;
+
+    @Column
+    private Date paidDate;
+
+    @Enumerated(EnumType.STRING)
+    private TenureStatus status;
 }
