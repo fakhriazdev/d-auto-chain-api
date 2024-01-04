@@ -317,8 +317,8 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Optional<Company> getCompanyNameLike(String companyName) {
-        return companyRepository.findByCompanyNameLike(companyName);
+    public List<Company> getCompaniesNameLike(String companyName) {
+        return companyRepository.findAllByCompanyNameLike(companyName);
     }
 
     private Specification<Company> getCompanySpecification(SearchCompanyRequest request) {

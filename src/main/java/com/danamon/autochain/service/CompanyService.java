@@ -16,5 +16,5 @@ public interface CompanyService {
     Resource getCompanyFilesByIdFile(String idFile);
     CompanyResponse update(UpdateCompanyRequest request);
     List<CompanyResponse> getNonPartnership(String id);
-    Optional<Company> getCompanyNameLike(String companyName);
+    List<Company> getCompaniesNameLike(String companyName);
 }
