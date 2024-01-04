@@ -316,6 +316,11 @@ public class CompanyServiceImpl implements CompanyService {
                 .build();
     }
 
+    @Override
+    public Optional<Company> getCompanyNameLike(String companyName) {
+        return companyRepository.findByCompanyNameLike(companyName);
+    }
+
     private Specification<Company> getCompanySpecification(SearchCompanyRequest request) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();

@@ -23,4 +23,5 @@ public class PaymentResponse {
     private String paidDate;
     private String method;
     private String status;
+    private String recepient;
 }

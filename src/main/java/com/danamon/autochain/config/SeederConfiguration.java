@@ -241,6 +241,8 @@ public class SeederConfiguration implements CommandLineRunner {
         Invoice savedInvoice1 = invoiceRepository.saveAndFlush(invoice);
 
         Payment payment = Payment.builder()
+                .senderId(company)
+                .recipientId(partner)
                 .invoice(savedInvoice1)
                 .financingPayable(null)
                 .amount(100000L)
@@ -268,6 +270,8 @@ public class SeederConfiguration implements CommandLineRunner {
         Invoice savedInvoice2 = invoiceRepository.saveAndFlush(invoice2);
 
         Payment payment2 = Payment.builder()
+                .senderId(company)
+                .recipientId(partner)
                 .invoice(savedInvoice2)
                 .financingPayable(null)
                 .amount(300000L)

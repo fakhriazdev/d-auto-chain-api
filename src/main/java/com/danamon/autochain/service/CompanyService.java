@@ -6,6 +6,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CompanyService {
     CompanyResponse create(NewCompanyRequest request);
@@ -15,4 +16,5 @@ public interface CompanyService {
     Resource getCompanyFilesByIdFile(String idFile);
     CompanyResponse update(UpdateCompanyRequest request);
     List<CompanyResponse> getNonPartnership(String id);
+    Optional<Company> getCompanyNameLike(String companyName);
 }

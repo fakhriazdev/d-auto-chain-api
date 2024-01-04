@@ -43,7 +43,7 @@ public class PaymentController {
             @RequestParam(required = false, defaultValue = "payable") String groupBy,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String transactionid
+            @RequestParam(required = false) String recipient
     ){
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -56,11 +56,10 @@ public class PaymentController {
                 .groupBy(groupBy)
                 .status(status)
                 .type(type)
-                .transactionId(transactionid)
+                .recipient(recipient)
                 .build();
 
         Page<PaymentResponse> ongoingPayments = paymentService.getOngoingPayments(request);
-//        List<PaymentResponse> ongoingPayments = paymentService.getOngoingPayments(request);
 
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(ongoingPayments.getTotalElements())
@@ -72,7 +71,6 @@ public class PaymentController {
         DataResponse<List<PaymentResponse>> response = DataResponse.<List<PaymentResponse>>builder()
                 .data(ongoingPayments.getContent())
                 .paging(pagingResponse)
-//                .data(ongoingPayments)
                 .message("Success get ongoing payments")
                 .statusCode(HttpStatus.OK.value())
                 .build();
@@ -86,9 +84,10 @@ public class PaymentController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
+            @RequestParam(required = false, defaultValue = "payable") String groupBy,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String transactionid
+            @RequestParam(required = false) String recipient
     ){
         page = PagingUtil.validatePage(page);
         size = PagingUtil.validateSize(size);
@@ -100,11 +99,11 @@ public class PaymentController {
                 .direction(direction)
                 .status(status)
                 .type(type)
-                .transactionId(transactionid)
+                .groupBy(groupBy)
+                .recipient(recipient)
                 .build();
 
         Page<PaymentResponse> ongoingPayments = paymentService.getHistoryPayments(request);
-//        List<PaymentResponse> ongoingPayments = paymentService.getHistoryPayments(request);
 
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(ongoingPayments.getTotalElements())
@@ -116,7 +115,6 @@ public class PaymentController {
         DataResponse<List<PaymentResponse>> response = DataResponse.<List<PaymentResponse>>builder()
                 .data(ongoingPayments.getContent())
                 .paging(pagingResponse)
-//                .data(ongoingPayments)
                 .message("Success get history payments")
                 .statusCode(HttpStatus.OK.value())
                 .build();
