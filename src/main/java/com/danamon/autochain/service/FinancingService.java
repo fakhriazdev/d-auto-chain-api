@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface FinancingService {
+//    =========================== PAYABLE ======================================
     Map<String,Double> get_limit();
-    void receivable_financing(List<ReceivableRequest> request);
     Page<FinancingResponse> getAllPayable(SearchFinancingRequest request);
+    ReceivableDetailResponse get_detail_payable(String financing_id);
+
+//    =========================== RECEIVABLE ===================================
+    void receivable_financing(List<ReceivableRequest> request);
     Page<FinancingResponse> getAll(SearchFinancingRequest request);
     ReceivableDetailResponse get_detail_receivable(String financing_id);
 
