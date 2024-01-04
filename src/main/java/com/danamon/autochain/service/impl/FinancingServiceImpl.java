@@ -3,10 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.FinancingStatus;
 import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.entity.*;
-import com.danamon.autochain.repository.CompanyRepository;
-import com.danamon.autochain.repository.FinancingReceivableRepository;
-import com.danamon.autochain.repository.InvoiceRepository;
-import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import jakarta.persistence.criteria.Predicate;
@@ -25,15 +22,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class FinancingServiceImpl implements FinancingService {
     private final FinancingReceivableRepository financingReceivableRepository;
+    private final FinancingPayableRepository financingPayableRepository;
     private final InvoiceRepository invoiceRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
@@ -51,8 +46,73 @@ public class FinancingServiceImpl implements FinancingService {
         return data;
     }
 
+//    =================================== FINANCING PAYABLE ==========================================
+
     @Override
-    public List<FinancingReceivable> receivable_financing(List<ReceivableRequest> request) {
+    public Page<FinancingResponse> getAllPayable(SearchFinancingRequest request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+        Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
+
+        Specification<FinancingPayable> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (request.getStatus() != null) {
+                Predicate status = criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("status")),
+                        request.getStatus().toLowerCase()
+                );
+                predicates.add(status);
+            }
+
+            Predicate id = criteriaBuilder.equal(
+                    criteriaBuilder.lower(root.get("company")),
+                    company.getCompany_id().toLowerCase()
+            );
+            predicates.add(id);
+
+            return query
+                    .where(predicates.toArray(new Predicate[]{}))
+                    .getRestriction();
+        };
+        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Page<FinancingPayable> financing = financingPayableRepository.findAll(specification, pageable);
+
+        return financing.map(this::mapToResponsePayable);
+    }
+
+    @Override
+    public ReceivableDetailResponse get_detail_payable(String financing_id) {
+        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
+        Map<String,String> sender = new HashMap<>();
+        sender.put("company_name", financingReceivable.getInvoice().getSenderId().getCompanyName());
+        sender.put("email", financingReceivable.getInvoice().getSenderId().getCompanyEmail());
+        sender.put("phone_number", financingReceivable.getInvoice().getSenderId().getPhoneNumber());
+        sender.put("city", financingReceivable.getInvoice().getSenderId().getCity());
+        sender.put("province", financingReceivable.getInvoice().getSenderId().getProvince());
+
+        Map<String,String> recipient = new HashMap<>();
+        recipient.put("company_name", financingReceivable.getInvoice().getRecipientId().getCompanyName());
+        recipient.put("email", financingReceivable.getInvoice().getRecipientId().getCompanyEmail());
+        recipient.put("phone_number", financingReceivable.getInvoice().getRecipientId().getPhoneNumber());
+        recipient.put("city", financingReceivable.getInvoice().getRecipientId().getCity());
+        recipient.put("province", financingReceivable.getInvoice().getRecipientId().getProvince());
+
+        return ReceivableDetailResponse.builder()
+                .invoice_number(financingReceivable.getInvoice().getInvoiceId())
+                .recipient(recipient)
+                .sender(sender)
+                .amount(financingReceivable.getAmount())
+                .Fee(financingReceivable.getFee())
+                .total(financingReceivable.getTotal())
+                .created_date(financingReceivable.getDisbursment_date())
+                .build();
+    }
+
+//   ===================================== FINANCING RECEIVABLE ==========================================
+    @Override
+    public void receivable_financing(List<ReceivableRequest> request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
@@ -97,7 +157,6 @@ public class FinancingServiceImpl implements FinancingService {
             );
         });
         financingReceivableRepository.saveAllAndFlush(financingReceivables);
-        return financingReceivables;
     }
 
     @Override
@@ -118,7 +177,7 @@ public class FinancingServiceImpl implements FinancingService {
             }
 
             Predicate id = criteriaBuilder.equal(
-                    criteriaBuilder.lower(root.get("companyId")),
+                    criteriaBuilder.lower(root.get("company")),
                     company.getCompany_id().toLowerCase()
             );
             predicates.add(id);
@@ -208,6 +267,7 @@ public class FinancingServiceImpl implements FinancingService {
         return RejectResponse.builder().build();
     }
 
+
     private FinancingResponse mapToResponseReceivable(FinancingReceivable data) {
         return FinancingResponse.builder()
                 .financing_id(data.getFinancingId())
@@ -219,6 +279,14 @@ public class FinancingServiceImpl implements FinancingService {
                 .build();
     }
 
-
-
+    private FinancingResponse mapToResponsePayable(FinancingPayable data) {
+        return FinancingResponse.builder()
+                .financing_id(data.getFinancingPayableId())
+                .invoice_number(data.getInvoice().getInvoiceId())
+                .Amount(data.getAmount())
+                .company_name(data.getCompany().getCompanyName())
+                .status(String.valueOf(data.getStatus()))
+                .date(Date.from(data.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
+                .build();
+    }
 }

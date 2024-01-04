@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -26,6 +27,10 @@ public class FinancingPayable extends HistoryLog{
     @ManyToOne
     @JoinColumn(name = "companyId")
     private Company company;
+
+    @JoinColumn(name = "invoiceId")
+    @OneToOne
+    private Invoice invoice;
 
 //    @OneToMany
 //    @JoinColumn(name = "paymentId")
@@ -51,7 +56,6 @@ public class FinancingPayable extends HistoryLog{
 
     @Column
     private Integer period_number;
-
 
     @OneToMany(mappedBy = "financingPayable")
     private List<Payment> payment;

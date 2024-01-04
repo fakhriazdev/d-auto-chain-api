@@ -16,7 +16,7 @@ public interface PaymentService {
     Page<PaymentResponse> getOngoingPayments(SearchPaymentRequest request);
 //    List<PaymentResponse> getOngoingPayments(SearchPaymentRequest request);
 
-        Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
+    Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
 //    List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
 
     PaymentResponse changeMethodPayment(PaymentChangeMethodRequest request);

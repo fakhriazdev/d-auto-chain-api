@@ -261,6 +261,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Transactional(readOnly = true)
     @Override
+
     public Page<CompanyResponse> getAll(SearchCompanyRequest request) {
         Specification<Company> specification = getCompanySpecification(request);
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());

@@ -52,11 +52,10 @@ public class FinancingController {
 
     @PostMapping("/receivable")
     public ResponseEntity<?> request_financing_receivable(@RequestBody List<ReceivableRequest> list_financing){
-        List<FinancingReceivable> receivableRequests = financingService.receivable_financing(list_financing);
+        financingService.receivable_financing(list_financing);
         DataResponse<List<FinancingReceivable>> response = DataResponse.<List<FinancingReceivable>>builder()
-                .message("successfully get all company")
+                .message("financing successfully created")
                 .statusCode(HttpStatus.OK.value())
-                .data(receivableRequests)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -65,11 +64,10 @@ public class FinancingController {
 
     @PostMapping("/payable")
     public ResponseEntity<?> request_financing_payable(List<ReceivableRequest> list_financing){
-        List<FinancingReceivable> receivableRequests = financingService.receivable_financing(list_financing);
+        financingService.receivable_financing(list_financing);
         DataResponse<List<FinancingReceivable>> response = DataResponse.<List<FinancingReceivable>>builder()
                 .message("successfully get all company")
                 .statusCode(HttpStatus.OK.value())
-                .data(receivableRequests)
                 .build();
 
         return ResponseEntity
@@ -77,9 +75,47 @@ public class FinancingController {
                 .body(response);
     }
 
+    @GetMapping("/payable")
+    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
+    public ResponseEntity<?> get_All_Financing_Payable(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false, defaultValue = "asc") String direction,
+            @RequestParam(required = false) String status
+    ){
+        page = PagingUtil.validatePage(page);
+        size = PagingUtil.validateSize(size);
+        direction = PagingUtil.validateDirection(direction);
+
+        SearchFinancingRequest request = SearchFinancingRequest.builder()
+                .page(page)
+                .size(size)
+                .direction(direction)
+                .status(status)
+                .build();
+
+        Page<FinancingResponse> data = financingService.getAll(request);
+
+        PagingResponse pagingResponse = PagingResponse.builder()
+                .count(data.getTotalElements())
+                .totalPages(data.getTotalPages())
+                .page(page)
+                .size(size)
+                .build();
+
+        DataResponse<List<FinancingResponse>> response = DataResponse.<List<FinancingResponse>>builder()
+                .data(data.getContent())
+                .paging(pagingResponse)
+                .message("Success Generate Invoice")
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/receivable")
     @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
-    public ResponseEntity<?> getAllFinancing(
+    public ResponseEntity<?> get_all_financing_receivable(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
