@@ -15,6 +15,7 @@ public interface FinancingService {
 
 //    =========================== RECEIVABLE ===================================
     void receivable_financing(List<ReceivableRequest> request);
+    Page<FinancingResponse> getAllPayable(SearchFinancingRequest request);
     Page<FinancingResponse> getAll(SearchFinancingRequest request);
     ReceivableDetailResponse get_detail_receivable(String financing_id);
 
