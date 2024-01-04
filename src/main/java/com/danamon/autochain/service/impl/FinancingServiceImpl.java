@@ -3,10 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.FinancingStatus;
 import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.entity.*;
-import com.danamon.autochain.repository.CompanyRepository;
-import com.danamon.autochain.repository.FinancingReceivableRepository;
-import com.danamon.autochain.repository.InvoiceRepository;
-import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import jakarta.persistence.criteria.Predicate;
@@ -34,6 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FinancingServiceImpl implements FinancingService {
     private final FinancingReceivableRepository financingReceivableRepository;
+    private final FinancingPayableRepository financingPayableRepository;
     private final InvoiceRepository invoiceRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
@@ -51,6 +49,43 @@ public class FinancingServiceImpl implements FinancingService {
         return data;
     }
 
+//    =================================== FINANCING PAYABLE ==========================================
+
+    @Override
+    public Page<FinancingResponse> getAllPayable(SearchFinancingRequest request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+        Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
+
+        Specification<FinancingPayable> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (request.getStatus() != null) {
+                Predicate status = criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("status")),
+                        request.getStatus().toLowerCase()
+                );
+                predicates.add(status);
+            }
+
+            Predicate id = criteriaBuilder.equal(
+                    criteriaBuilder.lower(root.get("company")),
+                    company.getCompany_id().toLowerCase()
+            );
+            predicates.add(id);
+
+            return query
+                    .where(predicates.toArray(new Predicate[]{}))
+                    .getRestriction();
+        };
+        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Page<FinancingPayable> financing = financingPayableRepository.findAll(specification, pageable);
+
+        return financing.map(this::mapToResponsePayable);
+    }
+
+//   ===================================== FINANCING RECEIVABLE ==========================================
     @Override
     public void receivable_financing(List<ReceivableRequest> request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -207,6 +242,7 @@ public class FinancingServiceImpl implements FinancingService {
         return RejectResponse.builder().build();
     }
 
+
     private FinancingResponse mapToResponseReceivable(FinancingReceivable data) {
         return FinancingResponse.builder()
                 .financing_id(data.getFinancingId())
@@ -218,6 +254,14 @@ public class FinancingServiceImpl implements FinancingService {
                 .build();
     }
 
-
-
+    private FinancingResponse mapToResponsePayable(FinancingPayable data) {
+        return FinancingResponse.builder()
+                .financing_id(data.getFinancingPayableId())
+                .invoice_number(data.getInvoice().getInvoiceId())
+                .Amount(data.getAmount())
+                .company_name(data.getCompany().getCompanyName())
+                .status(String.valueOf(data.getStatus()))
+                .date(data.getCreatedDate())
+                .build();
+    }
 }
