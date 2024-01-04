@@ -55,11 +55,7 @@ public class FinancingPayable extends HistoryLog{
     private Integer installments_number;
 
     @Column
-    private Date createdDate;
-
-    @Column
     private Integer period_number;
-
 
     @OneToMany(mappedBy = "financingPayable")
     private List<Payment> payment;

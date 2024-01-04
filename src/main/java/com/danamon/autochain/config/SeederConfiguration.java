@@ -245,11 +245,10 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayable(null)
                 .amount(100000L)
                 .type(PaymentType.INVOICING)
-                .dueDate("2024-01-31T21:29:04.48")
-                .paidDate(null)
+                .dueDate(new Date())
+                .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .source(null)
-                .outstandingFlag(Status.UNPAID)
+                .status(Status.UNPAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment);
@@ -273,11 +272,10 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayable(null)
                 .amount(300000L)
                 .type(PaymentType.INVOICING)
-                .dueDate("2024-01-31T21:29:04.48")
-                .paidDate(null)
+                .dueDate(new Date())
+                .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .source(null)
-                .outstandingFlag(Status.PAID)
+                .status(Status.PAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment2);

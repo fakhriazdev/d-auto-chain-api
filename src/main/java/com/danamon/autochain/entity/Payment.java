@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,24 +32,30 @@ public class Payment {
     @JoinColumn(name = "financingPayableId")
     private FinancingPayable financingPayable;
 
+    @ManyToOne
+    @JoinColumn(name = "recipientId")
+    private Company recipientId;
+
+    @ManyToOne
+    @JoinColumn(name = "senderId")
+    private Company senderId;
+
     @Column
     private Long amount;
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private PaymentType type;
 
     @Column
-    private String dueDate;
+    private Date dueDate;
 
     @Column
-    private String paidDate;
+    private Date paidDate;
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
 
-    @Column
-    private Boolean source;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
-    @Column
-    private Status outstandingFlag;
 }

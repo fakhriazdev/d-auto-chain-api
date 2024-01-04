@@ -22,10 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -289,7 +286,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .Amount(data.getAmount())
                 .company_name(data.getCompany().getCompanyName())
                 .status(String.valueOf(data.getStatus()))
-                .date(data.getCreatedDate())
+                .date(Date.from(data.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
                 .build();
     }
 }
