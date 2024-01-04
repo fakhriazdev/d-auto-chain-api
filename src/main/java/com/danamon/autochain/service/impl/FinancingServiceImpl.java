@@ -50,7 +50,7 @@ public class FinancingServiceImpl implements FinancingService {
 //    =================================== FINANCING PAYABLE ==========================================
 
     @Override
-    public Page<FinancingResponse> getAllPayable(SearchFinancingRequest request) {
+    public Page<FinancingResponse> get_all_payable(SearchFinancingRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
@@ -123,7 +123,7 @@ public class FinancingServiceImpl implements FinancingService {
 
 //   ===================================== FINANCING RECEIVABLE ==========================================
     @Override
-    public void receivable_financing(List<ReceivableRequest> request) {
+    public void create_financing_receivable(List<ReceivableRequest> request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
@@ -171,7 +171,7 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public Page<FinancingResponse> getAll(SearchFinancingRequest request) {
+    public Page<FinancingResponse> get_all_receivable(SearchFinancingRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
@@ -237,7 +237,7 @@ public class FinancingServiceImpl implements FinancingService {
 //    ====================================== BACK OFFICE ===========================================
 
     @Override
-    public Page<FinancingResponse> backoffice_getAll(SearchFinancingRequest request) {
+    public Page<FinancingResponse> backoffice_get_all_financing(SearchFinancingRequest request) {
 
         Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -263,21 +263,38 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public AcceptResponse backoffice_accept(String financing_id) {
-        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-        financingReceivable.setStatus(FinancingStatus.ONGOING);
-        financingReceivableRepository.saveAndFlush(financingReceivable);
-        return AcceptResponse.builder().build();
+    public AcceptResponse backoffice_accept(AcceptRequest request) {
+        if(request.getType().equalsIgnoreCase("payable")){
+            FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+            financingPayable.setStatus(FinancingStatus.ONGOING);
+            financingPayableRepository.saveAndFlush(financingPayable);
+            return AcceptResponse.builder().build();
+        } else if (request.getType().equalsIgnoreCase("receivable")) {
+            FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+            financingReceivable.setStatus(FinancingStatus.ONGOING);
+            financingReceivableRepository.saveAndFlush(financingReceivable);
+            return AcceptResponse.builder().build();
+        }else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
+        }
     }
 
     @Override
-    public RejectResponse backoffice_reject(String financing_id) {
-        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-        financingReceivable.setStatus(FinancingStatus.REJECTED);
-        financingReceivableRepository.saveAndFlush(financingReceivable);
-        return RejectResponse.builder().build();
+    public RejectResponse backoffice_reject(RejectRequest request) {
+        if(request.getType().equalsIgnoreCase("payable")){
+            FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+            financingPayable.setStatus(FinancingStatus.REJECTED);
+            financingPayableRepository.saveAndFlush(financingPayable);
+            return RejectResponse.builder().build();
+        } else if (request.getType().equalsIgnoreCase("receivable")) {
+            FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+            financingReceivable.setStatus(FinancingStatus.REJECTED);
+            financingReceivableRepository.saveAndFlush(financingReceivable);
+            return RejectResponse.builder().build();
+        }else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
+        }
     }
-
 
     private FinancingResponse mapToResponseReceivable(FinancingReceivable data) {
         return FinancingResponse.builder()
