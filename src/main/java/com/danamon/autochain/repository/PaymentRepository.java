@@ -14,6 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSpecificationExecutor<Payment> {
-//    List<Payment> findAllByInvoiceInAndOutstandingFlagIn(List<Invoice> invoices, List<Status> status);
-    Page<Payment> findAllByInvoiceInAndStatusIn(List<Invoice> invoices, List<Status> status, Pageable pageable);
+////    List<Payment> findAllByInvoiceInAndOutstandingFlagIn(List<Invoice> invoices, List<Status> status);
+//    Page<Payment> findAllByInvoiceInAndStatusIn(List<Invoice> invoices, List<Status> status, Pageable pageable);
 }

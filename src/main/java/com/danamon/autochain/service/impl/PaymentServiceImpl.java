@@ -55,35 +55,86 @@ import java.util.stream.Collectors;
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
-    private final InvoiceService invoiceService;
     private final ObjectMapper objectMapper;
+    private final CompanyService companyService;
 
     @Override
     @Transactional(readOnly = true)
     public Page<PaymentResponse> getOngoingPayments(SearchPaymentRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
-        // get invoices
-        List<Invoice> invoices;
-        if (request.getGroupBy().equals("payable")) {
-            invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
-        } else {
-            invoices = invoiceService.getInvoiceBySenderId(user.getCompany().getCompany_id());
-        }
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
 
-        // get payments by invoice
         List<Status> statuses = getOngoingStatuses(request);
         List<PaymentType> types = getTypes(request);
+        Optional<Company> recipient = companyService.getCompanyNameLike(request.getRecipient());
 
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(invoices, statuses, types, request.getTransactionId()),
+                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipient),
                 pageable
         );
 
-        return payments.map(payment -> mapToResponsePayment(payment));
+        return payments.map(payment -> mapToResponsePayment(payment, request));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+
+        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
+
+        List<Status> statuses = getHistoryStatuses(request);
+        List<PaymentType> types = getTypes(request);
+        Optional<Company> recipient = companyService.getCompanyNameLike(request.getRecipient());
+
+        Page<Payment> payments = paymentRepository.findAll(
+                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipient),
+                pageable
+        );
+
+        return payments.map(payment -> mapToResponsePayment(payment, request));
+    }
+
+    private static Specification<Payment> withInvoiceAndStatus(User user, List<Status> statuses, List<PaymentType> types, String groupBy, Optional<Company> recipient) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (groupBy.equals("payable")) {
+                predicates.add(criteriaBuilder.equal(
+                        root.get("recipientId"),
+                        user.getCompany()
+                ));
+
+                if (recipient.isPresent()) {
+                    predicates.add(criteriaBuilder.equal(
+                            root.get("senderId"),
+                            recipient.get()
+                    ));
+                }
+            } else {
+                predicates.add(criteriaBuilder.equal(
+                        root.get("senderId"),
+                        user.getCompany()
+                ));
+
+                if (recipient.isPresent()) {
+                    predicates.add(criteriaBuilder.equal(
+                            root.get("recipientId"),
+                            recipient.get()
+                    ));
+                }
+            }
+
+            predicates.add(root.get("status").in(statuses));
+            predicates.add(root.get("type").in(types));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     private static List<PaymentType> getTypes(SearchPaymentRequest request) {
@@ -128,48 +179,6 @@ public class PaymentServiceImpl implements PaymentService {
         return statuses;
     }
 
-    public static Specification<Payment> withInvoiceAndStatus(List<Invoice> invoices, List<Status> statuses, List<PaymentType> types, String transactionId) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            predicates.add(root.get("invoice").in(invoices));
-            predicates.add(root.get("status").in(statuses));
-            predicates.add(root.get("type").in(types));
-
-            if (transactionId != null) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("transactionId")),
-                        "%" + transactionId.toLowerCase() + "%"
-                ));
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request) {
-        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
-        // get invoices by groupBy
-        List<Invoice> invoices = invoiceService.getInvoiceByRecepientId(user.getCompany().getCompany_id());
-
-        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
-
-        // get payments by invoice
-        List<Status> statuses = getHistoryStatuses(request);
-        List<PaymentType> types = getTypes(request);
-
-        Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(invoices, statuses, types, request.getTransactionId()),
-                pageable
-        );
-
-        return payments.map(payment -> mapToResponsePayment(payment));
-    }
-
     private static List<Status> getHistoryStatuses(SearchPaymentRequest request) {
         List<Status> statuses = new ArrayList<>();
         if (request.getStatus() != null) {
@@ -191,7 +200,7 @@ public class PaymentServiceImpl implements PaymentService {
         return statuses;
     }
 
-    private PaymentResponse mapToResponsePayment(Payment payment) {
+    private PaymentResponse mapToResponsePayment(Payment payment, SearchPaymentRequest request) {
         List<ItemList> itemLists;
 
         try {
@@ -219,6 +228,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .paidDate(payment.getPaidDate().toString())
                 .method(payment.getMethod().toString())
                 .status(payment.getStatus().toString())
+                .recepient(request.getGroupBy().equals("payable") ? payment.getSenderId().getCompanyName() : payment.getRecipientId().getCompanyName())
                 .build();
 
         return paymentResponse;
@@ -232,6 +242,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentRepository.saveAndFlush(paymentOld);
 
-        return mapToResponsePayment(payment);
+        return mapToResponsePayment(payment, null);
     }
 }
