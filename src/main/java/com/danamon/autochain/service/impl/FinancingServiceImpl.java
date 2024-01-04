@@ -22,10 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -83,6 +80,34 @@ public class FinancingServiceImpl implements FinancingService {
         Page<FinancingPayable> financing = financingPayableRepository.findAll(specification, pageable);
 
         return financing.map(this::mapToResponsePayable);
+    }
+
+    @Override
+    public ReceivableDetailResponse get_detail_payable(String financing_id) {
+        FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
+        Map<String,String> sender = new HashMap<>();
+        sender.put("company_name", financingReceivable.getInvoice().getSenderId().getCompanyName());
+        sender.put("email", financingReceivable.getInvoice().getSenderId().getCompanyEmail());
+        sender.put("phone_number", financingReceivable.getInvoice().getSenderId().getPhoneNumber());
+        sender.put("city", financingReceivable.getInvoice().getSenderId().getCity());
+        sender.put("province", financingReceivable.getInvoice().getSenderId().getProvince());
+
+        Map<String,String> recipient = new HashMap<>();
+        recipient.put("company_name", financingReceivable.getInvoice().getRecipientId().getCompanyName());
+        recipient.put("email", financingReceivable.getInvoice().getRecipientId().getCompanyEmail());
+        recipient.put("phone_number", financingReceivable.getInvoice().getRecipientId().getPhoneNumber());
+        recipient.put("city", financingReceivable.getInvoice().getRecipientId().getCity());
+        recipient.put("province", financingReceivable.getInvoice().getRecipientId().getProvince());
+
+        return ReceivableDetailResponse.builder()
+                .invoice_number(financingReceivable.getInvoice().getInvoiceId())
+                .recipient(recipient)
+                .sender(sender)
+                .amount(financingReceivable.getAmount())
+                .Fee(financingReceivable.getFee())
+                .total(financingReceivable.getTotal())
+                .created_date(financingReceivable.getDisbursment_date())
+                .build();
     }
 
 //   ===================================== FINANCING RECEIVABLE ==========================================
@@ -261,7 +286,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .Amount(data.getAmount())
                 .company_name(data.getCompany().getCompanyName())
                 .status(String.valueOf(data.getStatus()))
-                .date(data.getCreatedDate())
+                .date(Date.from(data.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
                 .build();
     }
 }

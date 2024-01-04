@@ -35,15 +35,9 @@ public class SeederConfiguration implements CommandLineRunner {
     private final PaymentRepository paymentRepository;
     private final BCryptUtil bCryptUtil;
 
-//   ============================== SUPER ADMIN ===================================
-    private final String email = "rizdaagisa@gmail.com";
+    private final String email = "erwinperdana2@gmail.com";
     private final String username = "rizda";
     private final String password = "string";
-
-//    ============================ SUPER USER =====================================
-    private final String superUserEmail = "oreofinalprojectdtt@gmail.com";
-    private final String superUserUsername = "oreo";
-    private final String superUserPassword = "test12345";
 
     @Override
     public void run(String... args) {
@@ -90,26 +84,26 @@ public class SeederConfiguration implements CommandLineRunner {
 
     public void userSeeder(){
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
-        Company company = companyRepository.findBycompanyName("root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
-
-        List<UserRole> roles = new ArrayList<>();
+        Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
         Credential userCredential = Credential.builder()
-                .email(superUserEmail)
-                .username(superUserUsername)
-                .password(bCryptUtil.hashPassword(superUserPassword))
+                .email("oreofinalprojectdtt@gmail.com")
+                .username("oreo")
+                .password(bCryptUtil.hashPassword("test12345"))
                 .actor(ActorType.BACKOFFICE)
                 .modifiedDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
-                .roles(roles)
                 .createdBy("oreo")
                 .modifiedBy("oreo")
                 .build();
 
+        credentialRepository.saveAndFlush(userCredential);
 
         User user = new User();
         user.setCompany(company);
         user.setCredential(userCredential);
+
+        userRepository.saveAndFlush(user);
 
         List<UserRole> roleUser = new ArrayList<>();
         roleUser.add(
@@ -121,8 +115,36 @@ public class SeederConfiguration implements CommandLineRunner {
 
         userCredential.setRoles(roleUser);
 
-        userRepository.saveAndFlush(user);
-        credentialRepository.saveAndFlush(userCredential);
+        Company company2 = companyRepository.findBycompanyName("PT. Root2").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company name not found"));
+
+        Credential userCredential2 = Credential.builder()
+                .email("root2@gmail.com")
+                .username("oreo")
+                .password(bCryptUtil.hashPassword("string"))
+                .actor(ActorType.USER)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy("oreo")
+                .modifiedBy("oreo")
+                .build();
+
+        credentialRepository.saveAndFlush(userCredential2);
+
+        User user2 = new User();
+        user2.setCompany(company2);
+        user2.setCredential(userCredential2);
+
+        userRepository.saveAndFlush(user2);
+
+        List<UserRole> roleUser2 = new ArrayList<>();
+        roleUser2.add(
+                UserRole.builder()
+                        .role(superUser)
+                        .credential(userCredential2)
+                        .build()
+        );
+
+        userCredential2.setRoles(roleUser2);
     }
 
     public void companySeeder() {
@@ -223,11 +245,10 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayable(null)
                 .amount(100000L)
                 .type(PaymentType.INVOICING)
-                .dueDate("2024-01-31T21:29:04.48")
-                .paidDate(null)
+                .dueDate(new Date())
+                .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .source(null)
-                .outstandingFlag(Status.UNPAID)
+                .status(Status.UNPAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment);
@@ -251,11 +272,10 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayable(null)
                 .amount(300000L)
                 .type(PaymentType.INVOICING)
-                .dueDate("2024-01-31T21:29:04.48")
-                .paidDate(null)
+                .dueDate(new Date())
+                .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .source(null)
-                .outstandingFlag(Status.PAID)
+                .status(Status.PAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment2);
