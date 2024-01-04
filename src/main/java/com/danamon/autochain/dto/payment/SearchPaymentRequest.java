@@ -13,7 +13,9 @@ public class SearchPaymentRequest {
     private Integer page;
     private Integer size;
     private String direction;
+    private String groupBy;
     private String status;
     private String type;
+    private String transactionId;
 }
 

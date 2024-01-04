@@ -22,6 +22,5 @@ public class PaymentResponse {
     private String dueDate;
     private String paidDate;
     private String method;
-    private Boolean source;
-    private String outstandingFlag;
+    private String status;
 }

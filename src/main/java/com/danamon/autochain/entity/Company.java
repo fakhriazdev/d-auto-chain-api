@@ -58,8 +58,8 @@ public class Company {
     @JsonManagedReference
     private List<Partnership> partnerships;
 
-    @OneToOne(mappedBy = "company" ,cascade = CascadeType.ALL)
-    private User user;
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<User> user;
 
     @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
     private List<FinancingReceivable> financingReceivable;
