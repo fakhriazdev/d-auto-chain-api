@@ -1,11 +1,18 @@
 package com.danamon.autochain.service.impl;
 
-import com.danamon.autochain.constant.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingType;
+import com.danamon.autochain.constant.payment.PaymentStatus;
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.financing.*;
+import com.danamon.autochain.dto.payment.CreatePaymentRequest;
+import com.danamon.autochain.dto.transaction.TransactionRequest;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
+import com.danamon.autochain.service.PaymentService;
+import com.danamon.autochain.service.TransactionService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,8 +39,11 @@ public class FinancingServiceImpl implements FinancingService {
     private final TenureRepository tenureRepository;
     private final InvoiceRepository invoiceRepository;
     private final CompanyRepository companyRepository;
+    private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
     private final CompanyService companyService;
+    private final PaymentService paymentService;
+    private final TransactionService transactionService;
 
     @Override
     public Map<String, Double> get_limit() {
@@ -77,7 +87,7 @@ public class FinancingServiceImpl implements FinancingService {
                     .getRestriction();
         };
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
         Page<FinancingPayable> financing = financingPayableRepository.findAll(specification, pageable);
 
         return financing.map(this::mapToResponsePayable);
@@ -86,15 +96,15 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public PayableDetailResponse get_detail_payable(String financing_id) {
         FinancingPayable financingPayable = financingPayableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
-        List<Tenure> tenures = tenureRepository.findAllByPaymentId(financingPayable.getPayment());
-        Map<String,String> sender = new HashMap<>();
+        List<Tenure> tenures = tenureRepository.findAllByfinancingPayableId(financingPayable);
+        Map<String, String> sender = new HashMap<>();
         sender.put("company_name", financingPayable.getInvoice().getSenderId().getCompanyName());
         sender.put("email", financingPayable.getInvoice().getSenderId().getCompanyEmail());
         sender.put("phone_number", financingPayable.getInvoice().getSenderId().getPhoneNumber());
         sender.put("city", financingPayable.getInvoice().getSenderId().getCity());
         sender.put("province", financingPayable.getInvoice().getSenderId().getProvince());
 
-        Map<String,String> recipient = new HashMap<>();
+        Map<String, String> recipient = new HashMap<>();
         recipient.put("company_name", financingPayable.getInvoice().getRecipientId().getCompanyName());
         recipient.put("email", financingPayable.getInvoice().getRecipientId().getCompanyEmail());
         recipient.put("phone_number", financingPayable.getInvoice().getRecipientId().getPhoneNumber());
@@ -104,10 +114,10 @@ public class FinancingServiceImpl implements FinancingService {
         List<TenureDetailResponse> listTenure = new ArrayList<>();
         tenures.forEach(tenure -> {
             listTenure.add(TenureDetailResponse.builder()
-                            .tenure_id(tenure.getTenureId())
-                            .due_date(tenure.getDueDate())
-                            .amount(tenure.getAmount())
-                            .status(tenure.getStatus().name())
+                    .tenure_id(tenure.getTenureId())
+                    .due_date(tenure.getDueDate())
+                    .amount(tenure.getAmount())
+                    .status(tenure.getStatus().name())
                     .build());
         });
         return PayableDetailResponse.builder()
@@ -121,7 +131,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .build();
     }
 
-//   ===================================== FINANCING RECEIVABLE ==========================================
+    //   ===================================== FINANCING RECEIVABLE ==========================================
     @Override
     public void create_financing_receivable(List<ReceivableRequest> request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -130,6 +140,11 @@ public class FinancingServiceImpl implements FinancingService {
 
         List<FinancingReceivable> financingReceivables = new ArrayList<>();
         request.forEach(receivableRequest -> {
+
+            if (receivableRequest.getAmount() <= 75000000) {
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot less than Rp.75.000.000");
+            }
+
             Invoice invoice = invoiceRepository.findById(receivableRequest.getInvoice_number())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid invoice id"));
 
@@ -151,13 +166,13 @@ public class FinancingServiceImpl implements FinancingService {
             BigDecimal bigDecimal = new BigDecimal(result);
             BigDecimal roundedBigDecimal = bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP);
             double formattedResult = roundedBigDecimal.doubleValue();
-            
+
             financingReceivables.add(
                     FinancingReceivable.builder()
                             .invoice(invoice)
                             .company(company)
                             .status(FinancingStatus.PENDING)
-                            .financingType("RECEIVABLE")
+                            .financingType(FinancingType.RECEIVABLE)
                             .amount(receivableRequest.getAmount())
                             .fee(fee)
                             .total(formattedResult)
@@ -199,7 +214,7 @@ public class FinancingServiceImpl implements FinancingService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
         Page<FinancingReceivable> financing = financingReceivableRepository.findAll(specification, pageable);
 
         return financing.map(this::mapToResponseReceivable);
@@ -208,14 +223,14 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public ReceivableDetailResponse get_detail_receivable(String financing_id) {
         FinancingReceivable financingReceivable = financingReceivableRepository.findById(financing_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid financing id"));
-        Map<String,String> sender = new HashMap<>();
+        Map<String, String> sender = new HashMap<>();
         sender.put("company_name", financingReceivable.getInvoice().getSenderId().getCompanyName());
         sender.put("email", financingReceivable.getInvoice().getSenderId().getCompanyEmail());
         sender.put("phone_number", financingReceivable.getInvoice().getSenderId().getPhoneNumber());
         sender.put("city", financingReceivable.getInvoice().getSenderId().getCity());
         sender.put("province", financingReceivable.getInvoice().getSenderId().getProvince());
 
-        Map<String,String> recipient = new HashMap<>();
+        Map<String, String> recipient = new HashMap<>();
         recipient.put("company_name", financingReceivable.getInvoice().getRecipientId().getCompanyName());
         recipient.put("email", financingReceivable.getInvoice().getRecipientId().getCompanyEmail());
         recipient.put("phone_number", financingReceivable.getInvoice().getRecipientId().getPhoneNumber());
@@ -256,7 +271,7 @@ public class FinancingServiceImpl implements FinancingService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
         Page<FinancingReceivable> financing = financingReceivableRepository.findAll(specification, pageable);
 
         return financing.map(this::mapToResponseReceivable);
@@ -264,24 +279,87 @@ public class FinancingServiceImpl implements FinancingService {
 
     @Override
     public AcceptResponse backoffice_accept(AcceptRequest request) {
-        if(request.getType().equalsIgnoreCase("payable")){
+        if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+
             financingPayable.setStatus(FinancingStatus.ONGOING);
             financingPayableRepository.saveAndFlush(financingPayable);
             return AcceptResponse.builder().build();
+
         } else if (request.getType().equalsIgnoreCase("receivable")) {
             FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+            Payment payment = financingReceivable.getInvoice().getPayment();
+
+            Long financing_amount = financingReceivable.getAmount();
+            Long invoice_amount = financingReceivable.getInvoice().getAmount();
+            Long payable_amount = invoice_amount - financing_amount;
+
+            if (payable_amount < 0 || financing_amount > invoice_amount) {
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Invalid financing request amount");
+            }
+
+            PaymentType partialFinancing = PaymentType.PARTIAL_FINANCING;
+            AcceptDetailResponse buyyer = new AcceptDetailResponse();
+
+            if (payable_amount == 0) {
+                paymentService.deletePayment(payment);
+                partialFinancing = PaymentType.FINANCING;
+            }
+
+//            buat partial payment danamon & seller
+            if (financing_amount < invoice_amount) {
+                payment.setAmount(payable_amount);
+                payment.setType(PaymentType.PARTIAL_FINANCING);
+                paymentRepository.saveAndFlush(payment);
+
+                transactionService.createTransaction(
+                        TransactionRequest.builder()
+                                .recipientId(financingReceivable.getInvoice().getRecipientId())
+                                .amount(payable_amount)
+                                .createdDate(new Date())
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .financingType(FinancingType.PAYABLE)
+                                .build()
+                );
+
+                buyyer.setFinancingType(FinancingType.PAYABLE.name());
+                buyyer.setAmountPaid(payable_amount);
+                buyyer.setCompany_name(financingReceivable.getInvoice().getRecipientId().getCompanyName());
+            }
+
+            transactionService.createTransaction(
+                    TransactionRequest.builder()
+                            .recipientId(financingReceivable.getInvoice().getSenderId())
+                            .amount(financing_amount)
+                            .createdDate(new Date())
+                            .paymentStatus(PaymentStatus.COMPLETED)
+                            .financingType(FinancingType.RECEIVABLE)
+                            .build()
+            );
+
             financingReceivable.setStatus(FinancingStatus.ONGOING);
             financingReceivableRepository.saveAndFlush(financingReceivable);
-            return AcceptResponse.builder().build();
-        }else {
+
+            AcceptDetailResponse seller = AcceptDetailResponse.builder()
+                    .company_name(financingReceivable.getInvoice().getSenderId().getCompanyName())
+                    .amountPaid(financing_amount)
+                    .financingType(FinancingType.RECEIVABLE.name())
+                    .build();
+
+            return AcceptResponse.builder()
+                    .payment_type(partialFinancing.name())
+                    .buyyer(buyyer)
+                    .seller(seller)
+                    .build();
+
+        } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
         }
     }
 
     @Override
     public RejectResponse backoffice_reject(RejectRequest request) {
-        if(request.getType().equalsIgnoreCase("payable")){
+        if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
             financingPayable.setStatus(FinancingStatus.REJECTED);
             financingPayableRepository.saveAndFlush(financingPayable);
@@ -291,7 +369,7 @@ public class FinancingServiceImpl implements FinancingService {
             financingReceivable.setStatus(FinancingStatus.REJECTED);
             financingReceivableRepository.saveAndFlush(financingReceivable);
             return RejectResponse.builder().build();
-        }else {
+        } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
         }
     }

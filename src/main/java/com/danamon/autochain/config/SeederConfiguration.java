@@ -3,17 +3,16 @@ package com.danamon.autochain.config;
 import com.danamon.autochain.constant.*;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.payment.PaymentMethod;
+import com.danamon.autochain.constant.payment.PaymentStatus;
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.PartnershipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -298,7 +297,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .dueDate(new Date())
                 .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .status(Status.UNPAID)
+                .status(PaymentStatus.UNPAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment);
@@ -327,7 +326,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .dueDate(new Date())
                 .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
-                .status(Status.PAID)
+                .status(PaymentStatus.UNPAID)
                 .build();
 
         paymentRepository.saveAndFlush(payment2);

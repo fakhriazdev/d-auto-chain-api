@@ -1,14 +1,13 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.Date;
-import java.util.List;
 
 
 @NoArgsConstructor
@@ -35,6 +34,9 @@ public class FinancingReceivable extends HistoryLog {
     @Enumerated(EnumType.STRING)
     private FinancingStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private FinancingType financingType;
+
     @Column
     private Double fee;
 
@@ -46,8 +48,5 @@ public class FinancingReceivable extends HistoryLog {
 
     @Column
     private Date disbursment_date;
-
-    @Column
-    private String  financingType;
 
 }

@@ -23,8 +23,8 @@ public class Tenure {
     private String tenureId;
 
     @ManyToOne
-    @JoinColumn(name = "paymentId")
-    private Payment paymentId;
+    @JoinColumn(name = "financingPayableId")
+    private FinancingPayable financingPayableId;
 
     @Column
     private Long Amount;

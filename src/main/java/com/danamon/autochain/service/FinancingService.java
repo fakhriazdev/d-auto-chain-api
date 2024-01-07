@@ -1,6 +1,5 @@
 package com.danamon.autochain.service;
 
-import com.danamon.autochain.constant.FinancingStatus;
 import com.danamon.autochain.dto.financing.*;
 import org.springframework.data.domain.Page;
 

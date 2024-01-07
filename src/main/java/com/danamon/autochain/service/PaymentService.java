@@ -9,6 +9,7 @@ import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.entity.Payment;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 public interface PaymentService {
 
     void createPayment(CreatePaymentRequest request);
+    void deletePayment(Payment payment);
     Page<PaymentResponse> getOngoingPayments(SearchPaymentRequest request);
 //    List<PaymentResponse> getOngoingPayments(SearchPaymentRequest request);
     Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);

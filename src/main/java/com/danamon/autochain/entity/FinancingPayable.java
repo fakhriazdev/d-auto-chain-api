@@ -1,6 +1,6 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.util.Date;
 import java.util.List;
 
 @NoArgsConstructor
@@ -60,5 +59,8 @@ public class FinancingPayable extends HistoryLog{
 
     @OneToOne(mappedBy = "financingPayable")
     private Payment payment;
+
+    @OneToMany(mappedBy = "financingPayableId")
+    private List<Tenure> tenures;
 
 }

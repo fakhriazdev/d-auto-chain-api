@@ -1,6 +1,5 @@
 package com.danamon.autochain.controller.backOffice;
 
-import com.danamon.autochain.constant.FinancingStatus;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.dto.financing.*;
