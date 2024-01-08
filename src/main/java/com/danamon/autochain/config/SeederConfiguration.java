@@ -84,6 +84,8 @@ public class SeederConfiguration implements CommandLineRunner {
 
     public void userSeeder(){
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
         List<UserRole> roleUser = new ArrayList<>();
@@ -112,6 +114,7 @@ public class SeederConfiguration implements CommandLineRunner {
         User user = new User();
         user.setCompany(company);
         user.setCredential(userCredential);
+        user.setName("root");
 
         userRepository.saveAndFlush(user);
 
@@ -142,8 +145,45 @@ public class SeederConfiguration implements CommandLineRunner {
         User user2 = new User();
         user2.setCompany(company2);
         user2.setCredential(userCredential2);
+        user2.setName("root2");
 
         userRepository.saveAndFlush(user2);
+
+        List<UserRole> roleUser3 = new ArrayList<>();
+        Credential userCredential3 = Credential.builder()
+                .email("root3@gmail.com")
+                .username("oreo")
+                .password(bCryptUtil.hashPassword("string"))
+                .actor(ActorType.USER)
+                .roles(roleUser3)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy("oreo")
+                .modifiedBy("oreo")
+                .build();
+
+        roleUser3.add(
+                UserRole.builder()
+                        .role(finance)
+                        .credential(userCredential3)
+                        .build()
+        );
+
+        roleUser3.add(
+                UserRole.builder()
+                        .role(invoice)
+                        .credential(userCredential3)
+                        .build()
+        );
+
+        credentialRepository.saveAndFlush(userCredential3);
+
+        User user3 = new User();
+        user3.setCompany(company2);
+        user3.setCredential(userCredential3);
+        user3.setName("root3");
+
+        userRepository.saveAndFlush(user3);
     }
 
     public void companySeeder() {
