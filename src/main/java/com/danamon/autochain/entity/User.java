@@ -36,4 +36,6 @@ public class User {
     @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
     private List<UserAccsess> userAccsess;
 
+    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
+    private List<UserActivityLog> userActivityLogs;
 }

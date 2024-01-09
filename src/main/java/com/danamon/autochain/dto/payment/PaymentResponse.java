@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class PaymentResponse {
-    private String payment_id;
+    private String transactionId;
     private InvoiceResponse invoice;
     private Long amount;
     private String type;

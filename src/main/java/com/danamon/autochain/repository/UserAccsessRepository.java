@@ -2,10 +2,8 @@ package com.danamon.autochain.repository;
 
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Credential;
-import com.danamon.autochain.entity.Payment;
 import com.danamon.autochain.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.danamon.autochain.entity.UserAccsess;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -13,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
-    Optional<User> findUserByCredential(Credential credential);
+public interface UserAccsessRepository extends JpaRepository<UserAccsess, String> {
+    Optional<UserAccsess> findByUserAndCompany(User user, Company company);
 }
 
