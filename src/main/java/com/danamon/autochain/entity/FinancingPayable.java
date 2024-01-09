@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +12,13 @@ import org.hibernate.annotations.UuidGenerator;
 import java.util.Date;
 import java.util.List;
 
-@Entity
-@Table(name = "t_financing_payable")
 @NoArgsConstructor
 @Getter
 @Setter
 @AllArgsConstructor
 @SuperBuilder
+@Entity
+@Table(name = "t_financing_payable")
 public class FinancingPayable extends HistoryLog{
     @Id
     @UuidGenerator
@@ -36,8 +37,8 @@ public class FinancingPayable extends HistoryLog{
 //    @JoinColumn(name = "paymentId")
 //    private List<Payment> payment;
 
-    @Column
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private FinancingStatus status;
 
     @Column
     private Long amount;
@@ -57,7 +58,7 @@ public class FinancingPayable extends HistoryLog{
     @Column
     private Integer period_number;
 
-    @OneToMany(mappedBy = "financingPayable")
-    private List<Payment> payment;
+    @OneToOne(mappedBy = "financingPayable")
+    private Payment payment;
 
 }
