@@ -9,11 +9,9 @@ import com.danamon.autochain.dto.company.SearchCompanyRequest;
 import com.danamon.autochain.dto.manage_user.ManageUserResponse;
 import com.danamon.autochain.dto.manage_user.NewUserRequest;
 import com.danamon.autochain.dto.manage_user.SearchManageUserRequest;
+import com.danamon.autochain.dto.manage_user.UpdateUserRequest;
 import com.danamon.autochain.entity.*;
-import com.danamon.autochain.repository.CredentialRepository;
-import com.danamon.autochain.repository.RolesRepository;
-import com.danamon.autochain.repository.UserRepository;
-import com.danamon.autochain.repository.UserRolesRepository;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.CredentialService;
@@ -57,6 +55,7 @@ public class ManageUserServiceImpl implements ManageUserService {
     private final RandomPasswordUtil randomPasswordUtil;
     private final BCryptUtil bCryptUtil;
     private final CompanyService companyService;
+    private final UserAccsessRepository userAccsessRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -115,7 +114,7 @@ public class ManageUserServiceImpl implements ManageUserService {
                     .actor(ActorType.USER)
                     .roles(userRoles)
                     .createdDate(LocalDateTime.now())
-                    .createdBy(principal.getCredentialId())
+                    .createdBy(principal.getUsername())
                     .build();
 
             request.getAccess().forEach(roleName -> {
@@ -185,14 +184,125 @@ public class ManageUserServiceImpl implements ManageUserService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ManageUserResponse updateUser(UpdateUserRequest request) {
+        try {
+            Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User userLogin = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+
+            validationUtil.validate(request);
+
+            Optional<Credential> credential = credentialRepository.findByEmail(request.getEmail());
+
+            if (credential.isPresent()) {
+                credential.get().setUsername(request.getUsername());
+                credential.get().setEmail(request.getEmail());
+                credential.get().setModifiedBy(userLogin.getCredential().getUsername());
+                credential.get().setModifiedDate(LocalDateTime.now());
+
+                // check if exist in user role
+                request.getAccess().forEach(roleName -> {
+                            Roles role = rolesRepository.findByRoleName(roleName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+
+                            Optional<UserRole> userRole = userRolesRepository.findByCredentialAndRole(credential.get(), role);
+
+                            if (userRole.isEmpty()) {
+                                UserRole newRole = UserRole.builder()
+                                        .role(role)
+                                        .credential(credential.get())
+                                        .build();
+
+                                credential.get().getRoles().add(newRole);
+
+                                userRolesRepository.save(newRole);
+                            }
+                        }
+                );
+
+                // check if doesnt exist in request
+                credential.get().getRoles().removeIf(userRole -> {
+                    boolean found = request.getAccess().stream()
+                            .anyMatch(s -> userRole.getRole().getRoleName().equals(s));
+
+                    if (!found) {
+                        userRolesRepository.delete(userRole);
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                credentialRepository.saveAndFlush(credential.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Credential not found");
+            }
+
+            User user = getById(request.getUserId());
+            user.setName(request.getName());
+            user.setCredential(credential.get());
+
+            // check if exist in user access
+            request.getCompanyIds().forEach(companyId -> {
+                Company company = companyService.getById(companyId);
+
+                Optional<UserAccsess> userAccess = userAccsessRepository.findByUserAndCompany(user, company);
+
+                if (userAccess.isEmpty()) {
+                    UserAccsess newUserAccess = UserAccsess.builder()
+                            .company(company)
+                            .user(user)
+                            .build();
+
+                    user.getUserAccsess().add(newUserAccess);
+
+                    userAccsessRepository.save(newUserAccess);
+                }
+            }
+            );
+
+            // check if doesnt exist in request
+            user.getUserAccsess().removeIf(userAccsess -> {
+                boolean found = request.getCompanyIds().stream()
+                        .anyMatch(s -> userAccsess.getCompany().getCompany_id().equals(s));
+
+                if (!found) {
+                    userAccsessRepository.delete(userAccsess);
+                    return true;
+                }
+
+                return false;
+            });
+
+            userRepository.saveAndFlush(user);
+
+            return mapToResponse(user);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public User getById(String id) {
+        return findByIdOrThrowNotFound(id);
+    }
+
+    private User findByIdOrThrowNotFound(String id) {
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
+    }
+
     private ManageUserResponse mapToResponse(User user) {
         List<String> roles = user.getCredential().getRoles().stream().map(userRole -> userRole.getRole().getRoleName()).collect(Collectors.toList());
+        List<String> companyIds = user.getUserAccsess().stream().map(userAccsess -> userAccsess.getCompany().getCompany_id()).collect(Collectors.toList());
 
         return ManageUserResponse.builder()
+                .userId(user.getUser_id())
                 .username(user.getCredential().getUsername())
                 .name(user.getName())
                 .email(user.getCredential().getEmail())
                 .access(roles)
+                .companyIds(companyIds)
                 .build();
     }
 

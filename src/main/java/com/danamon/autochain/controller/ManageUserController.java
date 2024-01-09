@@ -7,6 +7,7 @@ import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.dto.manage_user.ManageUserResponse;
 import com.danamon.autochain.dto.manage_user.NewUserRequest;
 import com.danamon.autochain.dto.manage_user.SearchManageUserRequest;
+import com.danamon.autochain.dto.manage_user.UpdateUserRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -75,5 +77,18 @@ public class ManageUserController {
                 .statusCode(HttpStatus.CREATED.value())
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateUser(@RequestBody UpdateUserRequest request) {
+        ManageUserResponse tableResponse = manageUserService.updateUser(request);
+        DataResponse<ManageUserResponse> response = DataResponse.<ManageUserResponse>builder()
+                .message("successfully edit user")
+                .statusCode(HttpStatus.OK.value())
+                .data(tableResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 }
