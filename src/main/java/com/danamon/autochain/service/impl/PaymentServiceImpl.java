@@ -13,6 +13,7 @@ import com.danamon.autochain.dto.payment.SearchPaymentRequest;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -198,7 +199,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
-                .payment_id(payment.getPaymentId())
+                .transactionId(payment.getPaymentId())
                 .invoice(
                         InvoiceResponse.builder()
                                 .company_id(payment.getInvoice().getRecipientId().getCompany_id())
