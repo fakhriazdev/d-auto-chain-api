@@ -29,7 +29,6 @@ public class SeederConfiguration implements CommandLineRunner {
     private final RolesRepository rolesRepository;
     private final UserRepository userRepository;
     private final PartnershipRepository partnershipRepository;
-    private final UserRolesRepository userRolesRepository;
     private final CompanyService companyService;
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
@@ -83,7 +82,7 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void userSeeder(){
-        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles superUser = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
@@ -142,10 +141,20 @@ public class SeederConfiguration implements CommandLineRunner {
 
         credentialRepository.saveAndFlush(userCredential2);
 
+        List<UserAccsess> userAccsesses = new ArrayList<>();
+
         User user2 = new User();
         user2.setCompany(company2);
         user2.setCredential(userCredential2);
+        user2.setUserAccsess(userAccsesses);
         user2.setName("root2");
+
+        userAccsesses.add(
+                UserAccsess.builder()
+                        .company(company)
+                        .user(user2)
+                        .build()
+        );
 
         userRepository.saveAndFlush(user2);
 

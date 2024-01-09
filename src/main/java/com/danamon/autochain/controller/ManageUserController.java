@@ -1,8 +1,11 @@
 package com.danamon.autochain.controller;
 
 import com.danamon.autochain.dto.DataResponse;
+import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
+import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.dto.manage_user.ManageUserResponse;
+import com.danamon.autochain.dto.manage_user.NewUserRequest;
 import com.danamon.autochain.dto.manage_user.SearchManageUserRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
@@ -60,6 +63,17 @@ public class ManageUserController {
                 .statusCode(HttpStatus.OK.value())
                 .build();
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody NewUserRequest request){
+        ManageUserResponse manageUserResponse = manageUserService.createUser(request);
+        DataResponse<ManageUserResponse> response = DataResponse.<ManageUserResponse>builder()
+                .data(manageUserResponse)
+                .message("Success create user")
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
         return ResponseEntity.ok(response);
     }
 }

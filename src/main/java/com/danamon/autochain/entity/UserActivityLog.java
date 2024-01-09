@@ -23,10 +23,12 @@ public class UserActivityLog {
     @Column(name = "acitivityId", length = 128)
     private String id;
 
-    private String user_id;
-
     private Long timestamp;
 
     @Enumerated(EnumType.STRING)
     private UserActivity activity;
+
+    @ManyToOne
+    @JoinColumn(name = "userId")
+    private User user;
 }

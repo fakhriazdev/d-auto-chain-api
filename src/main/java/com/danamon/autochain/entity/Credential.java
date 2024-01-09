@@ -34,6 +34,7 @@ public class Credential extends HistoryLog implements UserDetails {
 
     @Column
     private String username;
+
     @Column
     private String password;
 

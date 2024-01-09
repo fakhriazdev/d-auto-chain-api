@@ -291,7 +291,7 @@ public class AuthServiceImpl implements AuthService {
             Credential userCredential = (Credential) authentication.getPrincipal();
 
             UserActivityLog activityLog = UserActivityLog.builder()
-                    .user_id(userCredential.getCredentialId())
+                    .user(userCredential.getUser())
                     .timestamp(System.currentTimeMillis())
                     .activity(UserActivity.LOGOUT)
                     .build();
