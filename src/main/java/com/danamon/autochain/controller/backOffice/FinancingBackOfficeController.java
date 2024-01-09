@@ -47,15 +47,13 @@ public class FinancingBackOfficeController {
         return ResponseEntity.ok(response);
     }
 
-
-    //    ====================================== PAYABLE =====================================
-
-    @GetMapping("/payable")
+    @GetMapping
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
     public ResponseEntity<?> get_all_financing_payable_backoffice(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) String status
     ){
         page = PagingUtil.validatePage(page);
@@ -67,50 +65,10 @@ public class FinancingBackOfficeController {
                 .size(size)
                 .direction(direction)
                 .status(status)
+                .type(type)
                 .build();
 
-        Page<FinancingResponse> data = financingService.get_all_receivable(request);
-
-        PagingResponse pagingResponse = PagingResponse.builder()
-                .count(data.getTotalElements())
-                .totalPages(data.getTotalPages())
-                .page(page)
-                .size(size)
-                .build();
-
-        DataResponse<List<FinancingResponse>> response = DataResponse.<List<FinancingResponse>>builder()
-                .data(data.getContent())
-                .paging(pagingResponse)
-                .message("Success Generate Invoice")
-                .statusCode(HttpStatus.CREATED.value())
-                .build();
-
-        return ResponseEntity.ok(response);
-    }
-
-
-//    ========================================== RECEIVABLE =====================================================
-
-    @GetMapping("/receivable")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
-    public ResponseEntity<?> get_all_financing_backOffice(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer size,
-            @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false) String status
-    ){
-        page = PagingUtil.validatePage(page);
-        size = PagingUtil.validateSize(size);
-        direction = PagingUtil.validateDirection(direction);
-
-        SearchFinancingRequest request = SearchFinancingRequest.builder()
-                .page(page)
-                .size(size)
-                .direction(direction)
-                .status(status)
-                .build();
-
-        Page<FinancingResponse> data = financingService.get_all_receivable(request);
+        Page<FinancingResponse> data = financingService.backoffice_get_all_financing(request);
 
         PagingResponse pagingResponse = PagingResponse.builder()
                 .count(data.getTotalElements())

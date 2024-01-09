@@ -27,7 +27,7 @@ public class Tenure {
     private FinancingPayable financingPayableId;
 
     @Column
-    private Long Amount;
+    private Double Amount;
 
     @Column
     private Date dueDate;

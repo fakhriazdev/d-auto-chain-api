@@ -38,10 +38,10 @@ public class FinancingController {
 
     //    ================================== PAYABLE FINANCING ============================================
     @PostMapping("/payable")
-    public ResponseEntity<?> request_financing_payable(List<ReceivableRequest> list_financing) {
-        financingService.create_financing_receivable(list_financing);
-        DataResponse<List<FinancingReceivable>> response = DataResponse.<List<FinancingReceivable>>builder()
-                .message("successfully get all company")
+    public ResponseEntity<?> request_financing_payable(List<PayableRequest> list_financing) {
+        financingService.create_financing_payable(list_financing);
+        DataResponse<List<PayableRequest>> response = DataResponse.<List<PayableRequest>>builder()
+                .message("successfully create financing payable")
                 .statusCode(HttpStatus.OK.value())
                 .build();
 

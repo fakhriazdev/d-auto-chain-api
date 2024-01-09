@@ -1,11 +1,11 @@
 package com.danamon.autochain.service.impl;
 
+import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.financing.*;
-import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.transaction.TransactionRequest;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
@@ -58,6 +58,58 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
 //    =================================== FINANCING PAYABLE ==========================================
+
+    @Override
+    public void create_financing_payable(List<PayableRequest> requests) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+        Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
+
+        requests.forEach(request -> {
+
+            if (request.getAmount() < 75000000)
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
+
+            double interest = 0.01d;
+
+            long loanAmount = request.getAmount();
+
+            if (loanAmount >= 75000000 && loanAmount <= 500000000L) {
+                interest = 0.07d;
+            } else if (loanAmount <= 1000000000L) {
+                interest = 0.075d;
+            } else if (loanAmount <= 1500000000L) {
+                interest = 0.08d;
+            } else if (loanAmount <= 2000000000L) {
+                interest = 0.085d;
+            } else if (loanAmount <= 2500000000L) {
+                interest = 0.09d;
+            }
+
+//          ======== FORMULA =======
+            double paymentPermount = loanAmount * (
+                    (interest * Math.pow( (1 + interest), request.getTenure())) /
+                            ((Math.pow(1 + interest, request.getTenure())) - 1)
+            );
+
+            Payment payment = paymentRepository.findById(request.getPayment_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid payment id : " + request.getPayment_id()));
+            financingPayableRepository.saveAndFlush(
+                    FinancingPayable.builder()
+                            .company(company)
+                            .invoice(payment.getInvoice())
+                            .createdBy(user.getName())
+                            .createdDate(LocalDateTime.now())
+                            .amount(request.getAmount())
+                            .installments_number(request.getInstallments_number())
+                            .interest(loanAmount * interest)
+                            .total(loanAmount + (loanAmount * interest))
+                            .period_number(0)
+                            .tenure(paymentPermount)
+                            .status(FinancingStatus.PENDING)
+                            .build()
+            );
+        });
+    }
 
     @Override
     public Page<FinancingResponse> get_all_payable(SearchFinancingRequest request) {
@@ -254,27 +306,53 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public Page<FinancingResponse> backoffice_get_all_financing(SearchFinancingRequest request) {
 
-        Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
+        if(request.getType().equalsIgnoreCase("receivable")){
+            Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
 
-            if (request.getStatus() != null) {
-                Predicate status = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("status")),
-                        request.getStatus().toLowerCase()
-                );
-                predicates.add(status);
-            }
+                if (request.getStatus() != null) {
+                    Predicate status = criteriaBuilder.equal(
+                            criteriaBuilder.lower(root.get("status")),
+                            request.getStatus().toLowerCase()
+                    );
+                    predicates.add(status);
+                }
 
-            return query
-                    .where(predicates.toArray(new Predicate[]{}))
-                    .getRestriction();
-        };
+                return query
+                        .where(predicates.toArray(new Predicate[]{}))
+                        .getRestriction();
+            };
 
-        Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
-        Page<FinancingReceivable> financing = financingReceivableRepository.findAll(specification, pageable);
+            Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+            Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
+            Page<FinancingReceivable> financing = financingReceivableRepository.findAll(specification, pageable);
 
-        return financing.map(this::mapToResponseReceivable);
+            return financing.map(this::mapToResponseReceivable);
+
+        } else if (request.getType().equalsIgnoreCase("payable")) {
+            Specification<FinancingPayable> specification = (root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                if (request.getStatus() != null) {
+                    Predicate status = criteriaBuilder.equal(
+                            criteriaBuilder.lower(root.get("status")),
+                            request.getStatus().toLowerCase()
+                    );
+                    predicates.add(status);
+                }
+
+                return query
+                        .where(predicates.toArray(new Predicate[]{}))
+                        .getRestriction();
+            };
+
+            Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
+            Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
+            Page<FinancingPayable> financing = financingPayableRepository.findAll(specification, pageable);
+
+            return financing.map(this::mapToResponsePayable);
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid status with : " + request.getStatus());
     }
 
     @Override
@@ -282,6 +360,28 @@ public class FinancingServiceImpl implements FinancingService {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
 
+            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getInstallments_number());
+
+            for (int i = 1; i <= financingPayable.getInstallments_number(); i++) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.MONTH, i);
+                Date dueDate = calendar.getTime();
+
+                // Set the tenure status
+                TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.ONGOING;
+
+                tenureRepository.saveAndFlush(
+                        Tenure.builder()
+                                .financingPayableId(financingPayable)
+                                .dueDate(dueDate)
+                                .status(tenureStatus)
+                                .Amount(tenure_amount)
+                                .build()
+                );
+            }
+
+            paymentService.deletePayment(financingPayable.getPayment());
             financingPayable.setStatus(FinancingStatus.ONGOING);
             financingPayableRepository.saveAndFlush(financingPayable);
             return AcceptResponse.builder().build();
