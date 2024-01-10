@@ -14,4 +14,5 @@ public class SearchFinancingRequest {
     private Integer size;
     private String direction;
     private String status;
+    private String type;
 }

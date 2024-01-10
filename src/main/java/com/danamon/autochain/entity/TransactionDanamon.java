@@ -1,6 +1,6 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.payment.PaymentMethod;
+import com.danamon.autochain.constant.financing.FinancingType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import jakarta.persistence.*;
@@ -17,45 +17,27 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "t_payment")
-public class Payment {
+@Table(name = "t_transaction")
+public class TransactionDanamon {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    private String paymentId;
-
-    @OneToOne
-    @JoinColumn(name = "invoiceId")
-    private Invoice invoice;
-
-    @OneToOne
-    @JoinColumn(name = "financingPayableId")
-    private FinancingPayable financingPayable;
+    private String transactionId;
 
     @ManyToOne
     @JoinColumn(name = "recipientId")
     private Company recipientId;
 
-    @ManyToOne
-    @JoinColumn(name = "senderId")
-    private Company senderId;
-
     @Column
     private Long amount;
 
     @Enumerated(EnumType.STRING)
-    private PaymentType type;
-
-    @Column
-    private Date dueDate;
-
-    @Column
-    private Date paidDate;
+    private PaymentStatus paymentstatus;
 
     @Enumerated(EnumType.STRING)
-    private PaymentMethod method;
+    private FinancingType financingType;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentStatus status;
+    @Column
+    private Date createdDate;
 
 }
