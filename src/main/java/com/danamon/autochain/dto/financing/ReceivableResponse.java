@@ -1,14 +1,8 @@
 package com.danamon.autochain.dto.financing;
 
-import com.danamon.autochain.constant.FinancingStatus;
-import com.danamon.autochain.entity.Company;
-import com.danamon.autochain.entity.Invoice;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.Date;
 
 @Data
 @AllArgsConstructor

@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RejectRequest {
-    String financing_id;
-    String type = "receivable";
+public class AcceptDetailResponse {
+    String company_name;
+    Long amountPaid;
+    String financingType;
 }

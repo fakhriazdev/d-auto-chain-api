@@ -1,6 +1,6 @@
 package com.danamon.autochain.entity;
 
-import com.danamon.autochain.constant.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.util.Date;
 import java.util.List;
 
 @NoArgsConstructor
@@ -41,24 +40,27 @@ public class FinancingPayable extends HistoryLog{
     private FinancingStatus status;
 
     @Column
-    private Long amount;
+    private Long amount; // total amount financing requested
 
     @Column
-    private Integer interest;
+    private Double interest; // suku bunga
 
     @Column
-    private Long total; //total amount financing (amount + interest)
+    private Double total; //total amount financing (amount + interest)
 
     @Column
-    private Integer tenure;
+    private Double tenure; // tenure financing in month
 
     @Column
-    private Integer installments_number;
+    private Integer installments_number; // jumlah cicilan
 
     @Column
-    private Integer period_number;
+    private Integer period_number; // intallment progress count, status will change if matches with installments number
 
     @OneToOne(mappedBy = "financingPayable")
     private Payment payment;
+
+    @OneToMany(mappedBy = "financingPayableId")
+    private List<Tenure> tenures;
 
 }

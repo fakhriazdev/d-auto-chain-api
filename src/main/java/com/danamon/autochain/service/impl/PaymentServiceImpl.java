@@ -1,8 +1,8 @@
 package com.danamon.autochain.service.impl;
 
 
-import com.danamon.autochain.constant.PaymentMethod;
-import com.danamon.autochain.constant.PaymentType;
+import com.danamon.autochain.constant.payment.PaymentMethod;
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
@@ -49,7 +49,23 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void createPayment(CreatePaymentRequest request){
+        Payment payment = Payment.builder()
+                .financingPayable(request.getFinancingPayable())
+                .amount(request.getAmount())
+                .dueDate(request.getDueDate())
+                .invoice(request.getInvoice())
+                .recipientId(request.getRecipientId())
+                .senderId(request.getSenderId())
+                .type(request.getType())
+                .status(request.getStatus())
+                .method(request.getMethod())
+                .build();
+        paymentRepository.saveAndFlush(payment);
+    }
 
+    @Override
+    public void deletePayment(Payment payment){
+        paymentRepository.delete(payment);
     }
 
     @Override

@@ -12,6 +12,6 @@ import java.util.Date;
 public class TenureDetailResponse {
     String tenure_id;
     Date due_date;
-    Long amount;
+    Double amount;
     String status;
 }

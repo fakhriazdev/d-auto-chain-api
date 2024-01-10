@@ -55,6 +55,6 @@ public class Invoice extends HistoryLog {
     @OneToOne(mappedBy = "invoice" ,cascade = CascadeType.ALL)
     private FinancingPayable financingPayable;
 
-    @OneToMany(mappedBy = "invoice" ,cascade = CascadeType.ALL)
-    private List<Payment> payment;
+    @OneToOne(mappedBy = "invoice" ,cascade = CascadeType.ALL)
+    private Payment payment;
 }

@@ -1,4 +1,4 @@
-package com.danamon.autochain.constant;
+package com.danamon.autochain.constant.financing;
 
 public enum FinancingStatus {
     PENDING, // not yet approved
