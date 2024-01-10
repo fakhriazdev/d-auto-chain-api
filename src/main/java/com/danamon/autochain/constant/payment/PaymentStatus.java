@@ -3,5 +3,7 @@ package com.danamon.autochain.constant.payment;
 public enum PaymentStatus {
     UNPAID,
     COMPLETED,
-    LATE_PAID
+    LATE_PAID,
+    PAID,
+    LATE_UNPAID
 }

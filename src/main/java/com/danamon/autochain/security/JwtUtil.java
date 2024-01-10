@@ -37,13 +37,14 @@ public class JwtUtil {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             List<String> roles = new ArrayList<>();
             user.getRoles().forEach(userRole -> roles.add(userRole.getRole().getRoleName()));
+
             return JWT.create()
                     .withIssuer(appName)
                     .withSubject(user.getCredentialId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("actor", user.getActor().getName())
-                    .withClaim("company_id", user.getUser().getCompany().getCompany_id())
+                    .withClaim("company_id", user.getActor().getName().equals("BACKOFFICE") ? null : user.getUser().getCompany().getCompany_id())
                     .withClaim("role", roles)
                     .sign(algorithm);
         } catch (JWTCreationException e) {

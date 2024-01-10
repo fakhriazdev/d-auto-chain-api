@@ -309,7 +309,7 @@ public class AuthServiceImpl implements AuthService {
         validationUtil.validate(request);
 
         Credential user = credentialRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Bad Credential"));
-
+        user.getRoles().forEach(userRole -> log.info(userRole.getRole().getRoleName()));
         try {
             Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     request.getEmail().toLowerCase(),
