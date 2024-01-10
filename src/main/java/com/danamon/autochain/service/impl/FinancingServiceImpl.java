@@ -67,8 +67,7 @@ public class FinancingServiceImpl implements FinancingService {
 
         requests.forEach(request -> {
 
-            if (request.getAmount() < 75000000)
-                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
+            if (request.getAmount() < 75000000) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
 
             double interest = 0.01d;
 
@@ -88,7 +87,7 @@ public class FinancingServiceImpl implements FinancingService {
 
 //          ======== FORMULA =======
             double paymentPermount = loanAmount * (
-                    (interest * Math.pow( (1 + interest), request.getTenure())) /
+                    (interest * Math.pow((1 + interest), request.getTenure())) /
                             ((Math.pow(1 + interest, request.getTenure())) - 1)
             );
 
@@ -306,7 +305,7 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public Page<FinancingResponse> backoffice_get_all_financing(SearchFinancingRequest request) {
 
-        if(request.getType().equalsIgnoreCase("receivable")){
+        if (request.getType().equalsIgnoreCase("receivable")) {
             Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
                 List<Predicate> predicates = new ArrayList<>();
 
