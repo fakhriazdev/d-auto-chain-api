@@ -332,5 +332,38 @@ public class SeederConfiguration implements CommandLineRunner {
                 .build();
 
         paymentRepository.saveAndFlush(payment2);
+
+        Calendar cal2 = Calendar.getInstance();
+        cal2.add(Calendar.DATE, -5);
+        Date lateDate = cal2.getTime();
+
+        Invoice invoice3 = Invoice.builder()
+                .senderId(partner)
+                .recipientId(company)
+                .dueDate(lateDate)
+                .status(Status.LATE_UNPAID)
+                .processingStatus(ProcessingStatusType.APPROVE_INVOICE)
+                .amount(500000L)
+                .createdDate(LocalDateTime.now())
+                .createdBy(null)
+                .itemList("[{\"itemsName\" : \"Spion Astut\", \"itemsQuantity\" : 10, \"unitPrice\" : 10000},{\"itemsName\" : \"Ketut\", \"itemsQuantity\" : 10, \"unitPrice\" : 20000}]")
+                .build();
+
+        Invoice savedInvoice3 = invoiceRepository.saveAndFlush(invoice3);
+
+        Payment payment3 = Payment.builder()
+                .senderId(partner)
+                .recipientId(company)
+                .invoice(savedInvoice3)
+                .financingPayable(null)
+                .amount(300000L)
+                .type(PaymentType.INVOICING)
+                .dueDate(new Date())
+                .paidDate(new Date())
+                .method(PaymentMethod.BANK_TRANSFER)
+                .status(Status.LATE_UNPAID)
+                .build();
+
+        paymentRepository.saveAndFlush(payment3);
     }
 }

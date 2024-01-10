@@ -30,6 +30,7 @@ public class CompanyController {
     private final CompanyFileService companyFileService;
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<?> updateCompany(
             @RequestParam String id,
             @RequestParam String companyName,
@@ -66,6 +67,7 @@ public class CompanyController {
                 .body(response);
     }
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<?> createCompany(
             @RequestParam String companyName,
             @RequestParam String province,
@@ -106,6 +108,7 @@ public class CompanyController {
                 .body(response);
     }
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('CREDIT_ANALYST','ADMIN','SUPER_ADMIN')")
     public ResponseEntity<?> getAllCompanies(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
@@ -175,6 +178,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}/non-partnerships")
+    @PreAuthorize("hasAnyAuthority('RELATIONSHIP_MANAGER','SUPER_ADMIN')")
     public ResponseEntity<?> getNonPartnershipByCompanyId(@PathVariable String id) {
         List<CompanyResponse> nonPartnerships = companyService.getNonPartnership(id);
         DataResponse<List<CompanyResponse>> response = DataResponse.<List<CompanyResponse>>builder()

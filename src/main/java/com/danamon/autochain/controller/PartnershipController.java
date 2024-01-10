@@ -24,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/partnerships")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
+@PreAuthorize("hasAnyAuthority('SUPER_USER')")
 public class PartnershipController {
     private final PartnershipService partnershipService;
 
