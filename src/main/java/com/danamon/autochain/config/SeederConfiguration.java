@@ -82,7 +82,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void userSeeder(){
-        Roles superUser = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles superAdmin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
@@ -103,7 +104,7 @@ public class SeederConfiguration implements CommandLineRunner {
 
         roleUser.add(
                 UserRole.builder()
-                        .role(superUser)
+                        .role(superAdmin)
                         .credential(userCredential)
                         .build()
         );
