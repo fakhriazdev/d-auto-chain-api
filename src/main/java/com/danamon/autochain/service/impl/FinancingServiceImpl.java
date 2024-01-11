@@ -3,6 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.financing.*;
@@ -60,12 +61,12 @@ public class FinancingServiceImpl implements FinancingService {
 //    =================================== FINANCING PAYABLE ==========================================
 
     @Override
-    public void create_financing_payable(List<PayableRequest> requests) {
+    public void create_financing_payable(BulkPayableRequest requests) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
 
-        requests.forEach(request -> {
+        requests.getRequest_financing().forEach(request -> {
 
             if (request.getAmount() < 75000000) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
 
@@ -96,6 +97,7 @@ public class FinancingServiceImpl implements FinancingService {
                     FinancingPayable.builder()
                             .company(company)
                             .invoice(payment.getInvoice())
+                            .payment(payment)
                             .createdBy(user.getName())
                             .createdDate(LocalDateTime.now())
                             .amount(request.getAmount())
@@ -359,9 +361,9 @@ public class FinancingServiceImpl implements FinancingService {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
 
-            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getMonthly_installment());
+            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getTenure());
 
-            for (int i = 1; i <= financingPayable.getMonthly_installment(); i++) {
+            for (int i = 1; i <= financingPayable.getTenure(); i++) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
                 calendar.add(Calendar.MONTH, i);
@@ -383,6 +385,7 @@ public class FinancingServiceImpl implements FinancingService {
             paymentService.deletePayment(financingPayable.getPayment());
             financingPayable.setStatus(FinancingStatus.ONGOING);
             financingPayableRepository.saveAndFlush(financingPayable);
+
             return AcceptResponse.builder().build();
 
         } else if (request.getType().equalsIgnoreCase("receivable")) {

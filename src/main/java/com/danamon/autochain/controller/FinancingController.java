@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class FinancingController {
 
     //    ================================== PAYABLE FINANCING ============================================
     @PostMapping("/payable")
-    public ResponseEntity<?> request_financing_payable(List<PayableRequest> list_financing) {
+    public ResponseEntity<?> request_financing_payable(@RequestBody BulkPayableRequest list_financing) {
         financingService.create_financing_payable(list_financing);
         DataResponse<List<PayableRequest>> response = DataResponse.<List<PayableRequest>>builder()
                 .message("successfully create financing payable")

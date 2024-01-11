@@ -25,10 +25,10 @@ public class FinancingBackOfficeController {
 
     @PostMapping("/approve")
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
-    public ResponseEntity<?> approve_financing_receivable_backoffice(@RequestBody AcceptRequest request){
+    public ResponseEntity<?> approve_financing_backoffice(@RequestBody AcceptRequest request){
         AcceptResponse data = financingService.backoffice_accept(request);
         DataResponse<AcceptResponse> response = DataResponse.<AcceptResponse>builder()
-                .message("Success get details")
+                .message("Success Approve Financing + " + request.getType() + " With ID : " + request.getFinancing_id())
                 .statusCode(200)
                 .data(data)
                 .build();
@@ -37,7 +37,7 @@ public class FinancingBackOfficeController {
 
     @PostMapping("/reject")
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
-    public ResponseEntity<?> reject_financing_receivable_backoffice(@RequestBody RejectRequest request){
+    public ResponseEntity<?> reject_financing_backoffice(@RequestBody RejectRequest request){
         RejectResponse data = financingService.backoffice_reject(request);
         DataResponse<RejectResponse> response = DataResponse.<RejectResponse>builder()
                 .message("Success get details")
@@ -49,7 +49,7 @@ public class FinancingBackOfficeController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
-    public ResponseEntity<?> get_all_financing_payable_backoffice(
+    public ResponseEntity<?> get_all_financing_backoffice(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,

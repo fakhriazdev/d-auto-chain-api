@@ -54,4 +54,6 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
+    @OneToOne(mappedBy = "payment")
+    private FinancingPayable financingPayable;
 }
