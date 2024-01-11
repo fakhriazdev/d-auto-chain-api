@@ -59,8 +59,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Invoice ID : " + id));
 
-        if (invoice.getRecipientId() != principal.getUser().getCompany())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You only can approve your own invoice recipient");
+        System.out.println(invoice.getRecipientId().getCompany_id());
+        System.out.println(principal.getUser().getCompany().getCompany_id());
+
+        if (!invoice.getRecipientId().getCompany_id().equals(principal.getUser().getCompany().getCompany_id()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You only can approve your own invoice recipient");
 
         if (invoice.getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE) || invoice.getProcessingStatus().equals(ProcessingStatusType.APPROVE_INVOICE))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot approve with type: " + invoice.getProcessingStatus());
