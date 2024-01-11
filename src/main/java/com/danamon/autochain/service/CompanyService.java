@@ -17,4 +17,6 @@ public interface CompanyService {
     CompanyResponse update(UpdateCompanyRequest request);
     List<CompanyResponse> getNonPartnership(String id);
     List<Company> getCompaniesNameLike(String companyName);
+    List<Company> findById(List<String> id);
+
 }

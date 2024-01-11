@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,4 +25,6 @@ public class BackOfficeRegisterRequest {
     @NotBlank(message = "email is required")
     @Size(min = 6, message = "must be greater than 6 character")
     private String email;
+    private String rolesList;
+    private List<String> companyRequests;
 }
