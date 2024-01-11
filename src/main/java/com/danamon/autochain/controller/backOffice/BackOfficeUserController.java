@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @RestController
-@RequestMapping("/backoffice/users")
+@RequestMapping("/api/backoffice/users")
 @SecurityRequirement(name = "Bearer Authentication")
 @RequiredArgsConstructor
 public class BackOfficeUserController {
