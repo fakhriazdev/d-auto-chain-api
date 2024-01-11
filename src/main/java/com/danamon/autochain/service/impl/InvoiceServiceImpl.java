@@ -3,7 +3,10 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.ReasonType;
-import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
+import com.danamon.autochain.constant.payment.PaymentMethod;
+import com.danamon.autochain.constant.payment.PaymentStatus;
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
@@ -14,6 +17,7 @@ import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.InvoiceIssueLogRepository;
 import com.danamon.autochain.repository.InvoiceRepository;
+import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
@@ -34,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +49,39 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CompanyService companyService;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
     private final InvoiceIssueLogRepository invoiceIssueLogRepository;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void approve_invoice(String id) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Invoice ID : " + id));
+
+        if (invoice.getRecipientId() != principal.getUser().getCompany())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You only can approve your own invoice recipient");
+
+        if (invoice.getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE) || invoice.getProcessingStatus().equals(ProcessingStatusType.APPROVE_INVOICE))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot approve with type: " + invoice.getProcessingStatus());
+
+        invoice.setInvoiceStatus(InvoiceStatus.UNPAID);
+        invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
+        invoiceRepository.saveAndFlush(invoice);
+
+        paymentRepository.saveAndFlush(
+                Payment.builder()
+                        .invoice(invoice)
+                        .recipientId(invoice.getRecipientId())
+                        .senderId(invoice.getSenderId())
+                        .method(PaymentMethod.BANK_TRANSFER)
+                        .type(PaymentType.INVOICING)
+                        .status(PaymentStatus.UNPAID)
+                        .amount(invoice.getAmount())
+                        .dueDate(invoice.getDueDate())
+                        .build()
+        );
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -66,7 +100,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .senderId(currentUserLogin.getCompany())
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
-                .status(Status.PENDING)
+                .invoiceStatus(InvoiceStatus.PENDING)
                 .processingStatus(ProcessingStatusType.WAITING_STATUS)
                 .amount(requestInvoice.getAmount())
                 .createdDate(LocalDateTime.now())
@@ -79,7 +113,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         List<ItemList> itemLists = mapStringToJson(invoice.getItemList());
         return InvoiceResponse.builder()
                 .companyName(invoice.getRecipientId().getCompanyName())
-                .status(String.valueOf(invoice.getStatus()))
+                .status(String.valueOf(invoice.getInvoiceStatus()))
                 .invNumber(invoice.getInvoiceId())
                 .dueDate(invoice.getDueDate())
                 .amount(invoice.getAmount())
@@ -97,7 +131,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         // get invoice by recipient and id
         Optional<Invoice> invoiceByRecipientIdAndInvoiceId = invoiceRepository.findInvoiceByRecipientIdAndInvoiceId(user.getCompany(), id);
 
-        if (invoiceByRecipientIdAndInvoiceId.isEmpty()){
+        if (invoiceByRecipientIdAndInvoiceId.isEmpty()) {
             Invoice invoice = invoiceRepository.findInvoiceBySenderIdAndInvoiceId(user.getCompany(), id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Invoice Not Found"));
 
             InvoiceDetailResponse invoiceDetailResponse = mapToInvoiceDetailResponse(invoice);
@@ -142,7 +176,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (processingStatusType.equals(ProcessingStatusType.CANCEL_INVOICE)) {
             // cancel by seller
             invoice.setProcessingStatus(ProcessingStatusType.CANCEL_INVOICE);
-            invoice.setStatus(Status.CANCELLED);
+            invoice.setInvoiceStatus(InvoiceStatus.CANCELLED);
         } else if (processingStatusType.equals(ProcessingStatusType.REJECT_INVOICE)) {
             // rejected by buyer
             // create invoice issue log
@@ -154,11 +188,11 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoiceIssueLogRepository.save(invoiceIssueLog);
             // update invoice
             invoice.setProcessingStatus(ProcessingStatusType.REJECT_INVOICE);
-            invoice.setStatus(Status.DISPUTED);
+            invoice.setInvoiceStatus(InvoiceStatus.DISPUTED);
         } else if (processingStatusType.equals(ProcessingStatusType.APPROVE_INVOICE)) {
             // approve
             invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
-            invoice.setStatus(Status.UNPAID);
+            invoice.setInvoiceStatus(InvoiceStatus.UNPAID);
         }
 
         invoice.setProcessingStatus(processingStatusType);
@@ -215,7 +249,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             String column = "senderId";
             assert request.getType() != null;
 
-            if(request.getType().equals("payable")){
+            if (request.getType().equals("payable")) {
                 column = "recipientId";
             }
 
@@ -231,10 +265,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction , "status");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
         Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
 
-        if(request.getType().equals("payable")){
+        if (request.getType().equals("payable")) {
             return invoices.map(this::mapToResponsePayable);
         } else {
             return invoices.map(this::mapToResponseReceivable);
@@ -247,7 +281,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
                 .companyName(invoice.getRecipientId().getCompanyName())
-                .status(String.valueOf(invoice.getStatus()))
+                .status(String.valueOf(invoice.getInvoiceStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
     }
@@ -258,7 +292,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
                 .companyName(invoice.getSenderId().getCompanyName())
-                .status(String.valueOf(invoice.getStatus()))
+                .status(String.valueOf(invoice.getInvoiceStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
     }

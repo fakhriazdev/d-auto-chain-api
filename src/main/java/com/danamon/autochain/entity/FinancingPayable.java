@@ -32,9 +32,9 @@ public class FinancingPayable extends HistoryLog{
     @OneToOne
     private Invoice invoice;
 
-//    @OneToMany
-//    @JoinColumn(name = "paymentId")
-//    private List<Payment> payment;
+    @OneToOne
+    @JoinColumn(name = "paymentId")
+    private Payment payment;
 
     @Enumerated(EnumType.STRING)
     private FinancingStatus status;
@@ -49,16 +49,16 @@ public class FinancingPayable extends HistoryLog{
     private Double total; //total amount financing (amount + interest)
 
     @Column
-    private Double tenure; // tenure financing in month
+    private Integer tenure; // banyak cicilan / tenure financing
 
     @Column
-    private Integer installments_number; // jumlah cicilan
+    private Double monthly_installment; // jumlah amount cicilan perbulan
 
     @Column
     private Integer period_number; // intallment progress count, status will change if matches with installments number
 
-    @OneToOne(mappedBy = "financingPayable")
-    private Payment payment;
+//    @OneToOne(mappedBy = "financingPayable")
+//    private Payment payment;
 
     @OneToMany(mappedBy = "financingPayableId")
     private List<Tenure> tenures;

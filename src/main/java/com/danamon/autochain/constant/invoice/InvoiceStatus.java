@@ -1,6 +1,6 @@
 package com.danamon.autochain.constant.invoice;
 
-public enum Status {
+public enum InvoiceStatus {
     PENDING // waiting for approval
     , DISPUTED // Rejected by buyer
     , CANCELLED // Invoice cancel by seller

@@ -1,5 +1,5 @@
 package com.danamon.autochain.constant.invoice;
 
-public enum Type {
+public enum InvoiceType {
         PAYABLE, RECEIVABLE
 }

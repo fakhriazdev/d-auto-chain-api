@@ -86,10 +86,10 @@ public class FinancingServiceImpl implements FinancingService {
             }
 
 //          ======== FORMULA =======
-            double paymentPermount = loanAmount * (
-                    (interest * Math.pow((1 + interest), request.getTenure())) /
-                            ((Math.pow(1 + interest, request.getTenure())) - 1)
-            );
+//            double paymentPermount = loanAmount * (
+//                    (interest * Math.pow((1 + interest), request.getTenure())) /
+//                            ((Math.pow(1 + interest, request.getTenure())) - 1)
+//            );
 
             Payment payment = paymentRepository.findById(request.getPayment_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid payment id : " + request.getPayment_id()));
             financingPayableRepository.saveAndFlush(
@@ -99,11 +99,11 @@ public class FinancingServiceImpl implements FinancingService {
                             .createdBy(user.getName())
                             .createdDate(LocalDateTime.now())
                             .amount(request.getAmount())
-                            .installments_number(request.getInstallments_number())
+                            .monthly_installment(request.getMonthly_instalment())
                             .interest(loanAmount * interest)
                             .total(loanAmount + (loanAmount * interest))
                             .period_number(0)
-                            .tenure(paymentPermount)
+                            .tenure(request.getTenure())
                             .status(FinancingStatus.PENDING)
                             .build()
             );
@@ -172,7 +172,7 @@ public class FinancingServiceImpl implements FinancingService {
                     .build());
         });
         return PayableDetailResponse.builder()
-                .payment_number(financingPayable.getPayment().getPaymentId())
+                .financing_id(financingPayable.getFinancingPayableId())
                 .invoice_number(financingPayable.getInvoice().getInvoiceId())
                 .recipient(recipient)
                 .sender(sender)
@@ -359,9 +359,9 @@ public class FinancingServiceImpl implements FinancingService {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
 
-            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getInstallments_number());
+            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getMonthly_installment());
 
-            for (int i = 1; i <= financingPayable.getInstallments_number(); i++) {
+            for (int i = 1; i <= financingPayable.getMonthly_installment(); i++) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
                 calendar.add(Calendar.MONTH, i);

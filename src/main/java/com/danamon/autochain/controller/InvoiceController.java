@@ -78,7 +78,17 @@ public class InvoiceController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/update")
+    @GetMapping("/approve/{invoice_id}")
+    public ResponseEntity<?> invoice_approve(@PathVariable(name = "invoice_id")String invoice_id){
+        invoiceService.approve_invoice(invoice_id);
+        DataResponse<?> response = DataResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success Approve Invoice")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reject")
     public ResponseEntity<?> updateInvoiceProcessingStatus(@RequestBody RequestInvoiceStatus requestInvoiceStatus){
             InvoiceDetailResponse invoiceDetailResponse = invoiceService.updateInvoiceStatus(requestInvoiceStatus);
 
@@ -89,10 +99,10 @@ public class InvoiceController {
                     .build();
             return ResponseEntity.ok(response);
     }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "id")String id){
-        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(id);
+
+    @GetMapping("/{invoice_id}")
+    public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "invoice_id")String invoice_id){
+        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(invoice_id);
         DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Success Get Invoice Data")

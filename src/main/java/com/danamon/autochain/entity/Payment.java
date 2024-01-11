@@ -28,10 +28,6 @@ public class Payment {
     @JoinColumn(name = "invoiceId")
     private Invoice invoice;
 
-    @OneToOne
-    @JoinColumn(name = "financingPayableId")
-    private FinancingPayable financingPayable;
-
     @ManyToOne
     @JoinColumn(name = "recipientId")
     private Company recipientId;
@@ -43,14 +39,14 @@ public class Payment {
     @Column
     private Long amount;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentType type;
-
     @Column
     private Date dueDate;
 
     @Column
     private Date paidDate;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentType type;
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod method;
