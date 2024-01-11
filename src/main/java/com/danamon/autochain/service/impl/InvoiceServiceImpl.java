@@ -243,7 +243,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             if (request.getStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("status")),
+                        criteriaBuilder.lower(root.get("invoiceStatus")),
                         request.getStatus().toLowerCase()
                 );
                 predicates.add(status);
