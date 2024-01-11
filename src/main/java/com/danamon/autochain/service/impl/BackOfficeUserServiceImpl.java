@@ -54,7 +54,13 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageRequest = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "username");
 
-        Page<Credential> credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(request.getRole(), pageRequest);
+        Page<Credential> credentialByActorAndRoles = null;
+
+        if (request.getRole() == null){
+            credentialByActorAndRoles = credentialRepository.findByActor(ActorType.BACKOFFICE, pageRequest);
+        }else {
+            credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(request.getRole(), pageRequest);
+        }
         return credentialByActorAndRoles.map(this::mapToResponse);
 
     }
