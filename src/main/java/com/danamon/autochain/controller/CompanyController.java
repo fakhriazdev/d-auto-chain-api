@@ -113,7 +113,7 @@ public class CompanyController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "asc") String direction,
-            @RequestParam(required = false, defaultValue = "companyName") String sortBy,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) String name
     ) {
         page = PagingUtil.validatePage(page);
@@ -124,7 +124,7 @@ public class CompanyController {
                 .page(page)
                 .size(size)
                 .direction(direction)
-                .sortBy(sortBy)
+                .status(status)
                 .name(name)
                 .build();
 
