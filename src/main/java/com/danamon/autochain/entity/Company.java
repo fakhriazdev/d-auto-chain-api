@@ -67,6 +67,9 @@ public class Company {
     @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
     private List<FinancingPayable> financingPayable;
 
+    @OneToMany(mappedBy = "recipientId" ,cascade = CascadeType.ALL)
+    private List<Payment> payments;
+
     @OneToMany(mappedBy = "recipientId", cascade = CascadeType.ALL)
     private List<TransactionDanamon> transactionDanamons;
 }

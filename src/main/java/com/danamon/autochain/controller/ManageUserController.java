@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -86,6 +87,19 @@ public class ManageUserController {
                 .message("successfully edit user")
                 .statusCode(HttpStatus.OK.value())
                 .data(tableResponse)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        ManageUserResponse userResponse = manageUserService.findById(id);
+        DataResponse<ManageUserResponse> response = DataResponse.<ManageUserResponse>builder()
+                .message("successfully get user")
+                .statusCode(HttpStatus.OK.value())
+                .data(userResponse)
                 .build();
         return ResponseEntity
                 .status(HttpStatus.OK)

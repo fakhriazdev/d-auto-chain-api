@@ -288,6 +288,12 @@ public class ManageUserServiceImpl implements ManageUserService {
         return findByIdOrThrowNotFound(id);
     }
 
+    @Override
+    public ManageUserResponse findById(String id) {
+        User user = findByIdOrThrowNotFound(id);
+        return mapToResponse(user);
+    }
+
     private User findByIdOrThrowNotFound(String id) {
         return userRepository.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
     }

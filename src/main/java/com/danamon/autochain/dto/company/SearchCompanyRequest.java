@@ -13,6 +13,6 @@ public class SearchCompanyRequest {
     private Integer page;
     private Integer size;
     private String direction;
-    private String sortBy;
+    private String status;
     private String name;
 }

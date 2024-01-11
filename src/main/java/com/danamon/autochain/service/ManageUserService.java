@@ -17,5 +17,6 @@ public interface ManageUserService {
      ManageUserResponse createUser(NewUserRequest request);
      ManageUserResponse updateUser(UpdateUserRequest request);
      User getById(String id);
+     ManageUserResponse findById(String id);
 }
 

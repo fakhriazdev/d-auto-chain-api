@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
+import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.dto.FileResponse;
 import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.*;
@@ -272,13 +273,26 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Transactional(readOnly = true)
     @Override
-
     public Page<CompanyResponse> getAll(SearchCompanyRequest request) {
         Specification<Company> specification = getCompanySpecification(request);
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, request.getSortBy());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "companyName");
         Page<Company> companies = companyRepository.findAll(specification, pageable);
-        return companies.map(this::mapToResponse);
+
+        return companies.map(company -> {
+            boolean found = company.getPayments().stream()
+                    .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+
+            if (request.getStatus() == null) {
+                return mapToResponse(company);
+            }
+
+            if (request.getStatus().equals("Restricted") && found) {
+                return mapToResponse(company);
+            }
+
+            return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
+        });
     }
 
     @Transactional(readOnly = true)
@@ -326,6 +340,9 @@ public class CompanyServiceImpl implements CompanyService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user with role super user not found");
         }
 
+        boolean found = company.getPayments().stream()
+                .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())
                 .companyName(company.getCompanyName())
@@ -340,6 +357,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .username(companySuperUser.getUsername())
                 .emailUser(companySuperUser.getEmail())
                 .files(fileResponses)
+                .status(found ? "Restricted" : "Cleared")
                 .build();
     }
 

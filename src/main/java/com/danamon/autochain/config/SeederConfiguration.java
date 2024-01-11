@@ -383,7 +383,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayable(null)
                 .amount(300000L)
                 .type(PaymentType.INVOICING)
-                .dueDate(new Date())
+                .dueDate(lateDate)
                 .paidDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
                 .status(PaymentStatus.LATE_UNPAID)
