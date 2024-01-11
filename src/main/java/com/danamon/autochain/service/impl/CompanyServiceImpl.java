@@ -375,6 +375,11 @@ public class CompanyServiceImpl implements CompanyService {
         return companyRepository.findAllByCompanyNameLike(companyName);
     }
 
+    @Override
+    public List<Company> findById(List<String> id) {
+        return companyRepository.findAllById(id);
+    }
+
     private Specification<Company> getCompanySpecification(SearchCompanyRequest request) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
