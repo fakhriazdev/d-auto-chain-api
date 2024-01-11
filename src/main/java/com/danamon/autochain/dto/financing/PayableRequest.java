@@ -21,5 +21,5 @@ public class PayableRequest {
 
     private Integer tenure;
 
-    private Integer installments_number;
+    private Double monthly_instalment;
 }
