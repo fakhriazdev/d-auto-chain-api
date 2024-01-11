@@ -287,12 +287,12 @@ public class SeederConfiguration implements CommandLineRunner {
 
 //        ============= WAITING STATUS INVOICE ========
         Invoice wait_invoice = Invoice.builder()
-                .senderId(company)
-                .recipientId(partner)
+                .senderId(partner)
+                .recipientId(company)
                 .dueDate(yesterday)
                 .invoiceStatus(InvoiceStatus.UNPAID)
                 .processingStatus(ProcessingStatusType.WAITING_STATUS)
-                .amount(300000L)
+                .amount(500000L)
                 .createdDate(LocalDateTime.now())
                 .createdBy(null)
                 .itemList("[{\"itemsName\" : \"Spion Astut\", \"itemsQuantity\" : 10, \"unitPrice\" : 10000},{\"itemsName\" : \"Ketut\", \"itemsQuantity\" : 10, \"unitPrice\" : 20000}]")
