@@ -280,8 +280,12 @@ public class CompanyServiceImpl implements CompanyService {
         Page<Company> companies = companyRepository.findAll(specification, pageable);
 
         return companies.map(company -> {
-            boolean found = company.getPayments().stream()
-                    .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+            boolean found = false;
+
+            if (company.getPayments() != null) {
+                found = company.getPayments().stream()
+                        .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+            }
 
             if (request.getStatus() == null) {
                 return mapToResponse(company);
@@ -340,8 +344,13 @@ public class CompanyServiceImpl implements CompanyService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user with role super user not found");
         }
 
-        boolean found = company.getPayments().stream()
-                .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+        boolean found = false;
+
+        if (company.getPayments() != null) {
+            found = company.getPayments().stream()
+                    .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+        }
+
 
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())
