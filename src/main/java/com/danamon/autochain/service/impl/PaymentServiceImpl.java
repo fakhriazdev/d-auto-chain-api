@@ -3,7 +3,7 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentType;
-import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.payment.CreatePaymentRequest;
@@ -14,7 +14,6 @@ import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -50,7 +49,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public void createPayment(CreatePaymentRequest request){
         Payment payment = Payment.builder()
-                .financingPayable(request.getFinancingPayable())
                 .amount(request.getAmount())
                 .dueDate(request.getDueDate())
                 .invoice(request.getInvoice())
@@ -77,12 +75,12 @@ public class PaymentServiceImpl implements PaymentService {
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
 
-        List<Status> statuses = getOngoingStatuses(request);
+        List<InvoiceStatus> invoiceStatuses = getOngoingStatuses(request);
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
                 pageable
         );
 
@@ -98,19 +96,19 @@ public class PaymentServiceImpl implements PaymentService {
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status", "type");
 
-        List<Status> statuses = getHistoryStatuses(request);
+        List<InvoiceStatus> invoiceStatuses = getHistoryStatuses(request);
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, statuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
                 pageable
         );
 
         return payments.map(payment -> mapToResponsePayment(payment, request));
     }
 
-    private static Specification<Payment> withInvoiceAndStatus(User user, List<Status> statuses, List<PaymentType> types, String groupBy, List<Company> recipients) {
+    private static Specification<Payment> withInvoiceAndStatus(User user, List<InvoiceStatus> invoiceStatuses, List<PaymentType> types, String groupBy, List<Company> recipients) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -134,7 +132,7 @@ public class PaymentServiceImpl implements PaymentService {
                 }
             }
 
-            predicates.add(root.get("status").in(statuses));
+            predicates.add(root.get("status").in(invoiceStatuses));
             predicates.add(root.get("type").in(types));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -162,46 +160,46 @@ public class PaymentServiceImpl implements PaymentService {
         return types;
     }
 
-    private static List<Status> getOngoingStatuses(SearchPaymentRequest request) {
-        List<Status> statuses = new ArrayList<>();
+    private static List<InvoiceStatus> getOngoingStatuses(SearchPaymentRequest request) {
+        List<InvoiceStatus> invoiceStatuses = new ArrayList<>();
         if (request.getStatus() != null) {
             switch (request.getStatus()) {
                 case "UNPAID":
-                    statuses.add(Status.UNPAID);
+                    invoiceStatuses.add(InvoiceStatus.UNPAID);
                     break;
                 case "LATE_UNPAID":
-                    statuses.add(Status.LATE_UNPAID);
+                    invoiceStatuses.add(InvoiceStatus.LATE_UNPAID);
                     break;
                 default:
-                    statuses.addAll(Arrays.asList(Status.UNPAID, Status.LATE_UNPAID));
+                    invoiceStatuses.addAll(Arrays.asList(InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID));
                     break;
             }
         } else {
-            statuses.addAll(Arrays.asList(Status.UNPAID, Status.LATE_UNPAID));
+            invoiceStatuses.addAll(Arrays.asList(InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID));
         }
 
-        return statuses;
+        return invoiceStatuses;
     }
 
-    private static List<Status> getHistoryStatuses(SearchPaymentRequest request) {
-        List<Status> statuses = new ArrayList<>();
+    private static List<InvoiceStatus> getHistoryStatuses(SearchPaymentRequest request) {
+        List<InvoiceStatus> invoiceStatuses = new ArrayList<>();
         if (request.getStatus() != null) {
             switch (request.getStatus()) {
                 case "PAID":
-                    statuses.add(Status.PAID);
+                    invoiceStatuses.add(InvoiceStatus.PAID);
                     break;
                 case "LATE_PAID":
-                    statuses.add(Status.LATE_PAID);
+                    invoiceStatuses.add(InvoiceStatus.LATE_PAID);
                     break;
                 default:
-                    statuses.addAll(Arrays.asList(Status.PAID, Status.LATE_PAID));
+                    invoiceStatuses.addAll(Arrays.asList(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID));
                     break;
             }
         } else {
-            statuses.addAll(Arrays.asList(Status.PAID, Status.LATE_PAID));
+            invoiceStatuses.addAll(Arrays.asList(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID));
         }
 
-        return statuses;
+        return invoiceStatuses;
     }
 
     private PaymentResponse mapToResponsePayment(Payment payment, SearchPaymentRequest request) {
@@ -220,7 +218,7 @@ public class PaymentServiceImpl implements PaymentService {
                         InvoiceResponse.builder()
                                 .company_id(payment.getInvoice().getRecipientId().getCompany_id())
                                 .companyName(payment.getInvoice().getRecipientId().getCompanyName())
-                                .status(String.valueOf(payment.getInvoice().getStatus()))
+                                .status(String.valueOf(payment.getInvoice().getInvoiceStatus()))
                                 .invNumber(payment.getInvoice().getInvoiceId())
                                 .dueDate(payment.getInvoice().getDueDate())
                                 .amount(payment.getInvoice().getAmount())

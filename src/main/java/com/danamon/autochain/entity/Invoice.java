@@ -1,14 +1,13 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
-import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
-import java.util.List;
 
 @Getter
 @Setter
@@ -37,7 +36,7 @@ public class Invoice extends HistoryLog {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private InvoiceStatus invoiceStatus;
 
     @Column(nullable = false)
     private Long amount;

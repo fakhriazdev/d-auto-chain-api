@@ -12,6 +12,9 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface InvoiceService {
+
+    void approve_invoice(String id);
+
     InvoiceResponse invoiceGeneration(RequestInvoice requestInvoice);
 
     InvoiceDetailResponse updateInvoiceStatus(RequestInvoiceStatus requestInvoiceStatus);

@@ -2,7 +2,7 @@ package com.danamon.autochain.config;
 
 import com.danamon.autochain.constant.*;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
-import com.danamon.autochain.constant.invoice.Status;
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -33,13 +33,19 @@ public class SeederConfiguration implements CommandLineRunner {
     private final PaymentRepository paymentRepository;
     private final BCryptUtil bCryptUtil;
 
-    private final String email = "rizdaagisa@gmail.com";
-    private final String username = "rizda";
-    private final String password = "string";
+//    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
+    private final String bo_email = "rizdaagisa99@gmail.com";
+    private final String bo_username = "rizda backoffice";
+    private final String bo_password = "string";
+
+//    ====================== USER ACCOUNT as SUPER USER =========================
+    private final String user_email = "rizdaagisa@gmail.com";
+    private final String user_username = "rizda user";
+    private final String user_password = "string";
 
     @Override
     public void run(String... args) {
-        Optional<Credential> byUsername = credentialRepository.findByEmail(email);
+        Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
             companySeeder();
@@ -56,15 +62,15 @@ public class SeederConfiguration implements CommandLineRunner {
         List<UserRole> role = new ArrayList<>();
         // Create and save seed data for Credential entity
         Credential adminCredential = new Credential();
-        adminCredential.setEmail(email);
-        adminCredential.setUsername(username);
-        adminCredential.setPassword(bCryptUtil.hashPassword(password));
+        adminCredential.setEmail(bo_email);
+        adminCredential.setUsername(bo_username);
+        adminCredential.setPassword(bCryptUtil.hashPassword(bo_password));
         adminCredential.setActor(ActorType.BACKOFFICE);
         adminCredential.setRoles(role);
         adminCredential.setModifiedDate(LocalDateTime.now());
         adminCredential.setCreatedDate(LocalDateTime.now());
-        adminCredential.setCreatedBy(username);
-        adminCredential.setModifiedBy(username);
+        adminCredential.setCreatedBy(bo_username);
+        adminCredential.setModifiedBy(bo_username);
 
         BackOffice backOffice = new BackOffice();
         backOffice.setCredential(adminCredential);
@@ -81,23 +87,25 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void userSeeder(){
-        Roles superUser = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
+        //        ================================= SUPER USER  ================================
+
         List<UserRole> roleUser = new ArrayList<>();
 
         Credential userCredential = Credential.builder()
-                .email("oreofinalprojectdtt@gmail.com")
-                .username("oreo")
-                .password(bCryptUtil.hashPassword("test12345"))
-                .actor(ActorType.BACKOFFICE)
+                .email(user_email)
+                .username(user_username)
+                .password(bCryptUtil.hashPassword(user_password))
+                .actor(ActorType.USER)
                 .roles(roleUser)
                 .modifiedDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
-                .createdBy("oreo")
-                .modifiedBy("oreo")
+                .createdBy(user_username)
+                .modifiedBy(user_username)
                 .build();
 
         roleUser.add(
@@ -112,9 +120,11 @@ public class SeederConfiguration implements CommandLineRunner {
         User user = new User();
         user.setCompany(company);
         user.setCredential(userCredential);
-        user.setName("root");
+        user.setName(user_username);
 
         userRepository.saveAndFlush(user);
+
+        //        ================================= USER 2 ================================
 
         Company company2 = companyRepository.findBycompanyName("PT. Root2").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company name not found"));
 
@@ -156,6 +166,8 @@ public class SeederConfiguration implements CommandLineRunner {
         );
 
         userRepository.saveAndFlush(user2);
+
+        //        ================================= USER 3 ================================
 
         List<UserRole> roleUser3 = new ArrayList<>();
         Credential userCredential3 = Credential.builder()
@@ -273,11 +285,27 @@ public class SeederConfiguration implements CommandLineRunner {
         cal.add(Calendar.DATE, -1);
         Date yesterday = cal.getTime();
 
+//        ============= WAITING STATUS INVOICE ========
+        Invoice wait_invoice = Invoice.builder()
+                .senderId(company)
+                .recipientId(partner)
+                .dueDate(yesterday)
+                .invoiceStatus(InvoiceStatus.UNPAID)
+                .processingStatus(ProcessingStatusType.WAITING_STATUS)
+                .amount(300000L)
+                .createdDate(LocalDateTime.now())
+                .createdBy(null)
+                .itemList("[{\"itemsName\" : \"Spion Astut\", \"itemsQuantity\" : 10, \"unitPrice\" : 10000},{\"itemsName\" : \"Ketut\", \"itemsQuantity\" : 10, \"unitPrice\" : 20000}]")
+                .build();
+
+        invoiceRepository.saveAndFlush(wait_invoice);
+
+
         Invoice invoice = Invoice.builder()
                 .senderId(company)
                 .recipientId(partner)
                 .dueDate(yesterday)
-                .status(Status.UNPAID)
+                .invoiceStatus(InvoiceStatus.UNPAID)
                 .processingStatus(ProcessingStatusType.APPROVE_INVOICE)
                 .amount(100000L)
                 .createdDate(LocalDateTime.now())
@@ -291,7 +319,6 @@ public class SeederConfiguration implements CommandLineRunner {
                 .senderId(company)
                 .recipientId(partner)
                 .invoice(savedInvoice1)
-                .financingPayable(null)
                 .amount(100000L)
                 .type(PaymentType.INVOICING)
                 .dueDate(new Date())
@@ -306,7 +333,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .senderId(company)
                 .recipientId(partner)
                 .dueDate(yesterday)
-                .status(Status.PAID)
+                .invoiceStatus(InvoiceStatus.PAID)
                 .processingStatus(ProcessingStatusType.APPROVE_INVOICE)
                 .amount(300000L)
                 .createdDate(LocalDateTime.now())
@@ -320,7 +347,6 @@ public class SeederConfiguration implements CommandLineRunner {
                 .senderId(company)
                 .recipientId(partner)
                 .invoice(savedInvoice2)
-                .financingPayable(null)
                 .amount(300000L)
                 .type(PaymentType.INVOICING)
                 .dueDate(new Date())

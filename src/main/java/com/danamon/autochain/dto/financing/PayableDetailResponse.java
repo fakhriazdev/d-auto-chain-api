@@ -12,7 +12,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 public class PayableDetailResponse {
-    String payment_number;
+    String financing_id;
     String invoice_number;
     Date created_date;
     Map<String,String> recipient;

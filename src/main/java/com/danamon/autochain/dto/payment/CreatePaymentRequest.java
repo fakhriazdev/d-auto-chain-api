@@ -3,7 +3,6 @@ package com.danamon.autochain.dto.payment;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
-import com.danamon.autochain.constant.invoice.Status;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.FinancingPayable;
 import com.danamon.autochain.entity.Invoice;

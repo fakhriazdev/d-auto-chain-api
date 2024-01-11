@@ -1,5 +1,6 @@
 package com.danamon.autochain.entity;
 
+import com.danamon.autochain.constant.RoleType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,10 +20,10 @@ public class Roles {
     @Id
     @GenericGenerator(name = "uuid", strategy = "uuid")
     @GeneratedValue(generator = "uuid")
-    @Column(name = "credentialId", length = 128, nullable = false)
-    private String id;
+    @Column(name = "roleId", length = 128, nullable = false)
+    private String roleId;
 
-    @Column(name = "role_name")
+    @Column
     private String roleName;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
