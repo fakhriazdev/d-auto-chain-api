@@ -46,7 +46,7 @@ public class Invoice extends HistoryLog {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProcessingStatusType processingStatus;
+    private ProcessingStatusType status;
 
     @OneToOne(mappedBy = "invoice" ,cascade = CascadeType.ALL)
     private FinancingReceivable financingReceivable;

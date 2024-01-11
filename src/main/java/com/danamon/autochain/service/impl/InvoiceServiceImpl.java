@@ -65,11 +65,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (!invoice.getRecipientId().getCompany_id().equals(principal.getUser().getCompany().getCompany_id()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You only can approve your own invoice recipient");
 
-        if (invoice.getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE) || invoice.getProcessingStatus().equals(ProcessingStatusType.APPROVE_INVOICE))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot approve with type: " + invoice.getProcessingStatus());
+        if (invoice.getStatus().equals(ProcessingStatusType.REJECT_INVOICE) || invoice.getStatus().equals(ProcessingStatusType.APPROVE_INVOICE))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot approve with type: " + invoice.getStatus());
 
         invoice.setInvoiceStatus(InvoiceStatus.UNPAID);
-        invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
+        invoice.setStatus(ProcessingStatusType.APPROVE_INVOICE);
         invoiceRepository.saveAndFlush(invoice);
 
         paymentRepository.saveAndFlush(
@@ -104,7 +104,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
                 .invoiceStatus(InvoiceStatus.PENDING)
-                .processingStatus(ProcessingStatusType.WAITING_STATUS)
+                .status(ProcessingStatusType.WAITING_STATUS)
                 .amount(requestInvoice.getAmount())
                 .createdDate(LocalDateTime.now())
                 .createdBy(principal.getCredentialId())
@@ -164,8 +164,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         Invoice invoice = invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
-        if (invoice.getProcessingStatus() != null) {
-            if (invoice.getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) {
+        if (invoice.getStatus() != null) {
+            if (invoice.getStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invoice With Status CANCEL Cannot Be Updated");
             }
         }
@@ -178,7 +178,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         if (processingStatusType.equals(ProcessingStatusType.CANCEL_INVOICE)) {
             // cancel by seller
-            invoice.setProcessingStatus(ProcessingStatusType.CANCEL_INVOICE);
+            invoice.setStatus(ProcessingStatusType.CANCEL_INVOICE);
             invoice.setInvoiceStatus(InvoiceStatus.CANCELLED);
         } else if (processingStatusType.equals(ProcessingStatusType.REJECT_INVOICE)) {
             // rejected by buyer
@@ -190,15 +190,15 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .build();
             invoiceIssueLogRepository.save(invoiceIssueLog);
             // update invoice
-            invoice.setProcessingStatus(ProcessingStatusType.REJECT_INVOICE);
+            invoice.setStatus(ProcessingStatusType.REJECT_INVOICE);
             invoice.setInvoiceStatus(InvoiceStatus.DISPUTED);
         } else if (processingStatusType.equals(ProcessingStatusType.APPROVE_INVOICE)) {
             // approve
-            invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
+            invoice.setStatus(ProcessingStatusType.APPROVE_INVOICE);
             invoice.setInvoiceStatus(InvoiceStatus.UNPAID);
         }
 
-        invoice.setProcessingStatus(processingStatusType);
+        invoice.setStatus(processingStatusType);
         invoiceRepository.saveAndFlush(invoice);
 
         return mapToInvoiceDetailResponse(invoice);
@@ -217,7 +217,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .invoiceId(invoice.getInvoiceId())
                 .date(Date.valueOf(invoice.getCreatedDate().toLocalDate()))
                 .dueDate(invoice.getDueDate())
-                .processingStatus(invoice.getProcessingStatus().name())
+                .processingStatus(invoice.getStatus().name())
                 .itemList(itemLists)
                 .build();
     }
@@ -243,7 +243,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             if (request.getStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("invoiceStatus")),
+                        criteriaBuilder.lower(root.get("status")),
                         request.getStatus().toLowerCase()
                 );
                 predicates.add(status);
