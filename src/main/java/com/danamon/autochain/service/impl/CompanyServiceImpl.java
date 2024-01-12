@@ -351,7 +351,6 @@ public class CompanyServiceImpl implements CompanyService {
                     .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
         }
 
-
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())
                 .companyName(company.getCompanyName())

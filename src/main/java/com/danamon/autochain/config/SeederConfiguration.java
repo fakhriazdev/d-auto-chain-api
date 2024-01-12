@@ -257,6 +257,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void partnershipSeeder() {
+        Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
+
         Company company = companyService.getById("ROO123");
         Company partner = companyService.getById("ROO321");
 
@@ -270,7 +272,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .partnerStatus(PartnershipStatus.IN_PARTNER)
                 .partnerRequestedDate(LocalDateTime.now())
                 .partnerConfirmationDate(null)
-                .requestedBy(null)
+                .requestedBy(byUsername.get())
                 .confirmedBy(null)
                 .build();
 

@@ -29,7 +29,7 @@ public class User {
     @JoinColumn(name = "companyId")
     private Company company;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "credentialId")
     private Credential credential;
 

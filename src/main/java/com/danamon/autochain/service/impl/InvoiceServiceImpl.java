@@ -1,6 +1,7 @@
 package com.danamon.autochain.service.impl;
 
 
+import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.ReasonType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
@@ -238,8 +239,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company recipientCompany = companyService.getById(user.getCompany().getCompany_id());
 
+        List<UserAccsess> userAccsess = user.getUserAccsess();
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER));
+
         Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            if (isSuperUser) {
+
+            }
 
             if (request.getStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
