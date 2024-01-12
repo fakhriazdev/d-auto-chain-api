@@ -4,7 +4,6 @@ import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
-import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
@@ -16,12 +15,10 @@ import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.service.TransactionService;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +45,7 @@ public class FinancingServiceImpl implements FinancingService {
     private final CompanyService companyService;
     private final PaymentService paymentService;
     private final TransactionService transactionService;
+    private final EntityManager entityManager;
 
     @Override
     public Map<String, Double> get_limit() {
@@ -70,7 +69,8 @@ public class FinancingServiceImpl implements FinancingService {
 
         requests.getRequest_financing().forEach(request -> {
 
-            if (request.getAmount() < 75000000) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
+            if (request.getAmount() < 75000000)
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
 
             double interest = 0.01d;
 
@@ -526,7 +526,7 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public BackOfficeDashboardController.FinancingStatResponse getAllFinanceStat() {
         // payable
-        Long ongoingPayable= financingPayableRepository.countByStatus(FinancingStatus.ONGOING);
+        Long ongoingPayable = financingPayableRepository.countByStatus(FinancingStatus.ONGOING);
         Long outstandingPayable = financingPayableRepository.countByStatus(FinancingStatus.OUTSTANDING);
         Long pendingPayable = financingPayableRepository.countByStatus(FinancingStatus.PENDING);
 
@@ -535,6 +535,25 @@ public class FinancingServiceImpl implements FinancingService {
         Long outstandingReceivable = financingReceivableRepository.countByStatus(FinancingStatus.OUTSTANDING);
         Long pendingReceivable = financingReceivableRepository.countByStatus(FinancingStatus.PENDING);
 
-        return new BackOfficeDashboardController.FinancingStatResponse(ongoingPayable+ongoingReceivable, outstandingPayable+outstandingReceivable, pendingReceivable+pendingPayable);
+        return new BackOfficeDashboardController.FinancingStatResponse(ongoingPayable + ongoingReceivable, outstandingPayable + outstandingReceivable, pendingReceivable + pendingPayable);
+    }
+
+    @Override
+    public List<BackofficeFinanceResponse> backoffice_get_all_financing() {
+        List<BackofficeFinanceResponse> result = new ArrayList<>();
+        Page<FinancingPayable> fpr = financingPayableRepository.findAll(PageRequest.of(1, 5, Sort.Direction.ASC, "createdDate"));
+        Page<FinancingReceivable> fpc = financingReceivableRepository.findAll(PageRequest.of(1, 5, Sort.Direction.ASC, "createdDate"));
+
+        fpr.stream().map(financingPayable ->
+                result.add(new BackofficeFinanceResponse(financingPayable.getCreatedDate(), financingPayable.getCreatedBy(), financingPayable.getStatus()))
+        );
+        fpc.stream().map(financingReceivable ->
+                result.add(new BackofficeFinanceResponse(financingReceivable.getCreatedDate(), financingReceivable.getCreatedBy(), financingReceivable.getStatus()))
+        );
+
+        return result.stream().sorted(Comparator.comparing(BackofficeFinanceResponse::financeDate)).toList();
+    }
+
+    public record BackofficeFinanceResponse(LocalDateTime financeDate, String issuer, FinancingStatus status) {
     }
 }
