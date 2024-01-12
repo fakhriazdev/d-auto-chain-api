@@ -15,4 +15,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, String>, JpaSp
     Optional<Invoice> findInvoiceBySenderIdAndInvoiceId(Company recipientId, String invoiceId);
     List<Invoice> findAllByRecipientId(Company recipient);
     List<Invoice> findAllBySenderId(Company sender);
+    List<Invoice> findAllBySenderIdInAndRecipientId(List<Company> senders, Company recipient);
+    List<Invoice> findAllByRecipientIdInAndSenderId(List<Company> recipients, Company sender);
 }

@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,9 +44,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CompanyService companyService;
@@ -239,17 +242,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company recipientCompany = companyService.getById(user.getCompany().getCompany_id());
 
-        List<UserAccsess> userAccsess = user.getUserAccsess();
+        List<Company> companies = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+        companies.add(recipientCompany);
 
         boolean isSuperUser = principal.getRoles().stream()
-                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER));
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
 
         Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            if (isSuperUser) {
-
-            }
 
             if (request.getStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
@@ -271,6 +271,14 @@ public class InvoiceServiceImpl implements InvoiceService {
                     recipientCompany.getCompany_id().toLowerCase()
             );
             predicates.add(id);
+
+            if (!isSuperUser) {
+                if(request.getType().equals("payable")) {
+                    predicates.add(root.get("senderId").in(companies));
+                } else {
+                    predicates.add(root.get("recipientId").in(companies));
+                }
+            }
 
             return query
                     .where(predicates.toArray(new Predicate[]{}))

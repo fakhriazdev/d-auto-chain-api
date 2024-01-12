@@ -90,7 +90,7 @@ public class SeederConfiguration implements CommandLineRunner {
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
-        Company company = companyRepository.findBycompanyName("PT. Root").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
+        Company company = companyRepository.findBycompanyName("PT. Enigma").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
         //        ================================= SUPER USER  ================================
 
@@ -126,7 +126,7 @@ public class SeederConfiguration implements CommandLineRunner {
 
         //        ================================= USER 2 ================================
 
-        Company company2 = companyRepository.findBycompanyName("PT. Root2").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company name not found"));
+        Company company2 = companyRepository.findBycompanyName("PT. Camp").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company name not found"));
 
         List<UserRole> roleUser2 = new ArrayList<>();
         Credential userCredential2 = Credential.builder()
@@ -150,24 +150,16 @@ public class SeederConfiguration implements CommandLineRunner {
 
         credentialRepository.saveAndFlush(userCredential2);
 
-        List<UserAccsess> userAccsesses = new ArrayList<>();
-
         User user2 = new User();
         user2.setCompany(company2);
         user2.setCredential(userCredential2);
-        user2.setUserAccsess(userAccsesses);
         user2.setName("root2");
-
-        userAccsesses.add(
-                UserAccsess.builder()
-                        .company(company)
-                        .user(user2)
-                        .build()
-        );
 
         userRepository.saveAndFlush(user2);
 
         //        ================================= USER 3 ================================
+
+        List<UserAccsess> userAccsesses = new ArrayList<>();
 
         List<UserRole> roleUser3 = new ArrayList<>();
         Credential userCredential3 = Credential.builder()
@@ -201,15 +193,56 @@ public class SeederConfiguration implements CommandLineRunner {
         User user3 = new User();
         user3.setCompany(company2);
         user3.setCredential(userCredential3);
+        user3.setUserAccsess(userAccsesses);
         user3.setName("root3");
 
+        userAccsesses.add(
+                UserAccsess.builder()
+                        .company(company)
+                        .user(user3)
+                        .build()
+        );
+
         userRepository.saveAndFlush(user3);
+
+        //        ================================= USER 4 ================================
+
+        Company company3 = companyRepository.findBycompanyName("PT. Toyota").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company name not found"));
+
+        List<UserRole> roleUser4 = new ArrayList<>();
+        Credential userCredential4 = Credential.builder()
+                .email("toyota@gmail.com")
+                .username("toy")
+                .password(bCryptUtil.hashPassword("string"))
+                .actor(ActorType.USER)
+                .roles(roleUser4)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy("oreo")
+                .modifiedBy("oreo")
+                .build();
+
+        roleUser4.add(
+                UserRole.builder()
+                        .role(superUser)
+                        .credential(userCredential4)
+                        .build()
+        );
+
+        credentialRepository.saveAndFlush(userCredential4);
+
+        User user4 = new User();
+        user4.setCompany(company2);
+        user4.setCredential(userCredential4);
+        user4.setName("toyota");
+
+        userRepository.saveAndFlush(user4);
     }
 
     public void companySeeder() {
         Company company = new Company();
         company.setCompany_id("ROO123");
-        company.setCompanyName("PT. Root");
+        company.setCompanyName("PT. Enigma");
         company.setCompanyEmail("root");
         company.setCity("root");
         company.setAddress("root");
@@ -223,7 +256,7 @@ public class SeederConfiguration implements CommandLineRunner {
 
         Company company2 = new Company();
         company2.setCompany_id("ROO321");
-        company2.setCompanyName("PT. Root2");
+        company2.setCompanyName("PT. Camp");
         company2.setCompanyEmail("root2");
         company2.setCity("root");
         company2.setAddress("root");
@@ -234,6 +267,20 @@ public class SeederConfiguration implements CommandLineRunner {
         company2.setProvince("root");
 
         companyRepository.saveAndFlush(company2);
+
+        Company company3 = new Company();
+        company3.setCompany_id("ROO456");
+        company3.setCompanyName("PT. Toyota");
+        company3.setCompanyEmail("toyota");
+        company3.setCity("root");
+        company3.setAddress("root");
+        company3.setAccountNumber("root");
+        company3.setFinancingLimit(12313d);
+        company3.setRemainingLimit(123513d);
+        company3.setPhoneNumber("root");
+        company3.setProvince("root");
+
+        companyRepository.saveAndFlush(company3);
     }
 
     public void rolesSeeder() {

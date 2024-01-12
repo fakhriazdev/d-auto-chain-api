@@ -1,6 +1,6 @@
 package com.danamon.autochain.service.impl;
 
-
+import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
@@ -79,8 +79,13 @@ public class PaymentServiceImpl implements PaymentService {
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
+        List<Company> companies = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients, isSuperUser, companies),
                 pageable
         );
 
@@ -100,15 +105,20 @@ public class PaymentServiceImpl implements PaymentService {
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
+        List<Company> companies = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients, isSuperUser, companies),
                 pageable
         );
 
         return payments.map(payment -> mapToResponsePayment(payment, request));
     }
 
-    private static Specification<Payment> withInvoiceAndStatus(User user, List<InvoiceStatus> invoiceStatuses, List<PaymentType> types, String groupBy, List<Company> recipients) {
+    private static Specification<Payment> withInvoiceAndStatus(User user, List<InvoiceStatus> invoiceStatuses, List<PaymentType> types, String groupBy, List<Company> recipients, boolean isSuperUser, List<Company> accessCompanies) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -118,6 +128,10 @@ public class PaymentServiceImpl implements PaymentService {
                         user.getCompany()
                 ));
 
+                if (!isSuperUser) {
+                    predicates.add(root.get("senderId").in(accessCompanies));
+                }
+
                 if (recipients != null) {
                     predicates.add(root.get("senderId").in(recipients));
                 }
@@ -126,6 +140,10 @@ public class PaymentServiceImpl implements PaymentService {
                         root.get("senderId"),
                         user.getCompany()
                 ));
+
+                if (!isSuperUser) {
+                    predicates.add(root.get("senderId").in(accessCompanies));
+                }
 
                 if (recipients != null) {
                     predicates.add(root.get("recipientId").in(recipients));
