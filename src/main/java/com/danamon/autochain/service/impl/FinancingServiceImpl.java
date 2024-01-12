@@ -321,6 +321,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .amount(financingReceivable.getAmount())
                 .Fee(financingReceivable.getFee())
                 .total(financingReceivable.getTotal())
+                .type(financingReceivable.getFinancingType().name())
                 .created_date(financingReceivable.getDisbursment_date())
                 .build();
     }
