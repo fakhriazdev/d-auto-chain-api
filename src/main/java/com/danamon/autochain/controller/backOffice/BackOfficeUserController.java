@@ -68,7 +68,6 @@ public class BackOfficeUserController {
     }
 
     @GetMapping("/view/relationship-manager")
-    @PermitAll
     private ResponseEntity<?> getRelationshipManagerView(@RequestParam(name = "name", required = false) String name,
                                                          @RequestParam(required = false, defaultValue = "1") Integer page,
                                                          @RequestParam(required = false, defaultValue = "10") Integer size,
@@ -102,7 +101,6 @@ public class BackOfficeUserController {
     }
 
     @PostMapping(value = "/view/accessibility")
-    @PermitAll
     public ResponseEntity<?> getUserAccessibility(@RequestBody Mono<List<String>> request){
         List<RoleType> collect = request.getMono().stream().map(RoleType::valueOf).toList();
         BackOfficeViewResponse<HashMap<String, List<String>>> accessibility = (BackOfficeViewResponse<HashMap<String, List<String>>>) backOfficeUserService.getAccessibility(collect);
@@ -131,7 +129,6 @@ public class BackOfficeUserController {
     }
 
     @GetMapping("/detail/{id}")
-    @PermitAll
     public ResponseEntity<?> getUserInfo(@PathVariable(name = "id") String id){
         BackOfficeUserResponse backOfficeUserById = backOfficeUserService.getBackOfficeUserById(id);
 
@@ -145,7 +142,6 @@ public class BackOfficeUserController {
     }
 
     @PutMapping("/edit")
-    @PermitAll
     public ResponseEntity<?> editBackofficeUser(@RequestBody EditBackOfficeUser editBackOfficeUser){
         return ResponseEntity.ok(editBackOfficeUser);
     }

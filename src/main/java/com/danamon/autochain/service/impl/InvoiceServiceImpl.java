@@ -219,7 +219,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .dueDate(invoice.getDueDate())
                 .processingStatus(invoice.getProcessingStatus().name())
                 .itemList(itemLists)
-                .amount(invoice.getAmount())
                 .build();
     }
 
