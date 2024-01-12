@@ -7,6 +7,7 @@ import com.danamon.autochain.constant.financing.FinancingType;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
+import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
 import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.dto.transaction.TransactionRequest;
 import com.danamon.autochain.entity.*;
@@ -519,5 +520,20 @@ public class FinancingServiceImpl implements FinancingService {
                 .status(String.valueOf(data.getStatus()))
                 .date(Date.from(data.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
                 .build();
+    }
+
+    @Override
+    public BackOfficeDashboardController.FinancingStatResponse getAllFinanceStat() {
+        // payable
+        Long ongoingPayable= financingPayableRepository.countByStatus(FinancingStatus.ONGOING);
+        Long outstandingPayable = financingPayableRepository.countByStatus(FinancingStatus.OUTSTANDING);
+        Long pendingPayable = financingPayableRepository.countByStatus(FinancingStatus.PENDING);
+
+        // receivable
+        Long ongoingReceivable = financingReceivableRepository.countByStatus(FinancingStatus.ONGOING);
+        Long outstandingReceivable = financingReceivableRepository.countByStatus(FinancingStatus.OUTSTANDING);
+        Long pendingReceivable = financingReceivableRepository.countByStatus(FinancingStatus.PENDING);
+
+        return new BackOfficeDashboardController.FinancingStatResponse(ongoingPayable+ongoingReceivable, outstandingPayable+outstandingReceivable, pendingReceivable+pendingPayable);
     }
 }

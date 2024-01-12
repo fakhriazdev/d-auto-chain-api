@@ -1,5 +1,6 @@
 package com.danamon.autochain.repository;
 
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.entity.FinancingReceivable;
 import com.danamon.autochain.entity.Invoice;
 import org.springframework.data.domain.Page;
@@ -11,4 +12,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FinancingReceivableRepository extends JpaRepository<FinancingReceivable, String>,  JpaSpecificationExecutor<FinancingReceivable> {
+    Long countByStatus(FinancingStatus status);
 }

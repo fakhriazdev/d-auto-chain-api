@@ -236,7 +236,7 @@ public class PaymentServiceImpl implements PaymentService {
                         InvoiceResponse.builder()
                                 .company_id(payment.getInvoice().getRecipientId().getCompany_id())
                                 .companyName(payment.getInvoice().getRecipientId().getCompanyName())
-                                .status(String.valueOf(payment.getInvoice().getInvoiceStatus()))
+                                .status(String.valueOf(payment.getInvoice().getStatus()))
                                 .invNumber(payment.getInvoice().getInvoiceId())
                                 .dueDate(payment.getInvoice().getDueDate())
                                 .amount(payment.getInvoice().getAmount())

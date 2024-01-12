@@ -39,7 +39,7 @@ public class InvoiceController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER')")
     public ResponseEntity<?> getAllInvoice(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,

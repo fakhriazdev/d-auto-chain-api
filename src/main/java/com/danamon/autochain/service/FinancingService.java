@@ -1,5 +1,6 @@
 package com.danamon.autochain.service;
 
+import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
 import com.danamon.autochain.dto.financing.*;
 import org.springframework.data.domain.Page;
 
@@ -25,4 +26,5 @@ public interface FinancingService {
     AcceptResponse backoffice_accept(AcceptRequest request);
     RejectResponse backoffice_reject(RejectRequest request);
 
+    BackOfficeDashboardController.FinancingStatResponse getAllFinanceStat();
 }
