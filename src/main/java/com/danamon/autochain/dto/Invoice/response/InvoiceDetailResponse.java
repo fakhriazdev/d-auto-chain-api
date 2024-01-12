@@ -22,6 +22,7 @@ public class InvoiceDetailResponse {
     private CompanyResponse companyRecipient;
     private CompanyResponse companyFrom;
     private String processingStatus;
+    private Long amount;
     private String type;
     private List<ItemList> itemList;
 }
