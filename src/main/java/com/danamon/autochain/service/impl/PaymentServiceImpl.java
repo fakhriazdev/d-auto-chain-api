@@ -282,36 +282,34 @@ public class PaymentServiceImpl implements PaymentService {
         Date lastMonthEndDate = java.sql.Date.valueOf(lastMonth.atEndOfMonth());
 
         List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        Double sumCurrentMonthIncome = currentMonthIncome.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
 
         List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        Double sumLastMonthIncome = lastMonthIncome.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
 
         List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        Double sumCurrentMonthExpense = currentMonthExpense.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
 
         List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        double sumLastMonthExpense = lastMonthExpense.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
 
         return LimitResponse.builder()
                 .limit(user.getCompany().getRemainingLimit())
                 .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
-                .income(
-                        currentMonthIncome.stream()
-                                .mapToLong(Payment::getAmount)
-                                .sum()
-                )
-                .incomeLastMonth(
-                        lastMonthIncome.stream()
-                                .mapToLong(Payment::getAmount)
-                                .sum()
-                )
-                .expense(
-                        currentMonthExpense.stream()
-                                .mapToLong(Payment::getAmount)
-                                .sum()
-                )
-                .expenseLastMonth(
-                        lastMonthExpense.stream()
-                                .mapToLong(Payment::getAmount)
-                                .sum()
-                )
+                .income(sumCurrentMonthIncome)
+                .incomeLastMonth(sumLastMonthIncome)
+                .incomeDifferencePercentage(sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome)
+                .expense(sumCurrentMonthExpense)
+                .expenseLastMonth(sumLastMonthExpense)
+                .expenseDifferencePercentage(sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense)
                 .build();
     }
 }

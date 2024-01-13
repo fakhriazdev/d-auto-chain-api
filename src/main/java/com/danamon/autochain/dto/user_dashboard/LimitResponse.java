@@ -12,8 +12,10 @@ import lombok.NoArgsConstructor;
 public class LimitResponse {
     private Double limit;
     private Double limitUsed;
-    private Long income;
-    private Long incomeLastMonth;
-    private Long expense;
-    private Long expenseLastMonth;
+    private Double income;
+    private Double incomeLastMonth;
+    private Double incomeDifferencePercentage;
+    private Double expense;
+    private Double expenseLastMonth;
+    private Double expenseDifferencePercentage;
 }
