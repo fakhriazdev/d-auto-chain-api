@@ -26,7 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.mail.MessagingException;
@@ -45,21 +47,23 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     private final CompanyService companyService;
     private final ValidationUtil validationUtil;
     private final UserRolesRepository userRolesRepository;
-    private final UserAccsessRepository userAccessRepository;
+    private final BackofficeAccessRepository backofficeAccessRepository;
     private final BackOfficeRepository backOfficeRepository;
-    private final CredentialService credentialService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Page<BackOfficeUserResponse> getAllBackOfficeUser(BackOfficeUserRequest request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageRequest = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "username");
 
         Page<Credential> credentialByActorAndRoles = null;
 
         if (request.getRole() == null){
-            credentialByActorAndRoles = credentialRepository.findByActor(ActorType.BACKOFFICE, pageRequest);
+            credentialByActorAndRoles = credentialRepository.findByActorAndCredentialIdNot(ActorType.BACKOFFICE, principal.getCredentialId(), pageRequest);
         }else {
-            credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(request.getRole(), pageRequest);
+            credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(principal ,request.getRole(), pageRequest);
         }
         return credentialByActorAndRoles.map(this::mapToResponse);
 
@@ -87,6 +91,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public BackOfficeRegisterResponse addBackOfficeUser(BackOfficeRegisterRequest backOfficeUserRequest) {
         try {
@@ -103,13 +108,14 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
             List<Company> companies = companyService.findById(backOfficeUserRequest.getCompanyRequests());
             List<UserRole> userRoles = new ArrayList<>();
+            String password = passwordUtil.generateRandomPassword(12);
 
             Credential credential = Credential.builder()
                     .username(backOfficeUserRequest.getUsername())
                     .email(backOfficeUserRequest.getEmail())
                     .actor(ActorType.BACKOFFICE)
                     .roles(userRoles)
-                    .password(passwordUtil.generateRandomPassword(12))
+                    .password(passwordEncoder.encode(password))
                     .createdBy(principal.getUsername())
                     .createdDate(LocalDateTime.now())
                     .build();
@@ -125,14 +131,18 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
             BackOffice backOffice = BackOffice.builder()
                     .credential(credential).build();
-
-            List<UserAccsess> userAccsessList = companies.stream().map(c -> UserAccsess.builder()
-                    .company(c)
-                    .build()
-            ).collect(Collectors.toList());
-
-            userAccessRepository.saveAllAndFlush(userAccsessList);
             backOfficeRepository.saveAndFlush(backOffice);
+
+            if (roles.getRoleName().equals(RoleType.RELATIONSHIP_MANAGER.getName())) {
+                List<BackofficeUserAccess> backofficeUserAccesses = companies.stream().map(access ->
+                        BackofficeUserAccess.builder()
+                                .credential(credential)
+                                .company(access)
+                                .build()
+                ).toList();
+                backofficeAccessRepository.saveAllAndFlush(backofficeUserAccesses);
+            }
+
 
             String accountEmail = "<html style='width: 100%;'>" +
                     "<body style='width: 100%'>" +
@@ -144,7 +154,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
                     "<div><h5><center>Your Account</u></center></h5></div><br>" +
                     "<div><h4><center>Email: " + credential.getEmail() + "</center></h4></div><br>" +
                     "</div>" +
-                    "<div><h4><center>Password: " + credential.getPassword() + "</center></h4></div><br>" +
+                    "<div><h4><center>Password: " + password + "</center></h4></div><br>" +
                     "</div>" +
                     "</div>" +
                     "</body>" +

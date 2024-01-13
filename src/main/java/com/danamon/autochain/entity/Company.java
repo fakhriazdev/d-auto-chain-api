@@ -71,4 +71,7 @@ public class Company {
 
     @OneToMany(mappedBy = "recipientId", cascade = CascadeType.ALL)
     private List<TransactionDanamon> transactionDanamons;
+
+    @OneToMany(mappedBy = "company", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<BackofficeUserAccess> backofficeUserAccesses;
 }
