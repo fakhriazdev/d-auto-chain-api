@@ -10,6 +10,7 @@ import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
@@ -32,9 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.YearMonth;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -264,5 +264,54 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.saveAndFlush(paymentOld);
 
         return mapToResponsePayment(payment, null);
+    }
+
+    @Override
+    public LimitResponse getLimitDashboard() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+
+        YearMonth currentMonth = YearMonth.now();
+
+        Date currentMonthStartDate = java.sql.Date.valueOf(currentMonth.atDay(1));
+        Date currentMonthEndDate = java.sql.Date.valueOf(currentMonth.atEndOfMonth());
+
+        YearMonth lastMonth = currentMonth.minusMonths(1);
+
+        Date lastMonthStartDate = java.sql.Date.valueOf(lastMonth.atDay(1));
+        Date lastMonthEndDate = java.sql.Date.valueOf(lastMonth.atEndOfMonth());
+
+        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+
+        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+
+        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+
+        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+
+        return LimitResponse.builder()
+                .limit(user.getCompany().getRemainingLimit())
+                .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
+                .income(
+                        currentMonthIncome.stream()
+                                .mapToLong(Payment::getAmount)
+                                .sum()
+                )
+                .incomeLastMonth(
+                        lastMonthIncome.stream()
+                                .mapToLong(Payment::getAmount)
+                                .sum()
+                )
+                .expense(
+                        currentMonthExpense.stream()
+                                .mapToLong(Payment::getAmount)
+                                .sum()
+                )
+                .expenseLastMonth(
+                        lastMonthExpense.stream()
+                                .mapToLong(Payment::getAmount)
+                                .sum()
+                )
+                .build();
     }
 }
