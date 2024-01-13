@@ -20,7 +20,7 @@ public class Scheduler {
 
     @Scheduled(cron = "0 30 0 * * *")
     public void changePaymentStatus() {
-        List<Payment> payments = paymentRepository.findAllByStatusEqualsIgnoreCase("UNPAID");
+        List<Payment> payments = paymentRepository.findAllByStatusEquals("UNPAID");
 
         LocalDate currentDate = LocalDate.now();
 

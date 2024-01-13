@@ -247,8 +247,8 @@ public class SeederConfiguration implements CommandLineRunner {
         company.setCity("root");
         company.setAddress("root");
         company.setAccountNumber("root");
-        company.setFinancingLimit(12313d);
-        company.setRemainingLimit(123513d);
+        company.setFinancingLimit(100000000d);
+        company.setRemainingLimit(50000000d);
         company.setPhoneNumber("root");
         company.setProvince("root");
 
@@ -261,8 +261,8 @@ public class SeederConfiguration implements CommandLineRunner {
         company2.setCity("root");
         company2.setAddress("root");
         company2.setAccountNumber("root");
-        company2.setFinancingLimit(12313d);
-        company2.setRemainingLimit(123513d);
+        company2.setFinancingLimit(80000000d);
+        company2.setRemainingLimit(20000000d);
         company2.setPhoneNumber("root");
         company2.setProvince("root");
 
@@ -275,8 +275,8 @@ public class SeederConfiguration implements CommandLineRunner {
         company3.setCity("root");
         company3.setAddress("root");
         company3.setAccountNumber("root");
-        company3.setFinancingLimit(12313d);
-        company3.setRemainingLimit(123513d);
+        company3.setFinancingLimit(120000000d);
+        company3.setRemainingLimit(40000000d);
         company3.setPhoneNumber("root");
         company3.setProvince("root");
 
