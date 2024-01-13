@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user-dashboard")
 public class UserDashboardController {
     private final PaymentService paymentService;
-    @GetMapping
-    @PermitAll
+    @GetMapping("/limit")
     public ResponseEntity<?> getLimit(){
         LimitResponse limitResponse = paymentService.getLimitDashboard();
         DataResponse<LimitResponse> response = DataResponse.<LimitResponse>builder()
