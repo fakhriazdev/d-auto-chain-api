@@ -16,9 +16,9 @@ public interface CredentialRepository extends JpaRepository<Credential, String> 
     Optional<Credential> findByEmail(String username);
 
     @Query(
-            "SELECT c FROM Credential c join UserRole ur on ur.credential = c join Roles r on ur.role = r where r.roleName = ?1 and c.actor ='BACKOFFICE'"
+            "SELECT c FROM Credential c join UserRole ur on ur.credential = c join Roles r on ur.role = r where not c = ?1 and r.roleName = ?2 and c.actor ='BACKOFFICE'"
     )
-    Page<Credential> getCredentialByActorAndRoles(String roleType , Pageable pageable);
-    Page<Credential> findByActor(ActorType actor, Pageable pageable);
+    Page<Credential> getCredentialByActorAndRoles(Credential credential, String roleType , Pageable pageable);
+    Page<Credential> findByActorAndCredentialIdNot(ActorType actor, String credentialId, Pageable pageable);
 
 }
