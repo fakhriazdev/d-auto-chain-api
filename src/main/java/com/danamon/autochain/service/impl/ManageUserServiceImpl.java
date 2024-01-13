@@ -23,6 +23,7 @@ import com.danamon.autochain.util.ValidationUtil;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -310,6 +311,12 @@ public class ManageUserServiceImpl implements ManageUserService {
                 .access(roles)
                 .companyIds(companyIds)
                 .build();
+    }
+
+    @Override
+    public void deleteUser(String id) {
+        User user = getById(id);
+        userRepository.delete(user);
     }
 
     private Specification<User> getManageUserSpesification(SearchManageUserRequest request, User user, List<Credential> credentials) {

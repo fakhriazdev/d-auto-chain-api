@@ -15,4 +15,9 @@ public interface PartnershipRepository extends JpaRepository<Partnership, String
     Optional<Partnership> findPartnershipByPartnershipNo(@Param("partnership_no") String id);
     @Query("SELECT p FROM Partnership p WHERE p.company.company_id = :companyId")
     Page<Partnership> findAllByCompanyId(@Param("companyId") String id, Pageable pageable);
+    Page<Partnership> findAllByCompanyOrPartner(
+            Company company,
+            Company partner,
+            Pageable pageable
+    );
 }

@@ -9,6 +9,7 @@ import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.Payment;
 import org.springframework.data.domain.Page;
 
@@ -23,4 +24,5 @@ public interface PaymentService {
     Page<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
 //    List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
     PaymentResponse changeMethodPayment(PaymentChangeMethodRequest request);
+    LimitResponse getLimitDashboard();
 }

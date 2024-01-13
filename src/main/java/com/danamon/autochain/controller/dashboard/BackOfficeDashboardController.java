@@ -2,6 +2,9 @@ package com.danamon.autochain.controller.dashboard;
 
 
 import com.danamon.autochain.dto.DataResponse;
+import com.danamon.autochain.dto.backoffice_dashboard.CompanySummaryResponse;
+import com.danamon.autochain.dto.user_dashboard.LimitResponse;
+import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.service.impl.FinancingServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,6 +25,7 @@ import java.util.List;
 @RequestMapping("/api/dashboard")
 public class BackOfficeDashboardController {
     private final FinancingService financingService;
+    private final CompanyService companyService;
     @GetMapping
     @PermitAll
     public ResponseEntity<?> getStat(){
@@ -47,5 +51,16 @@ public class BackOfficeDashboardController {
     }
     public record FinancingStatResponse(Long financing, Long pending, Long outstanding){
 
+    }
+
+    @GetMapping("/company-summary")
+    public ResponseEntity<?> getLimit(){
+        CompanySummaryResponse companyResponse = companyService.getCompanySummary();
+        DataResponse<CompanySummaryResponse> response = DataResponse.<CompanySummaryResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success get company summary")
+                .data(companyResponse)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }
