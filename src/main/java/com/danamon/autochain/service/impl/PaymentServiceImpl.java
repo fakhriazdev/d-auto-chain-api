@@ -1,6 +1,6 @@
 package com.danamon.autochain.service.impl;
 
-
+import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
@@ -10,6 +10,7 @@ import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
@@ -32,9 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.YearMonth;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -79,8 +79,13 @@ public class PaymentServiceImpl implements PaymentService {
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
+        List<Company> companies = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients, isSuperUser, companies),
                 pageable
         );
 
@@ -100,15 +105,20 @@ public class PaymentServiceImpl implements PaymentService {
         List<PaymentType> types = getTypes(request);
         List<Company> recipients = request.getRecipient() != null ? companyService.getCompaniesNameLike(request.getRecipient()) : null;
 
+        List<Company> companies = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Page<Payment> payments = paymentRepository.findAll(
-                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients),
+                withInvoiceAndStatus(user, invoiceStatuses, types, request.getGroupBy(), recipients, isSuperUser, companies),
                 pageable
         );
 
         return payments.map(payment -> mapToResponsePayment(payment, request));
     }
 
-    private static Specification<Payment> withInvoiceAndStatus(User user, List<InvoiceStatus> invoiceStatuses, List<PaymentType> types, String groupBy, List<Company> recipients) {
+    private static Specification<Payment> withInvoiceAndStatus(User user, List<InvoiceStatus> invoiceStatuses, List<PaymentType> types, String groupBy, List<Company> recipients, boolean isSuperUser, List<Company> accessCompanies) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -118,6 +128,10 @@ public class PaymentServiceImpl implements PaymentService {
                         user.getCompany()
                 ));
 
+                if (!isSuperUser) {
+                    predicates.add(root.get("senderId").in(accessCompanies));
+                }
+
                 if (recipients != null) {
                     predicates.add(root.get("senderId").in(recipients));
                 }
@@ -126,6 +140,10 @@ public class PaymentServiceImpl implements PaymentService {
                         root.get("senderId"),
                         user.getCompany()
                 ));
+
+                if (!isSuperUser) {
+                    predicates.add(root.get("senderId").in(accessCompanies));
+                }
 
                 if (recipients != null) {
                     predicates.add(root.get("recipientId").in(recipients));
@@ -246,5 +264,52 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.saveAndFlush(paymentOld);
 
         return mapToResponsePayment(payment, null);
+    }
+
+    @Override
+    public LimitResponse getLimitDashboard() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+
+        YearMonth currentMonth = YearMonth.now();
+
+        Date currentMonthStartDate = java.sql.Date.valueOf(currentMonth.atDay(1));
+        Date currentMonthEndDate = java.sql.Date.valueOf(currentMonth.atEndOfMonth());
+
+        YearMonth lastMonth = currentMonth.minusMonths(1);
+
+        Date lastMonthStartDate = java.sql.Date.valueOf(lastMonth.atDay(1));
+        Date lastMonthEndDate = java.sql.Date.valueOf(lastMonth.atEndOfMonth());
+
+        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        Double sumCurrentMonthIncome = currentMonthIncome.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
+
+        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        Double sumLastMonthIncome = lastMonthIncome.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
+
+        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        Double sumCurrentMonthExpense = currentMonthExpense.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
+
+        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        double sumLastMonthExpense = lastMonthExpense.stream()
+                .mapToDouble(Payment::getAmount)
+                .sum();
+
+        return LimitResponse.builder()
+                .limit(user.getCompany().getRemainingLimit())
+                .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
+                .income(sumCurrentMonthIncome)
+                .incomeLastMonth(sumLastMonthIncome)
+                .incomeDifferencePercentage(sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome)
+                .expense(sumCurrentMonthExpense)
+                .expenseLastMonth(sumLastMonthExpense)
+                .expenseDifferencePercentage(sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense)
+                .build();
     }
 }

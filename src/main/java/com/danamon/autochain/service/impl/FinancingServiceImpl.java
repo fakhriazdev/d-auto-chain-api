@@ -1,5 +1,6 @@
 package com.danamon.autochain.service.impl;
 
+import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
@@ -119,6 +120,13 @@ public class FinancingServiceImpl implements FinancingService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
 
+        List<Company> senders = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        List<Invoice> invoices = invoiceRepository.findAllBySenderIdInAndRecipientId(senders, company);
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Specification<FinancingPayable> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -135,6 +143,10 @@ public class FinancingServiceImpl implements FinancingService {
                     company.getCompany_id().toLowerCase()
             );
             predicates.add(id);
+
+            if (!isSuperUser) {
+                predicates.add(root.get("invoice").in(invoices));
+            }
 
             return query
                     .where(predicates.toArray(new Predicate[]{}))
@@ -245,6 +257,13 @@ public class FinancingServiceImpl implements FinancingService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
 
+        List<Company> recipients = new ArrayList<>(user.getUserAccsess().stream().map(UserAccsess::getCompany).toList());
+
+        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdInAndSenderId(recipients, company);
+
+        boolean isSuperUser = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
         Specification<FinancingReceivable> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -261,6 +280,10 @@ public class FinancingServiceImpl implements FinancingService {
                     company.getCompany_id().toLowerCase()
             );
             predicates.add(id);
+
+            if (!isSuperUser) {
+                predicates.add(root.get("invoice").in(invoices));
+            }
 
             return query
                     .where(predicates.toArray(new Predicate[]{}))

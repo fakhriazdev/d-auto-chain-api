@@ -4,6 +4,7 @@ import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.dto.FileResponse;
+import com.danamon.autochain.dto.backoffice_dashboard.CompanySummaryResponse;
 import com.danamon.autochain.dto.company.*;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
@@ -33,7 +34,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -323,6 +327,47 @@ public class CompanyServiceImpl implements CompanyService {
         return companyFileService.findByPath(companyFile.getPath());
     }
 
+    @Override
+    public CompanySummaryResponse getCompanySummary() {
+        List<Company> companies = companyRepository.findAll();
+        Integer restrictedCompany = 0;
+        Integer needAttention = 0;
+        List<CompanyResponse> companyResponses = new ArrayList<>();
+        for (Company company : companies) {
+            boolean restrictedCompanyFound = company.getPayments().stream()
+                    .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+
+            if (restrictedCompanyFound) {
+                restrictedCompany++;
+                if (companyResponses.size() < 5) companyResponses.add(mapToResponse(company));
+                continue;
+            }
+
+            boolean needAttentionFound = company.getPayments().stream()
+                    .anyMatch(payment -> {
+                        if (payment.getStatus().equals(PaymentStatus.UNPAID)) {
+                            LocalDate dueDate = payment.getDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                            long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
+
+                            return daysUntilDue <= 7 && daysUntilDue >= 0;
+                        }
+                        return false;
+                    });
+
+            if (needAttentionFound) {
+                needAttention++;
+                if (companyResponses.size() < 5) companyResponses.add(mapToResponse(company));
+            }
+        }
+
+        return CompanySummaryResponse.builder()
+                .registeredCompany(companies.size())
+                .needAttention(needAttention)
+                .restrictedCompany(restrictedCompany)
+                .companies(companyResponses)
+                .build();
+    }
+
     private CompanyResponse mapToResponse(Company company) {
         List<FileResponse> fileResponses = company.getCompanyFiles().stream().map(
                 companyFiles -> FileResponse.builder()
@@ -350,7 +395,6 @@ public class CompanyServiceImpl implements CompanyService {
             found = company.getPayments().stream()
                     .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
         }
-
 
         return CompanyResponse.builder()
                 .companyId(company.getCompany_id())

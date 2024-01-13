@@ -105,4 +105,18 @@ public class ManageUserController {
                 .status(HttpStatus.OK)
                 .body(response);
     }
+
+    @DeleteMapping(value = "/{id}")
+    @PreAuthorize("hasAnyAuthority('SUPER_USER')")
+    public ResponseEntity<?> deleteUserById(@PathVariable String id) {
+        manageUserService.deleteUser(id);
+        DataResponse<String> response = DataResponse.<String>builder()
+                .message("successfully delete user")
+                .statusCode(HttpStatus.OK.value())
+                .data(null)
+                .build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
 }

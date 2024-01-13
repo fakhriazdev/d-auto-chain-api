@@ -118,7 +118,9 @@ public class PartnershipServiceImpl implements PartnershipService {
     public Page<PartnershipResponse> getAll(String id, SearchPartnershipRequest request) {
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, request.getSortBy());
-        Page<Partnership> parterships = partnershipRepository.findAllByCompanyId(id, pageable);
+//        Page<Partnership> parterships = partnershipRepository.findAllByCompanyId(id, pageable);
+        Company company = companyService.getById(id);
+        Page<Partnership> parterships = partnershipRepository.findAllByCompanyOrPartner(company, company, pageable);
         return parterships.map(this::mapToResponse);
     }
 

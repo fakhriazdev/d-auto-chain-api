@@ -18,5 +18,6 @@ public interface ManageUserService {
      ManageUserResponse updateUser(UpdateUserRequest request);
      User getById(String id);
      ManageUserResponse findById(String id);
+     void deleteUser(String id);
 }
 
