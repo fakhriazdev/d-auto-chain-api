@@ -108,7 +108,7 @@ public class CompanyController {
                 .body(response);
     }
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('CREDIT_ANALYST','ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('CREDIT_ANALYST','ADMIN','SUPER_ADMIN','RELATIONSHIP_MANAGER')")
     public ResponseEntity<?> getAllCompanies(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,

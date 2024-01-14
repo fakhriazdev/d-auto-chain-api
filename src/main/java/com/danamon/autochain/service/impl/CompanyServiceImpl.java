@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.mail.SendFailedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -54,6 +55,8 @@ public class CompanyServiceImpl implements CompanyService {
     private final RandomPasswordUtil randomPasswordUtil;
     private final CredentialRepository credentialRepository;
     private final UserRolesRepository userRolesRepository;
+    private final UserAccsessRepository userAccsessRepository;
+    private final BackofficeAccessRepository backofficeAccessRepository;
     private final BCryptUtil bCryptUtil;
 
     @Override
@@ -72,6 +75,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         return filteredCompanies.stream().map(c -> mapToResponse(c)).collect(Collectors.toList());
     }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public CompanyResponse create(NewCompanyRequest request) {
@@ -102,7 +106,7 @@ public class CompanyServiceImpl implements CompanyService {
                     .companyFiles(companyFiles)
                     .build();
 
-                    Company companySaved = companyRepository.saveAndFlush(company);
+            Company companySaved = companyRepository.saveAndFlush(company);
 
             String password = randomPasswordUtil.generateRandomPassword(12);
 
@@ -133,7 +137,7 @@ public class CompanyServiceImpl implements CompanyService {
                 credential.setRoles(List.of(userRole));
 
                 userRolesRepository.saveAndFlush(userRole);
-            }  catch (DataIntegrityViolationException e){
+            } catch (DataIntegrityViolationException e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Email must be unique");
             }
 
@@ -148,9 +152,9 @@ public class CompanyServiceImpl implements CompanyService {
                         "</header>" +
                         "<div style='margin: auto;'>" +
                         "<div><h5><center>Your Account</u></center></h5></div><br>" +
-                        "<div><h4><center>Email: "+request.getEmailUser()+"</center></h4></div><br>" +
+                        "<div><h4><center>Email: " + request.getEmailUser() + "</center></h4></div><br>" +
                         "</div>" +
-                        "<div><h4><center>Password: "+password+"</center></h4></div><br>" +
+                        "<div><h4><center>Password: " + password + "</center></h4></div><br>" +
                         "</div>" +
                         "</div>" +
                         "</body>" +
@@ -159,7 +163,7 @@ public class CompanyServiceImpl implements CompanyService {
                 info.put("emailBody", accountEmail);
 
                 MailSender.mailer("Here Your Company Super Account", info, request.getEmailUser());
-            }  catch (Exception e){
+            } catch (Exception e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
@@ -183,7 +187,7 @@ public class CompanyServiceImpl implements CompanyService {
             kode = String.format("%03d", randomNumber);
 
             Optional<Company> availableCompany = companyRepository.findById(companyCode + kode);
-            if(availableCompany.isEmpty()) {
+            if (availableCompany.isEmpty()) {
                 break;
             }
         }
@@ -240,9 +244,9 @@ public class CompanyServiceImpl implements CompanyService {
                             "</header>" +
                             "<div style='margin: auto;'>" +
                             "<div><h5><center>Your Account</u></center></h5></div><br>" +
-                            "<div><h4><center>Email: "+companySuperUser.getEmail()+"</center></h4></div><br>" +
+                            "<div><h4><center>Email: " + companySuperUser.getEmail() + "</center></h4></div><br>" +
                             "</div>" +
-                            "<div><h4><center>Password: "+newPassword+"</center></h4></div><br>" +
+                            "<div><h4><center>Password: " + newPassword + "</center></h4></div><br>" +
                             "</div>" +
                             "</div>" +
                             "</body>" +
@@ -251,7 +255,7 @@ public class CompanyServiceImpl implements CompanyService {
                     info.put("emailBody", accountEmail);
 
                     MailSender.mailer("New Password for Company Account", info, companySuperUser.getEmail());
-                }  catch (Exception e){
+                } catch (Exception e) {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
                 }
             }
@@ -261,7 +265,7 @@ public class CompanyServiceImpl implements CompanyService {
                         companyFileService.createFile(multipartFile)
                 ).collect(Collectors.toList());
 
-                if(companyOld.getCompanyFiles().size() != 0) {
+                if (companyOld.getCompanyFiles().size() != 0) {
                     List<CompanyFile> oldFiles = new ArrayList<>(companyOld.getCompanyFiles());
                     companyFiles.addAll(oldFiles);
                 }
@@ -278,29 +282,67 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional(readOnly = true)
     @Override
     public Page<CompanyResponse> getAll(SearchCompanyRequest request) {
-        Specification<Company> specification = getCompanySpecification(request);
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        List<UserRole> roles = principal.getRoles();
+
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "companyName");
-        Page<Company> companies = companyRepository.findAll(specification, pageable);
 
-        return companies.map(company -> {
-            boolean found = false;
+        if (roles.stream().anyMatch(r -> r.getRole().getRoleName().equals("SUPER_ADMIN") || r.getRole().getRoleName().equals("ADMIN"))) {
 
-            if (company.getPayments() != null) {
-                found = company.getPayments().stream()
-                        .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+            Specification<Company> specification = getCompanySpecification(request);
+            Page<Company> companies = companyRepository.findAll(specification, pageable);
+
+            return companies.map(company -> {
+                boolean found = false;
+
+                if (company.getPayments() != null) {
+                    found = company.getPayments().stream()
+                            .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+                }
+
+                if (request.getStatus() == null) {
+                    return mapToResponse(company);
+                }
+
+                if (request.getStatus().equals("Restricted") && found) {
+                    return mapToResponse(company);
+                }
+
+                return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
+            });
+        } else {
+            Pageable newPageRequest = PageRequest.of(request.getPage() - 1, request.getSize());
+            List<Credential> backofficeUserAccessId = principal.getBackofficeUserAccesses().stream().map(BackofficeUserAccess::getCredential).collect(Collectors.toList());
+            Page<BackofficeUserAccess> companyAccess = backofficeAccessRepository.findByCredentialIn(backofficeUserAccessId, newPageRequest);
+            if (request.getStatus() == null){
+                return companyAccess.map(c -> mapToResponse(c.getCompany()));
+            }else{
+                List<String> list = companyAccess.getContent().stream().map(c -> c.getCompany().getCompanyName()).toList();
+
+                Page<Company> getStatus = companyRepository.findAllByCompanyNameIn(list,pageable);
+
+                return getStatus.map(company -> {
+                    boolean found = false;
+
+                    if (company.getPayments() != null) {
+                        found = company.getPayments().stream()
+                                .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+                    }
+
+                    if (request.getStatus() == null) {
+                        return mapToResponse(company);
+                    }
+
+                    if (request.getStatus().equals("Restricted") && found) {
+                        return mapToResponse(company);
+                    }
+
+                    return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
+                });
             }
-
-            if (request.getStatus() == null) {
-                return mapToResponse(company);
-            }
-
-            if (request.getStatus().equals("Restricted") && found) {
-                return mapToResponse(company);
-            }
-
-            return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
-        });
+        }
     }
 
     @Transactional(readOnly = true)

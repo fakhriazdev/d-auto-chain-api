@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import jakarta.persistence.Table;
 
+import java.util.List;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +22,28 @@ public class BackOffice {
     @Column(name = "backofficeId", length = 128, nullable = false)
     private String backoffice_id;
 
-    @OneToOne
-    @JoinColumn(name= "credentialId", nullable=false)
+    @OneToOne(cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "credentialId", nullable = false)
     private Credential credential;
+
+//    @OneToMany(mappedBy = "backOffice", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    private List<BackofficeUserAccess> backofficeUserAccesses;
+
+
+//    @Column
+//    private String name;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "companyId")
+//    private Company company;
+//
+//    @OneToOne(cascade = CascadeType.REMOVE)
+//    @JoinColumn(name = "credentialId")
+//    private Credential credential;
+//
+//    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
+//    private List<UserAccsess> userAccsess;
+//
+//    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
+//    private List<UserActivityLog> userActivityLogs;
 }

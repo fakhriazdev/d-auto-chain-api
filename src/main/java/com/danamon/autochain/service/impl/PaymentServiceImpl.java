@@ -5,16 +5,18 @@ import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.dto.Invoice.ItemList;
+import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
-import com.danamon.autochain.dto.payment.CreatePaymentRequest;
-import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
-import com.danamon.autochain.dto.payment.PaymentResponse;
-import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.dto.financing.PayableDetailResponse;
+import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
+import com.danamon.autochain.repository.FinancingPayableRepository;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
+import com.danamon.autochain.service.FinancingService;
+import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -44,10 +46,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final CompanyService companyService;
+    private final InvoiceService invoiceService;
+    private final FinancingPayableRepository financingPayableRepository;
 
     @Override
     @Transactional
-    public void createPayment(CreatePaymentRequest request){
+    public void createPayment(CreatePaymentRequest request) {
         Payment payment = Payment.builder()
                 .amount(request.getAmount())
                 .dueDate(request.getDueDate())
@@ -62,7 +66,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void deletePayment(Payment payment){
+    public void deletePayment(Payment payment) {
         paymentRepository.delete(payment);
     }
 
@@ -311,5 +315,36 @@ public class PaymentServiceImpl implements PaymentService {
                 .expenseLastMonth(sumLastMonthExpense)
                 .expenseDifferencePercentage(sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense)
                 .build();
+    }
+
+    @Override
+    public PaymentDetailFinancing getPaymentDetailFinancing(Payment payment) {
+        //get invoice
+//        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(payment.getInvoice().getInvoiceId());
+
+        //get financing payable
+//        PayableDetailResponse detailPayable = financingService.get_detail_payable(payment.getFinancingPayable().getFinancingPayableId());
+
+        FinancingPayable financingPayable = financingPayableRepository.findByPayment(payment).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        return PaymentDetailFinancing.builder()
+                .transactionId(financingPayable.getInvoice().getInvoiceId())
+                .tenor(financingPayable.getTenure().toString())
+                .supplier(financingPayable.getCompany().getCompanyName())
+                .amount(financingPayable.getAmount())
+                .paymentMethod(financingPayable.getPayment().getMethod().name())
+                .financingId(financingPayable.getFinancingPayableId())
+                .build();
+
+    }
+
+    @Override
+    public InvoiceDetailResponse getPaymentDetailInvoice(Payment payment) {
+        return invoiceService.getInvoiceDetail(payment.getInvoice().getInvoiceId());
+    }
+
+    @Override
+    public Payment getPaymentDetailType(String paymentId) {
+        return paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
     }
 }

@@ -5,10 +5,7 @@ import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
-import com.danamon.autochain.dto.payment.CreatePaymentRequest;
-import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
-import com.danamon.autochain.dto.payment.PaymentResponse;
-import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.Payment;
 import org.springframework.data.domain.Page;
@@ -25,4 +22,10 @@ public interface PaymentService {
 //    List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
     PaymentResponse changeMethodPayment(PaymentChangeMethodRequest request);
     LimitResponse getLimitDashboard();
+
+    PaymentDetailFinancing getPaymentDetailFinancing(Payment payment);
+    InvoiceDetailResponse getPaymentDetailInvoice(Payment payment);
+    Payment getPaymentDetailType(String transactionId);
+
+
 }
