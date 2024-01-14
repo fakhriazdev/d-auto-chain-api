@@ -1,5 +1,6 @@
 package com.danamon.autochain.repository;
 
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Invoice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, String>, JpaSp
     Optional<Invoice> findInvoiceByRecipientIdAndInvoiceId(Company recipientId, String invoiceId);
     Optional<Invoice> findInvoiceBySenderIdAndInvoiceId(Company recipientId, String invoiceId);
     List<Invoice> findAllByRecipientId(Company recipient);
+    List<Invoice> findAllByRecipientIdAndStatusOrStatus(Company recipientId, InvoiceStatus status, InvoiceStatus status2);
+    List<Invoice> findAllBySenderIdAndStatusOrStatus(Company senderId, InvoiceStatus status, InvoiceStatus status2);
     List<Invoice> findAllBySenderId(Company sender);
     List<Invoice> findAllBySenderIdInAndRecipientId(List<Company> senders, Company recipient);
     List<Invoice> findAllByRecipientIdInAndSenderId(List<Company> recipients, Company sender);

@@ -18,7 +18,7 @@ import java.util.List;
 @SuperBuilder
 @Entity
 @Table(name = "t_financing_payable")
-public class FinancingPayable extends HistoryLog{
+public class    FinancingPayable extends HistoryLog{
     @Id
     @UuidGenerator
     @Column(name = "financingPayableId", length = 128, nullable = false)

@@ -15,4 +15,5 @@ import java.util.List;
 @Repository
 public interface BackofficeAccessRepository extends JpaRepository<BackofficeUserAccess, String> {
     Page<BackofficeUserAccess> findByCredentialIn(Collection<Credential> credential, Pageable pageable);
+    void deleteAllByCredential(Credential credential);
 }

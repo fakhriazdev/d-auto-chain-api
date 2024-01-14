@@ -44,7 +44,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -330,5 +329,27 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = companyService.getById(id);
 
         return invoiceRepository.findAllBySenderId(company);
+    }
+
+    @Override
+    public Long getTotalPaidInvoicePayable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.PAID,  InvoiceStatus.LATE_PAID);
+        long total = 0;
+        for (Invoice i : invoices){
+            total+= i.getAmount();
+        }
+        return total;
+    }
+
+    @Override
+    public Long getTotalUnpaidInvoicePayable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.UNPAID,  InvoiceStatus.LATE_UNPAID);
+        long total = 0;
+        for (Invoice i : invoices){
+            total+= i.getAmount();
+        }
+        return total;
     }
 }

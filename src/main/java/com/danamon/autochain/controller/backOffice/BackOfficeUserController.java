@@ -31,7 +31,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BackOfficeUserController {
     private final BackOfficeUserService backOfficeUserService;
-    private final CredentialService credentialService;
 
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(required = false, defaultValue = "1") Integer page,
@@ -144,6 +143,13 @@ public class BackOfficeUserController {
     @PutMapping("/edit")
     public ResponseEntity<?> editBackofficeUser(@RequestBody EditBackOfficeUser editBackOfficeUser){
         return ResponseEntity.ok(editBackOfficeUser);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteBackOfficeUser(@PathVariable(name = "id") String id){
+        backOfficeUserService.deleteUser(id);
+
+        return ResponseEntity.ok("Success Delete User");
     }
 
     public record EditBackOfficeUser(String username, String name, String email, List<String> roles, List<String> companies){
