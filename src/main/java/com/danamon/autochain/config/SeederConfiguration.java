@@ -232,7 +232,7 @@ public class SeederConfiguration implements CommandLineRunner {
         credentialRepository.saveAndFlush(userCredential4);
 
         User user4 = new User();
-        user4.setCompany(company2);
+        user4.setCompany(company3);
         user4.setCredential(userCredential4);
         user4.setName("toyota");
 
