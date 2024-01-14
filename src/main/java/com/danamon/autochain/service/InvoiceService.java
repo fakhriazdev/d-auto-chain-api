@@ -29,4 +29,7 @@ public interface InvoiceService {
 
     Long getTotalPaidInvoicePayable();
     Long getTotalUnpaidInvoicePayable();
+
+    Long getTotalPaidInvoiceReceivable();
+    Long getTotalUnpaidInvoiceReceivable();
 }

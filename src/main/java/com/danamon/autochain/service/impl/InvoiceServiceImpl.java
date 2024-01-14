@@ -352,4 +352,28 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
         return total;
     }
+
+    @Override
+    public Long getTotalPaidInvoiceReceivable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.PAID, InvoiceStatus.LATE_PAID);
+        long total = 0;
+        for (Invoice i : invoices){
+            total+= i.getAmount();
+        }
+        return total;
+    }
+
+    @Override
+    public Long getTotalUnpaidInvoiceReceivable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID);
+        long total = 0;
+        for (Invoice i : invoices){
+            total+= i.getAmount();
+        }
+        return total;
+    }
+
+
 }

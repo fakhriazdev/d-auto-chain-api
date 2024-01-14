@@ -35,7 +35,7 @@ public class UserDashboardController {
     }
 
     @GetMapping("/cash/payable")
-    private ResponseEntity<?> getCashCycle(){
+    public ResponseEntity<?> getCashCyclePayable(){
         Long totalPaidInvoicePayable = invoiceService.getTotalPaidInvoicePayable();
         Long totalUnpaidInvoicePayable = invoiceService.getTotalUnpaidInvoicePayable();
 
@@ -50,6 +50,21 @@ public class UserDashboardController {
                 .statusCode(HttpStatus.OK.value())
                 .build();
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/cash/receivable")
+    public ResponseEntity<?> getCashCycleReceivable(){
+        Long totalPaidInvoiceReceivable = invoiceService.getTotalPaidInvoiceReceivable();
+        Long totalUnpaidInvoiceReceivable = invoiceService.getTotalUnpaidInvoiceReceivable();
+
+        CycleCash cycleCash = new CycleCash(totalPaidInvoiceReceivable, totalUnpaidInvoiceReceivable, 0L, 0L);
+
+        DataResponse<CycleCash> response = DataResponse.<CycleCash>builder()
+                .message("Success Get All Data")
+                .data(cycleCash)
+                .statusCode(HttpStatus.OK.value())
+                .build();
         return ResponseEntity.ok(response);
     }
 
