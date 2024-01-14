@@ -22,7 +22,7 @@ public class BackOffice {
     @Column(name = "backofficeId", length = 128, nullable = false)
     private String backoffice_id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "credentialId", nullable = false)
     private Credential credential;
 

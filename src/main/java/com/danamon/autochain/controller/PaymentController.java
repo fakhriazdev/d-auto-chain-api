@@ -1,5 +1,6 @@
 package com.danamon.autochain.controller;
 
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
@@ -10,8 +11,10 @@ import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.UpdateCompanyRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
+import com.danamon.autochain.dto.payment.PaymentDetailFinancing;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
+import com.danamon.autochain.entity.Payment;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.util.PagingUtil;
@@ -134,4 +137,27 @@ public class PaymentController {
                 .status(HttpStatus.OK)
                 .body(response);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPaymentDetail(@PathVariable(name = "id") String transactionId){
+        Payment paymentDetailType = paymentService.getPaymentDetailType(transactionId);
+        if (paymentDetailType.getType().equals(PaymentType.INVOICING)){
+            InvoiceDetailResponse paymentDetailInvoice = paymentService.getPaymentDetailInvoice(paymentDetailType);
+            DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Success get data")
+                    .data(paymentDetailInvoice)
+                    .build();
+            return ResponseEntity.ok(response);
+        }else {
+            PaymentDetailFinancing paymentDetailFinancing = paymentService.getPaymentDetailFinancing(paymentDetailType);
+            DataResponse<PaymentDetailFinancing> response = DataResponse.<PaymentDetailFinancing>builder()
+                    .data(paymentDetailFinancing)
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Success get data")
+                    .build();
+            return ResponseEntity.ok(response);
+        }
+    }
+
 }

@@ -186,6 +186,16 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     public void updateBackofficeUser(BackOfficeUserController.EditBackOfficeUser request) {
 
     }
+
+    @Override
+    @Transactional
+    public void deleteUser(String id) {
+        Credential credential = credentialRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+//        backofficeAccessRepository.deleteAllByCredential(credential);
+        backOfficeRepository.deleteByCredential(credential);
+//        credentialRepository.deleteById(credential.getCredentialId());
+    }
+
     private BackOfficeUserResponse mapToResponse(Credential data){
         List<String> collect = data.getRoles().stream().map(r -> RoleType.valueOf(r.getRole().getRoleName()).getName()).toList();
         return BackOfficeUserResponse.builder()

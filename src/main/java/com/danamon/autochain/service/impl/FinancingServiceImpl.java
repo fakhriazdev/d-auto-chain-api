@@ -45,7 +45,6 @@ public class FinancingServiceImpl implements FinancingService {
     private final CompanyService companyService;
     private final PaymentService paymentService;
     private final TransactionService transactionService;
-    private final EntityManager entityManager;
 
     @Override
     public Map<String, Double> get_limit() {
@@ -560,6 +559,34 @@ public class FinancingServiceImpl implements FinancingService {
         );
 
         return result.stream().sorted(Comparator.comparing(BackofficeFinanceResponse::financeDate)).toList();
+    }
+
+    @Override
+    public Long getTotalPaidFinancingPayable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<FinancingPayable> financingPayables = financingPayableRepository.findAllByCompanyAndStatusIs(principal.getUser().getCompany(), FinancingStatus.COMPLETED);
+
+        long total = 0;
+
+        for (FinancingPayable financingPayable : financingPayables) {
+            total += financingPayable.getAmount();
+        }
+
+        return total;
+    }
+
+    @Override
+    public Long getTotalUnpaidFinancingPayable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<FinancingPayable> financingPayables = financingPayableRepository.findAllByCompanyAndStatusIsOrStatusIs(principal.getUser().getCompany(), FinancingStatus.ONGOING, FinancingStatus.OUTSTANDING);
+
+        long total = 0;
+
+        for (FinancingPayable financingPayable : financingPayables) {
+            total += financingPayable.getAmount();
+        }
+
+        return total;
     }
 
     public record BackofficeFinanceResponse(LocalDateTime financeDate, String issuer, FinancingStatus status) {

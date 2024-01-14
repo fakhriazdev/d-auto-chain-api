@@ -19,5 +19,6 @@ public interface BackOfficeUserService {
     BackOfficeRegisterResponse addBackOfficeUser(BackOfficeRegisterRequest request);
     BackOfficeUserResponse getBackOfficeUserById(String id);
     void updateBackofficeUser(BackOfficeUserController.EditBackOfficeUser request);
+    void deleteUser(String id);
 
 }
