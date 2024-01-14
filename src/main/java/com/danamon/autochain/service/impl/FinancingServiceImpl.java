@@ -62,12 +62,12 @@ public class FinancingServiceImpl implements FinancingService {
 //    =================================== FINANCING PAYABLE ==========================================
 
     @Override
-    public void create_financing_payable(BulkPayableRequest requests) {
+    public void create_financing_payable(List<PayableRequest> requests) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
 
-        requests.getRequest_financing().forEach(request -> {
+        requests.forEach(request -> {
 
             if (request.getAmount() < 75000000)
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");

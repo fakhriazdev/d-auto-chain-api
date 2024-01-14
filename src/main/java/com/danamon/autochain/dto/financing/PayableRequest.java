@@ -1,6 +1,7 @@
 package com.danamon.autochain.dto.financing;
 
 import com.danamon.autochain.constant.financing.FinancingStatus;
+import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Invoice;
 import jakarta.persistence.*;
