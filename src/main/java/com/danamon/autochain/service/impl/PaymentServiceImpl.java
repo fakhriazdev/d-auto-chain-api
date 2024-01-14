@@ -302,7 +302,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .sum();
 
         return LimitResponse.builder()
-                .limit(user.getCompany().getRemainingLimit())
+                .limit(user.getCompany().getFinancingLimit())
                 .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
                 .income(sumCurrentMonthIncome)
                 .incomeLastMonth(sumLastMonthIncome)
