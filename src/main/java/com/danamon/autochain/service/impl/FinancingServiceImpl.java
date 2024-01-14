@@ -388,6 +388,8 @@ public class FinancingServiceImpl implements FinancingService {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
 
+            if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
             Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getTenure());
 
             for (int i = 1; i <= financingPayable.getTenure(); i++) {
@@ -417,6 +419,9 @@ public class FinancingServiceImpl implements FinancingService {
 
         } else if (request.getType().equalsIgnoreCase("receivable")) {
             FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+
+            if(financingReceivable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
             Payment payment = financingReceivable.getInvoice().getPayment();
 
             Long financing_amount = financingReceivable.getAmount();
@@ -435,6 +440,7 @@ public class FinancingServiceImpl implements FinancingService {
                 partialFinancing = PaymentType.FINANCING;
             }
 
+//            ========================== PARTIAL DANAMON ==========================
 //            buat partial payment danamon & seller
             if (financing_amount < invoice_amount) {
                 payment.setAmount(payable_amount);
@@ -487,17 +493,17 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public RejectResponse backoffice_reject(RejectRequest request) {
+    public void backoffice_reject(RejectRequest request) {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
             financingPayable.setStatus(FinancingStatus.REJECTED);
             financingPayableRepository.saveAndFlush(financingPayable);
-            return RejectResponse.builder().build();
+
         } else if (request.getType().equalsIgnoreCase("receivable")) {
             FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
             financingReceivable.setStatus(FinancingStatus.REJECTED);
             financingReceivableRepository.saveAndFlush(financingReceivable);
-            return RejectResponse.builder().build();
+
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
         }
