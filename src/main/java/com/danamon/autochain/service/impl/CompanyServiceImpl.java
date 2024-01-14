@@ -313,20 +313,35 @@ public class CompanyServiceImpl implements CompanyService {
                 return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
             });
         } else {
-//            List<BackofficeUserAccess> companyAccess = backofficeAccessRepository.findAll();
-            System.out.println("FLAGGGG");
-            System.out.println(principal.getBackofficeUserAccesses().toString());
-            log.info(principal.getBackofficeUserAccesses().toString());
-            return null;
-//            if (request.getStatus() == null){
-//                return companyAccess.map(c -> mapToResponse(c.getCompany()));
-//            }else{
-//                Page<CompanyResponse> getStatus = companyAccess.map(c -> mapToResponse(c.getCompany()));
-//
-//                getStatus.filter(companyResponse -> companyResponse.getStatus().equals(request.getStatus()));
-//
-//                return  getStatus;
-//            }
+            Pageable newPageRequest = PageRequest.of(request.getPage() - 1, request.getSize());
+            List<Credential> backofficeUserAccessId = principal.getBackofficeUserAccesses().stream().map(BackofficeUserAccess::getCredential).collect(Collectors.toList());
+            Page<BackofficeUserAccess> companyAccess = backofficeAccessRepository.findByCredentialIn(backofficeUserAccessId, newPageRequest);
+            if (request.getStatus() == null){
+                return companyAccess.map(c -> mapToResponse(c.getCompany()));
+            }else{
+                List<String> list = companyAccess.getContent().stream().map(c -> c.getCompany().getCompanyName()).toList();
+
+                Page<Company> getStatus = companyRepository.findAllByCompanyNameIn(list,pageable);
+
+                return getStatus.map(company -> {
+                    boolean found = false;
+
+                    if (company.getPayments() != null) {
+                        found = company.getPayments().stream()
+                                .anyMatch(payment -> payment.getStatus().equals(PaymentStatus.LATE_UNPAID));
+                    }
+
+                    if (request.getStatus() == null) {
+                        return mapToResponse(company);
+                    }
+
+                    if (request.getStatus().equals("Restricted") && found) {
+                        return mapToResponse(company);
+                    }
+
+                    return request.getStatus().equals("Cleared") && !found ? mapToResponse(company) : null;
+                });
+            }
         }
     }
 
