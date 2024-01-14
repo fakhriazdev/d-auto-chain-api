@@ -188,12 +188,14 @@ public class FinancingServiceImpl implements FinancingService {
         });
         return PayableDetailResponse.builder()
                 .financing_id(financingPayable.getFinancingPayableId())
-                .invoice_number(financingPayable.getInvoice().getInvoiceId())
+                .payment_id(financingPayable.getInvoice().getPayment().getPaymentId())
                 .recipient(recipient)
                 .sender(sender)
                 .total_amount(financingPayable.getAmount())
                 .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
-                .tenure_list(listTenure)
+                .tenure(financingPayable.getTenure())
+                .amount_instalment(financingPayable.getMonthly_installment())
+                .tenure_list_detail(listTenure)
                 .build();
     }
 
