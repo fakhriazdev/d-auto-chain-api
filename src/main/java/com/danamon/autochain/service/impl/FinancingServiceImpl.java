@@ -61,12 +61,12 @@ public class FinancingServiceImpl implements FinancingService {
 //    =================================== FINANCING PAYABLE ==========================================
 
     @Override
-    public void create_financing_payable(BulkPayableRequest requests) {
+    public void create_financing_payable(List<PayableRequest> requests) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Company company = companyRepository.findById(user.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid company id"));
 
-        requests.getRequest_financing().forEach(request -> {
+        requests.forEach(request -> {
 
             if (request.getAmount() < 75000000)
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot low than Rp.75.000.000");
@@ -187,12 +187,14 @@ public class FinancingServiceImpl implements FinancingService {
         });
         return PayableDetailResponse.builder()
                 .financing_id(financingPayable.getFinancingPayableId())
-                .invoice_number(financingPayable.getInvoice().getInvoiceId())
+                .payment_id(financingPayable.getInvoice().getPayment().getPaymentId())
                 .recipient(recipient)
                 .sender(sender)
                 .total_amount(financingPayable.getAmount())
                 .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
-                .tenure_list(listTenure)
+                .tenure(financingPayable.getTenure())
+                .amount_instalment(financingPayable.getMonthly_installment())
+                .tenure_list_detail(listTenure)
                 .build();
     }
 
@@ -320,6 +322,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .amount(financingReceivable.getAmount())
                 .Fee(financingReceivable.getFee())
                 .total(financingReceivable.getTotal())
+                .type(financingReceivable.getFinancingType().name())
                 .created_date(financingReceivable.getDisbursment_date())
                 .build();
     }
@@ -384,6 +387,8 @@ public class FinancingServiceImpl implements FinancingService {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
 
+            if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
             Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getTenure());
 
             for (int i = 1; i <= financingPayable.getTenure(); i++) {
@@ -413,6 +418,9 @@ public class FinancingServiceImpl implements FinancingService {
 
         } else if (request.getType().equalsIgnoreCase("receivable")) {
             FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+
+            if(financingReceivable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
             Payment payment = financingReceivable.getInvoice().getPayment();
 
             Long financing_amount = financingReceivable.getAmount();
@@ -431,6 +439,7 @@ public class FinancingServiceImpl implements FinancingService {
                 partialFinancing = PaymentType.FINANCING;
             }
 
+//            ========================== PARTIAL DANAMON ==========================
 //            buat partial payment danamon & seller
             if (financing_amount < invoice_amount) {
                 payment.setAmount(payable_amount);
@@ -483,17 +492,17 @@ public class FinancingServiceImpl implements FinancingService {
     }
 
     @Override
-    public RejectResponse backoffice_reject(RejectRequest request) {
+    public void backoffice_reject(RejectRequest request) {
         if (request.getType().equalsIgnoreCase("payable")) {
             FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
             financingPayable.setStatus(FinancingStatus.REJECTED);
             financingPayableRepository.saveAndFlush(financingPayable);
-            return RejectResponse.builder().build();
+
         } else if (request.getType().equalsIgnoreCase("receivable")) {
             FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
             financingReceivable.setStatus(FinancingStatus.REJECTED);
             financingReceivableRepository.saveAndFlush(financingReceivable);
-            return RejectResponse.builder().build();
+
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
         }

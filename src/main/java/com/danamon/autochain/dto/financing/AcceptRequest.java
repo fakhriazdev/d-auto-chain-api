@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AcceptRequest {
     String financing_id;
-    String type = "receivable";
+    String type;
 }

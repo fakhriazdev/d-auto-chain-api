@@ -12,7 +12,7 @@ public interface FinancingService {
     Map<String,Double> get_limit();
 
 //    =========================== PAYABLE ======================================
-    void create_financing_payable(BulkPayableRequest request);
+    void create_financing_payable(List<PayableRequest> request);
     Page<FinancingResponse> get_all_payable(SearchFinancingRequest request);
     PayableDetailResponse get_detail_payable(String financing_id);
 

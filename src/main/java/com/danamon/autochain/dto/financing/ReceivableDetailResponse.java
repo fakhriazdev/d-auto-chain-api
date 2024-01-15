@@ -15,6 +15,7 @@ public class ReceivableDetailResponse {
     Date created_date;
     Map<String,String> recipient;
     Map<String,String> sender;
+    String type;
     Long amount;
     Double Fee;
     Double total;
