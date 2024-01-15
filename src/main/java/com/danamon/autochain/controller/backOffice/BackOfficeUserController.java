@@ -11,15 +11,19 @@ import com.danamon.autochain.dto.backoffice.BackOfficeUserResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeViewResponse;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
+import com.danamon.autochain.entity.Roles;
 import com.danamon.autochain.service.BackOfficeUserService;
+import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -29,8 +33,10 @@ import java.util.List;
 @RequestMapping("/api/backoffice/users")
 @SecurityRequirement(name = "Bearer Authentication")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN')")
 public class BackOfficeUserController {
     private final BackOfficeUserService backOfficeUserService;
+    private final CompanyService companyService;
 
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(required = false, defaultValue = "1") Integer page,
@@ -79,24 +85,22 @@ public class BackOfficeUserController {
                 .page(page)
                 .size(size)
                 .build();
+        Page<CompanyResponse> companies = companyService.getAll(searchCompanyRequest);
 
-        BackOfficeViewResponse<Page<CompanyResponse>> backOfficeUserViewRelationshipManager = (BackOfficeViewResponse<Page<CompanyResponse>>) backOfficeUserService.getAccessibility(searchCompanyRequest);
-
-        Page<CompanyResponse> generic = backOfficeUserViewRelationshipManager.getGeneric();
         PagingResponse pagingResponse = PagingResponse.builder()
-                .count(generic.stream().count())
-                .size(generic.getSize())
-                .page(generic.getTotalPages())
+                .count(companies.stream().count())
+                .size(companies.getSize())
+                .page(companies.getTotalPages())
                 .build();
 
-        DataResponse<BackOfficeViewResponse<Page<CompanyResponse>>> successGetData = DataResponse.<BackOfficeViewResponse<Page<CompanyResponse>>>builder()
+        DataResponse<List<CompanyResponse>> response = DataResponse.<List<CompanyResponse>>builder()
                 .paging(pagingResponse)
-                .data(backOfficeUserViewRelationshipManager)
+                .data(companies.getContent())
                 .statusCode(HttpStatus.OK.value())
                 .message("Success get data")
                 .build();
 
-        return ResponseEntity.ok(successGetData);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/view/accessibility")
@@ -150,6 +154,19 @@ public class BackOfficeUserController {
         backOfficeUserService.deleteUser(id);
 
         return ResponseEntity.ok("Success Delete User");
+    }
+
+    @GetMapping("/roles")
+    public ResponseEntity<?> getBackofficeRoles(){
+        List<BackofficeRolesResponse> backOfficeRoles = backOfficeUserService.getBackOfficeRoles();
+        DataResponse<List<BackofficeRolesResponse>> response
+                = DataResponse.<List<BackofficeRolesResponse>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success")
+                .data(backOfficeRoles)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     public record EditBackOfficeUser(String username, String name, String email, List<String> roles, List<String> companies){

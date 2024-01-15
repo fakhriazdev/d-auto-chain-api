@@ -314,14 +314,20 @@ public class CompanyServiceImpl implements CompanyService {
             });
         } else {
             Pageable newPageRequest = PageRequest.of(request.getPage() - 1, request.getSize());
-            List<Credential> backofficeUserAccessId = principal.getBackofficeUserAccesses().stream().map(BackofficeUserAccess::getCredential).collect(Collectors.toList());
-            Page<BackofficeUserAccess> companyAccess = backofficeAccessRepository.findByCredentialIn(backofficeUserAccessId, newPageRequest);
+            BackOffice backOffice = principal.getBackOffice();
+            Page<BackofficeUserAccess> companyAccess = backofficeAccessRepository.findAllByBackOffice(backOffice, newPageRequest);
             if (request.getStatus() == null){
                 return companyAccess.map(c -> mapToResponse(c.getCompany()));
             }else{
                 List<String> list = companyAccess.getContent().stream().map(c -> c.getCompany().getCompanyName()).toList();
 
-                Page<Company> getStatus = companyRepository.findAllByCompanyNameIn(list,pageable);
+                Page<Company> getStatus = null;
+
+                if(request.getName() == null){
+                    getStatus = companyRepository.findAllByCompanyNameIn(list,pageable);
+                }else {
+                    getStatus = companyRepository.findAllByCompanyNameLikeAndCompanyNameIn(request.getName(), list, pageable);
+                }
 
                 return getStatus.map(company -> {
                     boolean found = false;

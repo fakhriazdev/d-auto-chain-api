@@ -1,5 +1,7 @@
 package com.danamon.autochain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import lombok.*;
@@ -22,28 +24,13 @@ public class BackOffice {
     @Column(name = "backofficeId", length = 128, nullable = false)
     private String backoffice_id;
 
-    @OneToOne(cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "credentialId", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "credentialId")
     private Credential credential;
 
-//    @OneToMany(mappedBy = "backOffice", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<BackofficeUserAccess> backofficeUserAccesses;
+    private String name;
 
-
-//    @Column
-//    private String name;
-//
-//    @ManyToOne
-//    @JoinColumn(name = "companyId")
-//    private Company company;
-//
-//    @OneToOne(cascade = CascadeType.REMOVE)
-//    @JoinColumn(name = "credentialId")
-//    private Credential credential;
-//
-//    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
-//    private List<UserAccsess> userAccsess;
-//
-//    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
-//    private List<UserActivityLog> userActivityLogs;
+    @OneToMany(mappedBy = "backOffice", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<BackofficeUserAccess> backofficeUserAccesses;
 }

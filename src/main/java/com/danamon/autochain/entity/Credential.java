@@ -44,10 +44,7 @@ public class Credential extends HistoryLog implements UserDetails {
     @OneToMany(mappedBy = "credential", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<UserRole> roles;
 
-    @OneToMany(mappedBy = "credential",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
-    private List<BackofficeUserAccess> backofficeUserAccesses;
-
-    @OneToOne(mappedBy = "credential")
+    @OneToOne(mappedBy = "credential", cascade = CascadeType.ALL, orphanRemoval = true)
     private BackOffice backOffice;
 
     @OneToOne(mappedBy = "credential" ,cascade = CascadeType.ALL)
