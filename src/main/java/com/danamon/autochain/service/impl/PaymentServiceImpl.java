@@ -171,12 +171,15 @@ public class PaymentServiceImpl implements PaymentService {
                 case "FINANCING":
                     types.add(PaymentType.FINANCING);
                     break;
+                case "PARTIAL_FINANCING":
+                    types.add(PaymentType.PARTIAL_FINANCING);
+                    break;
                 default:
-                    types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING));
+                    types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING, PaymentType.PARTIAL_FINANCING));
                     break;
             }
         } else {
-            types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING));
+            types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING, PaymentType.PARTIAL_FINANCING));
         }
 
         return types;
