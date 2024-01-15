@@ -24,7 +24,7 @@ public interface FinancingService {
 //    ============================ BACK OFFICE =================================
     Page<FinancingResponse> backoffice_get_all_financing(SearchFinancingRequest request);
     AcceptResponse backoffice_accept(AcceptRequest request);
-    void backoffice_reject(RejectRequest request);
+    RejectResponse backoffice_reject(RejectRequest request);
     // ============================== DASHBOARD ====================================
     BackOfficeDashboardController.FinancingStatResponse getAllFinanceStat();
     List<FinancingServiceImpl.BackofficeFinanceResponse> backoffice_get_all_financing();
