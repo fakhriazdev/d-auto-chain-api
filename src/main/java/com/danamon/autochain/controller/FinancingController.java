@@ -39,7 +39,7 @@ public class FinancingController {
 
     //    ================================== PAYABLE FINANCING ============================================
     @PostMapping("/payable")
-    public ResponseEntity<?> request_financing_payable(@RequestBody BulkPayableRequest list_financing) {
+    public ResponseEntity<?> request_financing_payable(@RequestBody List<PayableRequest> list_financing) {
         financingService.create_financing_payable(list_financing);
         DataResponse<List<PayableRequest>> response = DataResponse.<List<PayableRequest>>builder()
                 .message("successfully create financing payable")

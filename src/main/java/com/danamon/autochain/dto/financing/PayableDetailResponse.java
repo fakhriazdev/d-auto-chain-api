@@ -13,11 +13,12 @@ import java.util.Map;
 @AllArgsConstructor
 public class PayableDetailResponse {
     String financing_id;
-    String invoice_number;
+    String payment_id;
     Date created_date;
     Map<String,String> recipient;
     Map<String,String> sender;
     Long total_amount;
-    Integer tenure_instalment;
-    List<TenureDetailResponse> tenure_list;
+    Integer tenure;
+    Double amount_instalment;
+    List<TenureDetailResponse> tenure_list_detail;
 }

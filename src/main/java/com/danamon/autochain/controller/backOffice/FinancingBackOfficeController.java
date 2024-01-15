@@ -38,11 +38,10 @@ public class FinancingBackOfficeController {
     @PostMapping("/reject")
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
     public ResponseEntity<?> reject_financing_backoffice(@RequestBody RejectRequest request){
-        RejectResponse data = financingService.backoffice_reject(request);
-        DataResponse<RejectResponse> response = DataResponse.<RejectResponse>builder()
-                .message("Success get details")
+        financingService.backoffice_reject(request);
+        DataResponse response = DataResponse.builder()
+                .message("Success, financing rejected with ID : " + request.getFinancing_id())
                 .statusCode(200)
-                .data(data)
                 .build();
         return ResponseEntity.ok(response);
     }
