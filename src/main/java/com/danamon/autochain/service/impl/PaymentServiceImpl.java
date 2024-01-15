@@ -14,10 +14,7 @@ import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.FinancingPayableRepository;
 import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
-import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.FinancingService;
-import com.danamon.autochain.service.InvoiceService;
-import com.danamon.autochain.service.PaymentService;
+import com.danamon.autochain.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,6 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final CompanyService companyService;
     private final InvoiceService invoiceService;
     private final FinancingPayableRepository financingPayableRepository;
+    private final AuthService authService;
 
     @Override
     @Transactional
@@ -239,6 +237,21 @@ public class PaymentServiceImpl implements PaymentService {
         String paidDate = null;
         if(payment.getPaidDate() != null) paidDate = payment.getPaidDate().toString();
 
+        String recipient = "";
+        if(request != null) {
+            if(request.getGroupBy().equals("payable")) {
+                recipient = payment.getSenderId().getCompanyName();
+            } else {
+                recipient = payment.getRecipientId().getCompanyName();
+            }
+        } else {
+            Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+
+            recipient = Objects.equals(user.getCompany(), payment.getSenderId()) ? payment.getRecipientId().getCompanyName() : payment.getSenderId().getCompanyName();
+        }
+
+
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .transactionId(payment.getPaymentId())
                 .invoice(
@@ -258,7 +271,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .paidDate(paidDate)
                 .method(payment.getMethod().toString())
                 .status(payment.getStatus().toString())
-                .recepient(request.getGroupBy().equals("payable") ? payment.getSenderId().getCompanyName() : payment.getRecipientId().getCompanyName())
+                .recepient(recipient)
                 .build();
 
         return paymentResponse;
