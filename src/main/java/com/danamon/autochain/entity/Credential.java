@@ -88,4 +88,8 @@ public class Credential extends HistoryLog implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public String getUsername2() {
+        return username;
+    }
 }
