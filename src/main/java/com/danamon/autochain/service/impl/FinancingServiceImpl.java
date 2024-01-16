@@ -195,6 +195,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .tenure(financingPayable.getTenure())
                 .amount_instalment(financingPayable.getMonthly_installment())
                 .tenure_list_detail(listTenure)
+                .status(financingPayable.getStatus().toString())
                 .build();
     }
 
@@ -324,6 +325,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .total(financingReceivable.getTotal())
                 .type(financingReceivable.getFinancingType().name())
                 .created_date(financingReceivable.getDisbursment_date())
+                .status(financingReceivable.getStatus().toString())
                 .build();
     }
 
