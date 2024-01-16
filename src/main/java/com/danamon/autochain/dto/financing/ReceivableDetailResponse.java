@@ -19,4 +19,5 @@ public class ReceivableDetailResponse {
     Long amount;
     Double Fee;
     Double total;
+    String status;
 }
