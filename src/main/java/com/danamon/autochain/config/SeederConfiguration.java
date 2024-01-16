@@ -50,9 +50,9 @@ public class SeederConfiguration implements CommandLineRunner {
         if (byUsername.isEmpty()) {
             rolesSeeder();
             companySeeder();
-//            backofficeSeeder();
+            backofficeSeeder();
 //            userSeeder();
-//            partnershipSeeder();
+            partnershipSeeder();
 //            invoiceAndPaymentSeeder();
         }
     }
@@ -394,16 +394,15 @@ public class SeederConfiguration implements CommandLineRunner {
     private void partnershipSeeder() {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
 
-        Company company = companyService.getById("ROO123");
-        Company partner = companyService.getById("ROO321");
+        Company company = companyService.getById("AST123");
+        Company CompanyPartner = companyService.getById("IND345");
 
-        String id = "CP-ROO123-ROO321";
+        String id = "CP-AST123-IND345";
 
-        System.out.println();
         Partnership partnership = Partnership.builder()
                 .partnershipNo(id)
                 .company(company)
-                .partner(partner)
+                .partner(CompanyPartner)
                 .partnerStatus(PartnershipStatus.IN_PARTNER)
                 .partnerRequestedDate(LocalDateTime.now())
                 .partnerConfirmationDate(null)
@@ -412,6 +411,151 @@ public class SeederConfiguration implements CommandLineRunner {
                 .build();
 
         partnershipRepository.saveAndFlush(partnership);
+
+        Company CompanyPartner2 = companyService.getById("ITA567");
+
+        id = "CP-AST123-ITA567";
+
+        Partnership partnership2 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company)
+                .partner(CompanyPartner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership2);
+
+        Company CompanyPartner3 = companyService.getById("GAR123");
+
+        id = "CP-AST123-GAR123";
+
+        Partnership partnership3 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company)
+                .partner(CompanyPartner3)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership3);
+
+        //=======================================================
+
+        Company company2 = companyService.getById("GAJ456");
+        Company Company2Partner = companyService.getById("IND234");
+
+        id = "CP-GAJ456-IND234";
+
+        Partnership partnership4 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company2)
+                .partner(Company2Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership4);
+
+        Company Company2Partner2 = companyService.getById("MUL890");
+
+        id = "CP-GAJ456-MUL890";
+
+        Partnership partnership5 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company2)
+                .partner(Company2Partner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership5);
+
+        //=======================================================
+
+        Company company3 = companyService.getById("REL567");
+        Company Company3Partner = companyService.getById("UNI456");
+
+        id = "CP-REL567-UNI456";
+
+        Partnership partnership6 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership6);
+
+        Company Company3Partner2 = companyService.getById("SEL234");
+
+        id = "CP-REL567-SEL234";
+
+        Partnership partnership7 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership7);
+
+        Company Company3Partner3 = companyService.getById("GAR123");
+
+        id = "CP-REL567-GAR123";
+
+        Partnership partnership8 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner3)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership8);
+
+        //=======================================================
+
+        Company company4 = companyService.getById("GAR123");
+        Company Company4Partner = companyService.getById("DWI890");
+
+        id = "CP-GAR123-DWI890";
+
+        Partnership partnership9 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company4)
+                .partner(Company4Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership9);
     }
 
     private void invoiceAndPaymentSeeder() {
