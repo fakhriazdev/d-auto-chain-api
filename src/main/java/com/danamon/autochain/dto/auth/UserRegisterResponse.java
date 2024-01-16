@@ -1,10 +1,13 @@
 package com.danamon.autochain.dto.auth;
 
 
+import com.danamon.autochain.dto.user.UserRoleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -13,5 +16,5 @@ import lombok.NoArgsConstructor;
 public class UserRegisterResponse {
     private String username;
     private String email;
-    private String user_type;
+    private List<String> roleType;
 }

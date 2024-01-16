@@ -1,22 +1,24 @@
 package com.danamon.autochain.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.GenericGenerator;
 
-@Data
+import java.util.List;
+
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-<<<<<<< src/main/java/com/danamon/autochain/entity/Company.java
 @Table(name = "m_company")
 public class Company {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
+//    @GenericGenerator(name = "uuid", strategy = "uuid")
+//    @GeneratedValue(generator = "uuid")
+    @Column(name = "companyId", nullable = false)
     private String company_id;
 
     @Column(name = "company_name", length = 128, nullable = false)
@@ -34,7 +36,7 @@ public class Company {
     @Column(name = "phone_number", length = 64, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "company_email", length = 64, nullable = false)
+    @Column(name = "company_email", length = 64, nullable = false, unique = true)
     private String companyEmail;
 
     @Column(name = "account_number", length = 128, nullable = false)
@@ -46,9 +48,30 @@ public class Company {
     @Column(name = "remaining_limit", nullable = false)
     private Double remainingLimit;
 
+    @OneToMany
+    @JoinColumn(name = "company_file_id")
+    private List<CompanyFile> companyFiles;
 
-    @OneToOne(mappedBy = "company_id" ,cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_credential_id" , foreignKey= @ForeignKey(name = "Fk_user_credential"))
-    private User user;
+    @OneToMany
+    @JoinColumn(name = "partner_id")
+    @JsonManagedReference
+    private List<Partnership> partnerships;
 
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<User> user;
+
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<FinancingReceivable> financingReceivable;
+
+    @OneToMany(mappedBy = "company" ,cascade = CascadeType.ALL)
+    private List<FinancingPayable> financingPayable;
+
+    @OneToMany(mappedBy = "recipientId" ,cascade = CascadeType.ALL)
+    private List<Payment> payments;
+
+    @OneToMany(mappedBy = "recipientId", cascade = CascadeType.ALL)
+    private List<TransactionDanamon> transactionDanamons;
+
+    @OneToMany(mappedBy = "company", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<BackofficeUserAccess> backofficeUserAccesses;
 }

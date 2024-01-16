@@ -6,33 +6,46 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.danamon.autochain.entity.User;
+import com.danamon.autochain.entity.Credential;
+import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JwtUtil {
     @Value("${app.autochain.jwt-secret}")
     private String jwtSecret;
     @Value("${app.autochain.app-name}")
     private String appName;
-    @Value("${app.autochain.jwtExpirationInSecond}")
+    @Value("604800")
     private long jwtExpirationInSecond;
 
-    public String generateToken(User user) {
+//    private final UserRepository userRepository;
+
+    public String generateTokenUser(Credential user) {
         try {
+//            userRepository.findById();
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            List<String> roles = new ArrayList<>();
+            user.getRoles().forEach(userRole -> roles.add(userRole.getRole().getRoleName()));
+
             return JWT.create()
                     .withIssuer(appName)
-                    .withSubject(user.getUser_id())
+                    .withSubject(user.getCredentialId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
-                    .withClaim("role", user.getUser_type().name())
+                    .withClaim("actor", user.getActor().getName())
+                    .withClaim("company_id", user.getActor().getName().equals("BACKOFFICE") ? null : user.getUser().getCompany().getCompany_id())
+                    .withClaim("role", roles)
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             log.error("error while creating jwt token: {}", e.getMessage());
@@ -52,15 +65,20 @@ public class JwtUtil {
         }
     }
 
-    public JwtClaim getUserInfoByToken(String token) {
+    public Map<String, String> getUserInfoByToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             JWTVerifier verifier = JWT.require(algorithm).build();
             DecodedJWT decodedJWT = verifier.verify(token);
-            return JwtClaim.builder()
-                    .userId(decodedJWT.getSubject())
-                    .role(decodedJWT.getClaim("role").asString())
-                    .build();
+
+            Map<String, String> userInfo = new HashMap<>();
+            userInfo.put("userId", decodedJWT.getSubject());
+
+            List<String> authoritiesList = decodedJWT.getClaim("role").asList(String.class);
+            userInfo.put("actor", decodedJWT.getClaim("actor").asString());
+            userInfo.put("role", (authoritiesList != null) ? Arrays.toString(authoritiesList.toArray()) : "[]");
+
+            return userInfo;
         } catch (JWTVerificationException e) {
             log.error("invalid verification JWT: {}", e.getMessage());
             return null;
