@@ -115,7 +115,7 @@ public class ManageUserServiceImpl implements ManageUserService {
                     .actor(ActorType.USER)
                     .roles(userRoles)
                     .createdDate(LocalDateTime.now())
-                    .createdBy(principal.getUsername())
+                    .createdBy(principal.getUsername2())
                     .build();
 
             request.getAccess().forEach(roleName -> {
@@ -199,7 +199,7 @@ public class ManageUserServiceImpl implements ManageUserService {
             if (credential.isPresent()) {
                 credential.get().setUsername(request.getUsername());
                 credential.get().setEmail(request.getEmail());
-                credential.get().setModifiedBy(userLogin.getCredential().getUsername());
+                credential.get().setModifiedBy(userLogin.getCredential().getUsername2());
                 credential.get().setModifiedDate(LocalDateTime.now());
 
                 // check if exist in user role
@@ -305,7 +305,7 @@ public class ManageUserServiceImpl implements ManageUserService {
 
         return ManageUserResponse.builder()
                 .userId(user.getUser_id())
-                .username(user.getCredential().getUsername())
+                .username(user.getCredential().getUsername2())
                 .name(user.getName())
                 .email(user.getCredential().getEmail())
                 .access(roles)

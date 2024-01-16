@@ -455,7 +455,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .accountNumber(company.getAccountNumber())
                 .financingLimit(company.getFinancingLimit())
                 .reaminingLimit(company.getRemainingLimit())
-                .username(companySuperUser.getUsername())
+                .username(companySuperUser.getUsername2())
                 .emailUser(companySuperUser.getEmail())
                 .files(fileResponses)
                 .status(found ? "Restricted" : "Cleared")
