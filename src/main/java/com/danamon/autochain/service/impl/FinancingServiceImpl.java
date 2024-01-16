@@ -589,6 +589,13 @@ public class FinancingServiceImpl implements FinancingService {
         return total;
     }
 
+    @Override
+    public Long getTotalFinancingEarlyDisbursement() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        return financingReceivableRepository.findAllByCompanyAndStatusIsAndStatusIs(principal.getUser().getCompany(), FinancingStatus.ONGOING, FinancingStatus.COMPLETED).orElse(0L);
+    }
+
     public record BackofficeFinanceResponse(LocalDateTime financeDate, String issuer, FinancingStatus status) {
     }
 }

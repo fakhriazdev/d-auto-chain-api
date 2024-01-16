@@ -1,5 +1,6 @@
 package com.danamon.autochain.dto.backoffice;
 
+import com.danamon.autochain.controller.backOffice.BackofficeRolesResponse;
 import com.danamon.autochain.entity.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class BackOfficeViewResponse <T>{
-    private List<Roles> roles;
+    private List<BackofficeRolesResponse> roles;
     private T generic;
 }
 

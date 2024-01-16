@@ -1,6 +1,8 @@
 package com.danamon.autochain.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -52,6 +54,10 @@ public class MailSender {
         Address address = new InternetAddress(to);
         message.setRecipient(Message.RecipientType.CC,address);
 
-        Transport.send(message);
+        try {
+            Transport.send(message);
+        }catch (SendFailedException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mail Address Not Found Or Mail Provider Not Acceptable");
+        }
     }
 }
