@@ -24,7 +24,7 @@ public class BackOffice {
     @Column(name = "backofficeId", length = 128, nullable = false)
     private String backoffice_id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "credentialId")
     private Credential credential;
 
