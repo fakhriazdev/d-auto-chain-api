@@ -30,7 +30,7 @@ public class BackOffice {
 
     private String name;
 
-    @OneToMany(mappedBy = "backOffice", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "backOffice", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<BackofficeUserAccess> backofficeUserAccesses;
 }

@@ -3,7 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.controller.backOffice.BackOfficeUserController;
-import com.danamon.autochain.controller.backOffice.BackofficeRolesResponse;
+import com.danamon.autochain.dto.backoffice.BackofficeRolesResponse;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterRequest;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeUserRequest;
@@ -34,10 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.mail.MessagingException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,10 +59,10 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
         Page<Credential> credentialByActorAndRoles = null;
 
-        if (request.getRole() == null){
+        if (request.getRole() == null) {
             credentialByActorAndRoles = credentialRepository.findByActorAndCredentialIdNot(ActorType.BACKOFFICE, principal.getCredentialId(), pageRequest);
-        }else {
-            credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(principal ,request.getRole(), pageRequest);
+        } else {
+            credentialByActorAndRoles = credentialRepository.getCredentialByActorAndRoles(principal, request.getRole(), pageRequest);
         }
         return credentialByActorAndRoles.map(this::mapToResponse);
 
@@ -151,8 +148,8 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
             if (roles.getRoleName().equals(RoleType.RELATIONSHIP_MANAGER.getName())) {
                 List<Company> companies = companyService.findById(backOfficeUserRequest.getCompanyRequests());
 
-                if (companies.size() != backOfficeUserRequest.getCompanyRequests().size()){
-                    throw new ResponseStatusException(HttpStatus.CONFLICT,"Please Input Valid Company");
+                if (companies.size() != backOfficeUserRequest.getCompanyRequests().size()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Please Input Valid Company");
                 }
 
                 List<BackofficeUserAccess> backofficeUserAccesses = companies.stream().map(access ->
@@ -186,6 +183,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
             MailSender.mailer("Register Back Office Account", mail, credential.getEmail());
 
             return BackOfficeRegisterResponse.builder()
+                    .user_type(credential.getActor().getName())
                     .username(credential.getUsername())
                     .email(credential.getEmail())
                     .build();
@@ -198,14 +196,67 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
     @Override
     public BackOfficeUserResponse getBackOfficeUserById(String id) {
-        Credential credential = credentialRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        BackOffice backOffice = backOfficeRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
+        Credential credential = backOffice.getCredential();
         return mapToResponse(credential);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateBackofficeUser(BackOfficeUserController.EditBackOfficeUser request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        //set up for user list
+        List<UserRole> userRoles = new ArrayList<>();
 
+        //get role
+        Roles roles = rolesRepository.findById(request.roles().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT))).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+
+        //get BackOffice Data
+        BackOffice backOffice = backOfficeRepository.findById(request.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+
+        backOffice.setName(request.name());
+
+        // get Credential Data
+        Credential credential = backOffice.getCredential();
+        userRolesRepository.deleteAll(credential.getRoles());
+
+        credential.setUsername(request.username());
+        credential.setEmail(request.email());
+        credential.setModifiedBy(principal.getUsername2());
+        credential.setModifiedDate(LocalDateTime.now());
+
+        userRoles.add(
+                UserRole.builder()
+                        .role(roles)
+                        .credential(credential)
+                        .build()
+        );
+
+        credential.setRoles(userRoles);
+
+        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName())) {
+            // checking company
+            List<Company> companies = companyService.findById(request.companies());
+
+            if (companies.isEmpty() && request.companies().size() != companies.size()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Please Input Valid Company ID");
+            }
+
+            backofficeAccessRepository.deleteAll(backOffice.getBackofficeUserAccesses());
+
+            List<BackofficeUserAccess> userAccesses = companies.stream().map(c ->
+                        BackofficeUserAccess.builder()
+                                .company(c)
+                                .backOffice(backOffice)
+                                .build()
+            ).collect(Collectors.toList());
+
+            backOffice.setBackofficeUserAccesses(userAccesses);
+        }
+
+        backOfficeRepository.saveAndFlush(backOffice);
+        credentialRepository.saveAndFlush(credential);
     }
 
     @Override
@@ -218,12 +269,13 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
         backOfficeRepository.delete(backOffice);
     }
 
-    private BackOfficeUserResponse mapToResponse(Credential data){
+    private BackOfficeUserResponse mapToResponse(Credential data) {
         List<String> collect = data.getRoles().stream().map(r -> RoleType.valueOf(r.getRole().getRoleName()).getName()).toList();
         return BackOfficeUserResponse.builder()
                 .id(data.getBackOffice().getBackoffice_id())
-                .username(data.getUsername())
+                .username(data.getUsername2())
                 .email(data.getEmail())
+                .name(data.getBackOffice().getName())
                 .roles(collect.stream().findFirst().orElse(null))
                 .build();
     }
