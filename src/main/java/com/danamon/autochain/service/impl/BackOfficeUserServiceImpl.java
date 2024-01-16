@@ -3,6 +3,7 @@ package com.danamon.autochain.service.impl;
 import com.danamon.autochain.constant.ActorType;
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.controller.backOffice.BackOfficeUserController;
+import com.danamon.autochain.controller.backOffice.BackofficeRolesResponse;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterRequest;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeUserRequest;
@@ -14,11 +15,11 @@ import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.BackOfficeUserService;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.util.MailSender;
 import com.danamon.autochain.util.RandomPasswordUtil;
 import com.danamon.autochain.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     private final CredentialRepository credentialRepository;
     private final RolesRepository rolesRepository;
@@ -70,43 +72,56 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     }
 
     @Override
+    public List<BackofficeRolesResponse> getBackOfficeRoles() {
+        List<String> admin = List.of("ADMIN", "RELATIONSHIP_MANAGER", "CREDIT_ANALYST");
+
+        List<Roles> roles = rolesRepository.findAllByRoleNameIn(admin).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Roles Not Found"));
+        return roles.stream().map(r -> BackofficeRolesResponse.builder().roleName(r.getRoleName()).id(r.getRoleId()).build()).collect(Collectors.toList());
+    }
+
+    @Override
     public BackOfficeViewResponse<?> getAccessibility(SearchCompanyRequest request) {
-        List<String> name = List.of(RoleType.ADMIN.getName(), RoleType.RELATIONSHIP_MANAGER.getName(), RoleType.CREDIT_ANALYST.getName());
-        List<Roles> dataNotFound = rolesRepository.findByRoleNameIn(name).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        List<String> name = List.of(RoleType.ADMIN.name(), RoleType.RELATIONSHIP_MANAGER.name(), RoleType.CREDIT_ANALYST.name());
+        List<Roles> roles = rolesRepository.findAllByRoleNameIn(name).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        List<BackofficeRolesResponse> collect = roles.stream().map(r -> BackofficeRolesResponse.builder().roleName(r.getRoleName()).id(r.getRoleId()).build()).toList();
 
         Page<CompanyResponse> companyResponses = companyService.getAll(request);
 
-        return BackOfficeViewResponse.<Page<CompanyResponse>>builder().roles(dataNotFound).generic(companyResponses).build();
+        return BackOfficeViewResponse.<Page<CompanyResponse>>builder().roles(collect).generic(companyResponses).build();
     }
 
     @Override
     public BackOfficeViewResponse<?> getAccessibility(List<RoleType> roleTypes) {
         Map<String, List<String>> accessibility = RoleType.getAccessibility(roleTypes);
-        List<String> name = List.of(RoleType.ADMIN.getName(), RoleType.RELATIONSHIP_MANAGER.getName(), RoleType.CREDIT_ANALYST.getName());
-        List<Roles> roles = rolesRepository.findByRoleNameIn(name).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        List<String> name = List.of(RoleType.ADMIN.name(), RoleType.RELATIONSHIP_MANAGER.name(), RoleType.CREDIT_ANALYST.name());
+
+        List<Roles> roles = rolesRepository.findAllByRoleNameIn(name).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        List<BackofficeRolesResponse> collect = roles.stream().map(r -> BackofficeRolesResponse.builder().roleName(r.getRoleName()).id(r.getRoleId()).build()).toList();
+
         return BackOfficeViewResponse.<Map<String, List<String>>>builder()
-                .roles(roles)
+                .roles(collect)
                 .generic(accessibility)
                 .build();
-
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public BackOfficeRegisterResponse addBackOfficeUser(BackOfficeRegisterRequest backOfficeUserRequest) {
         try {
+            validationUtil.validate(backOfficeUserRequest);
             Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-            validationUtil.validate(backOfficeUserRequest);
-            if (backOfficeUserRequest.getRolesList().equals(RoleType.RELATIONSHIP_MANAGER.getName()) && backOfficeUserRequest.getCompanyRequests().size() <= 0) {
+            Roles roles = rolesRepository.findById(backOfficeUserRequest.getRolesList()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Role ID Not Found"));
+
+            if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && backOfficeUserRequest.getCompanyRequests().isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "You must choose one or more company");
             }
-            Roles roles = rolesRepository.findById(backOfficeUserRequest.getRolesList()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Role ID Not Found"));
 
             RandomPasswordUtil passwordUtil = new RandomPasswordUtil();
             HashMap<String, String> mail = new HashMap<>();
 
-            List<Company> companies = companyService.findById(backOfficeUserRequest.getCompanyRequests());
             List<UserRole> userRoles = new ArrayList<>();
             String password = passwordUtil.generateRandomPassword(12);
 
@@ -120,23 +135,29 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
                     .createdDate(LocalDateTime.now())
                     .build();
 
-            credentialRepository.saveAndFlush(credential);
-
             userRoles.add(UserRole.builder()
                     .role(roles)
                     .credential(credential)
                     .build());
+            credentialRepository.saveAndFlush(credential);
 
             userRolesRepository.saveAllAndFlush(userRoles);
 
             BackOffice backOffice = BackOffice.builder()
+                    .name(backOfficeUserRequest.getName())
                     .credential(credential).build();
             backOfficeRepository.saveAndFlush(backOffice);
 
             if (roles.getRoleName().equals(RoleType.RELATIONSHIP_MANAGER.getName())) {
+                List<Company> companies = companyService.findById(backOfficeUserRequest.getCompanyRequests());
+
+                if (companies.size() != backOfficeUserRequest.getCompanyRequests().size()){
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,"Please Input Valid Company");
+                }
+
                 List<BackofficeUserAccess> backofficeUserAccesses = companies.stream().map(access ->
                         BackofficeUserAccess.builder()
-                                .credential(credential)
+                                .backOffice(backOffice)
                                 .company(access)
                                 .build()
                 ).toList();
@@ -188,18 +209,19 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(String id) {
-        Credential credential = credentialRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
-//        backofficeAccessRepository.deleteAllByCredential(credential);
-        backOfficeRepository.deleteByCredential(credential);
-//        credentialRepository.deleteById(credential.getCredentialId());
+        BackOffice backOffice = backOfficeRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        backofficeAccessRepository.customDelete(backOffice.getBackoffice_id());
+
+        backOfficeRepository.delete(backOffice);
     }
 
     private BackOfficeUserResponse mapToResponse(Credential data){
         List<String> collect = data.getRoles().stream().map(r -> RoleType.valueOf(r.getRole().getRoleName()).getName()).toList();
         return BackOfficeUserResponse.builder()
-                .userId(data.getCredentialId())
+                .id(data.getBackOffice().getBackoffice_id())
                 .username(data.getUsername())
                 .email(data.getEmail())
                 .roles(collect.stream().findFirst().orElse(null))

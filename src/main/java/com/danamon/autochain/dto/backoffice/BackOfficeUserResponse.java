@@ -10,7 +10,7 @@ import lombok.*;
 public class BackOfficeUserResponse {
     private String username;
     private String email;
-    private String userId;
+    private String id;
     private String roles;
     private String name;
 }

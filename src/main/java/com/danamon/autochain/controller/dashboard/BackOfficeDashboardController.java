@@ -38,7 +38,7 @@ public class BackOfficeDashboardController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/get/all")
+    @GetMapping("/finance/all")
     @PermitAll
     public ResponseEntity<?> getAll(){
         List<FinancingServiceImpl.BackofficeFinanceResponse> backofficeFinanceResponses = financingService.backoffice_get_all_financing();

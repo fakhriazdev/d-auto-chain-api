@@ -26,5 +26,6 @@ public class BackOfficeRegisterRequest {
     @Size(min = 6, message = "must be greater than 6 character")
     private String email;
     private String rolesList;
+    private String name;
     private List<String> companyRequests;
 }

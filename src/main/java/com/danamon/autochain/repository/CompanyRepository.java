@@ -14,4 +14,6 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     Optional<Company> findBycompanyName(String name);
     List<Company> findAllByCompanyNameLike(String name);
     Page<Company> findAllByCompanyNameIn(Collection<String> companyName, Pageable pageable);
+    Page<Company> findAllByCompanyNameLikeAndCompanyNameIn(String companyName, Collection<String> companyName2, Pageable pageable);
+
 }
