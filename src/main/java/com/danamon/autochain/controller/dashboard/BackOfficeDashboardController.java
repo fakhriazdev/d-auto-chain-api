@@ -3,6 +3,7 @@ package com.danamon.autochain.controller.dashboard;
 
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.backoffice_dashboard.CompanySummaryResponse;
+import com.danamon.autochain.dto.backoffice_dashboard.PerformanceCompanyResponse;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +28,19 @@ import java.util.List;
 public class BackOfficeDashboardController {
     private final FinancingService financingService;
     private final CompanyService companyService;
+
+    @GetMapping("/performance/filter")
+    @PermitAll
+    public ResponseEntity<?> get_company_performance(@PathVariable(name = "filter") String filter){
+        List<PerformanceCompanyResponse> data = financingService.get_performance(filter);
+        DataResponse<List<PerformanceCompanyResponse>> response = DataResponse.<List<PerformanceCompanyResponse>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success Get Data")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
     @PermitAll
     public ResponseEntity<?> getStat(){
