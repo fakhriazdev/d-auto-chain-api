@@ -57,7 +57,7 @@ public class MailSender {
         try {
             Transport.send(message);
         }catch (SendFailedException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mail Address Not Found Or Mail Provider Not Acceptable");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 }

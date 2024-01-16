@@ -2,7 +2,7 @@ package com.danamon.autochain.service;
 
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.controller.backOffice.BackOfficeUserController;
-import com.danamon.autochain.controller.backOffice.BackofficeRolesResponse;
+import com.danamon.autochain.dto.backoffice.BackofficeRolesResponse;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterRequest;
 import com.danamon.autochain.dto.auth.BackOfficeRegisterResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeUserRequest;
