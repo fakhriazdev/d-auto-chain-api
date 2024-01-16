@@ -1,7 +1,5 @@
 package com.danamon.autochain.dto.backoffice;
 
-import com.danamon.autochain.controller.backOffice.BackofficeRolesResponse;
-import com.danamon.autochain.entity.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.danamon.autochain.controller.backOffice;
+package com.danamon.autochain.dto.backoffice;
 
 
 import lombok.AllArgsConstructor;

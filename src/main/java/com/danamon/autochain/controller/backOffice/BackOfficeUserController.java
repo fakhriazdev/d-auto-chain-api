@@ -9,16 +9,13 @@ import com.danamon.autochain.dto.auth.BackOfficeRegisterResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeUserRequest;
 import com.danamon.autochain.dto.backoffice.BackOfficeUserResponse;
 import com.danamon.autochain.dto.backoffice.BackOfficeViewResponse;
+import com.danamon.autochain.dto.backoffice.BackofficeRolesResponse;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.company.SearchCompanyRequest;
-import com.danamon.autochain.entity.Roles;
 import com.danamon.autochain.service.BackOfficeUserService;
 import com.danamon.autochain.service.CompanyService;
-import com.danamon.autochain.service.CredentialService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.annotation.security.PermitAll;
-import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -146,7 +143,8 @@ public class BackOfficeUserController {
 
     @PutMapping("/edit")
     public ResponseEntity<?> editBackofficeUser(@RequestBody EditBackOfficeUser editBackOfficeUser){
-        return ResponseEntity.ok(editBackOfficeUser);
+        backOfficeUserService.updateBackofficeUser(editBackOfficeUser);
+        return ResponseEntity.ok("Success Edit User");
     }
 
     @DeleteMapping("/delete/{id}")
@@ -169,7 +167,7 @@ public class BackOfficeUserController {
         return ResponseEntity.ok(response);
     }
 
-    public record EditBackOfficeUser(String username, String name, String email, List<String> roles, List<String> companies){
+    public record EditBackOfficeUser(String id, String username, String name, String email, List<String> roles, List<String> companies){
     }
 
 }
