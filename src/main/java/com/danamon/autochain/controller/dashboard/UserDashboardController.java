@@ -11,6 +11,7 @@ import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @RequestMapping("/api/user-dashboard")
+@PreAuthorize("hasAnyAuthority('SUPER_USER')")
 public class UserDashboardController {
     private final PaymentService paymentService;
     private final InvoiceService invoiceService;
@@ -42,7 +44,7 @@ public class UserDashboardController {
         Long totalPaidFinancingPayable = financingService.getTotalPaidFinancingPayable();
         Long totalUnpaidFinancingPayable = financingService.getTotalUnpaidFinancingPayable();
 
-        CycleCash cycleCash = new CycleCash(totalPaidInvoicePayable,totalUnpaidInvoicePayable, totalPaidFinancingPayable, totalUnpaidFinancingPayable);
+        CycleCash cycleCash = new CycleCash(totalPaidInvoicePayable,totalUnpaidInvoicePayable, totalPaidFinancingPayable, totalUnpaidFinancingPayable, null);
 
         DataResponse<CycleCash> response = DataResponse.<CycleCash>builder()
                 .data(cycleCash)
@@ -57,8 +59,9 @@ public class UserDashboardController {
     public ResponseEntity<?> getCashCycleReceivable(){
         Long totalPaidInvoiceReceivable = invoiceService.getTotalPaidInvoiceReceivable();
         Long totalUnpaidInvoiceReceivable = invoiceService.getTotalUnpaidInvoiceReceivable();
+        Long totalFinancingEarlyDisbursement = financingService.getTotalFinancingEarlyDisbursement();
 
-        CycleCash cycleCash = new CycleCash(totalPaidInvoiceReceivable, totalUnpaidInvoiceReceivable, 0L, 0L);
+        CycleCash cycleCash = new CycleCash(totalPaidInvoiceReceivable, totalUnpaidInvoiceReceivable, null, 0L, totalFinancingEarlyDisbursement);
 
         DataResponse<CycleCash> response = DataResponse.<CycleCash>builder()
                 .message("Success Get All Data")
@@ -68,5 +71,5 @@ public class UserDashboardController {
         return ResponseEntity.ok(response);
     }
 
-    private record CycleCash(Long paidInvoice, Long unpaidInvoice, Long paidFinancingPayable, Long unpaidFinancingPayable){}
+    private record CycleCash(Long paidInvoice, Long unpaidInvoice, Long paidFinancingPayable, Long unpaidFinancingPayable, Long totalFinancingEarlyDisbursement){}
 }

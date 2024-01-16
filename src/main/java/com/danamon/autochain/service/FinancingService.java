@@ -28,7 +28,8 @@ public interface FinancingService {
     // ============================== DASHBOARD ====================================
     BackOfficeDashboardController.FinancingStatResponse getAllFinanceStat();
     List<FinancingServiceImpl.BackofficeFinanceResponse> backoffice_get_all_financing();
-
     Long getTotalPaidFinancingPayable();
     Long getTotalUnpaidFinancingPayable();
+    Long getTotalFinancingEarlyDisbursement();
+
 }
