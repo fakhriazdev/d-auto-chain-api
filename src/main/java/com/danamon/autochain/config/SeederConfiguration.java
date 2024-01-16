@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -49,10 +50,10 @@ public class SeederConfiguration implements CommandLineRunner {
         if (byUsername.isEmpty()) {
             rolesSeeder();
             companySeeder();
-            backofficeSeeder();
-            userSeeder();
-            partnershipSeeder();
-            invoiceAndPaymentSeeder();
+//            backofficeSeeder();
+//            userSeeder();
+//            partnershipSeeder();
+//            invoiceAndPaymentSeeder();
         }
     }
 
@@ -268,47 +269,106 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void companySeeder() {
+        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+
+        createCompany("AST123", "PT. Astra Otopart Tbk", "supplychainfinanceadmin@astraotopart.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Raya Pegangsaan Dua Km. 2,2", "010101001", 2000000000d, 2000000000d, "082123456780",
+                "supplychainfinanceadmin@astraotopart.co.id", "scfadminotopart", superUser);
+
+        createCompany("GAJ456", "PT. Gajah Tunggal Tbk", "scfgajahtunggal@gajahtunggal.co.id", "Karawang", "Jawa Barat",
+                "Jl. Trans Heksa, Kawasan Industri KJIE, Wanasari", "010101002", 2000000000d, 2000000000d, "082123456781",
+                "scfgajahtunggal@gajahtunggal.co.id", "scfadmingajahtunggal", superUser);
+
+        createCompany("ADI789", "PT. Adira Finance tbk", "adirafinancescf@adira.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Jl. Jenderal Sudirman No.Kav.25 12, RT.12/RW.1, Kuningan", "010101003", 5000000000d, 5000000000d, "082123456782",
+                "adirafinancescf@adira.co.id", "scfadminadira", superUser);
+
+        createCompany("IND234", "PT. Indospring Tbk", "indospringscfadmin@indospring.co.id", "Kabupaten Bekasi", "Jawa Barat",
+                "Jl. Kalibaru Timur No.10, RT.10/RW.15, Kali Baru", "010101004", 1500000000d, 1500000000d, "082123456783",
+                "indospringscfadmin@indospring.co.id", "scfadminindospring", superUser);
+
+        createCompany("ITA567", "PT. Itama Ranoraya Tbk", "supplychainfinancingadmin@itama.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Jl. Raya Pasar Minggu No.18 21st Floor, RT.1/RW.1, Pejaten Timur, Ps. Minggu", "010101005", 2000000000d, 2000000000d, "082123456784",
+                "supplychainfinancingadmin@itama.co.id", "scfadmin_itama", superUser);
+
+        createCompany("MUL890", "PT. Multistrada Arah Sarana Tbk", "financeadmin@multistrada.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Michelin Indonesia, RT.4/RW.3, Pondok Indah", "010101006", 2500000000d, 2500000000d, "082123456785",
+                "financeadmin@multistrada.co.id", "scfadmin_multistrada", superUser);
+
+        createCompany("GAR123", "PT Garuda Metalindo Tbk", "sc_finance@garudametalindo.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Kamal Muara No.23, RT.2/RW.2, Kamal Muara", "010101007", 3000000000d, 3000000000d, "082123456786",
+                "sc_finance@garudametalindo.co.id", "scfadmin_metalindo", superUser);
+
+        createCompany("UNI456", "PT United Tractors Tbk", "unitedtractors.scfadmin@ut.co.id", "Jakarta Timur", "DKI Jakarta",
+                "Jl. Raya Bekasi No.KM.22, RT.7/RW.1, Cakung Bar.", "010101008", 4000000000d, 4000000000d, "082123456787",
+                "unitedtractors.scfadmin@ut.co.id", "scfadmin.ut", superUser);
+
+        createCompany("GAY789", "PT. Gaya Makmur Tractors", "financeadmin@gayamakmur.co.id", "Jakarta Barat", "DKI Jakarta",
+                "Jl. Lingkar Luar Barat No.3 Rawa Buaya", "010101009", 3000000000d, 3000000000d, "082123456788",
+                "financeadmin@gayamakmur.co.id", "scfadmin_gayamakmur", superUser);
+
+        createCompany("SEL234", "PT. Selamat Sempurna Tbk", "admin.finance@selamat.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Pluit Raya I No. 1", "010101010", 2000000000d, 2000000000d, "082123456789",
+                "admin.finance@selamat.co.id", "scfadmin_selamatsempurna", superUser);
+
+        createCompany("REL567", "PT. Relindo Multi Traktor Tbk", "scf_admin@relindo.co.id", "Tangerang", "Banten",
+                "Rukan Crown, block C, Jl. Green Lake City Boulevard No.8, RT.004/RW.008", "010101011", 2500000000d, 2500000000d, "082123456790",
+                "scf_admin@relindo.co.id", "scfadmin.relindo", superUser);
+
+        createCompany("DWI890", "PT. Dwimitra Sejahtera BersamaTbk", "admin.scf@dwimitra.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Pemandangan III No.5B, RT.1/RW.1, Pademangan Bar.", "010101012", 1500000000d, 1500000000d, "082123456791",
+                "admin.scf@dwimitra.co.id", "scfadmin_dwimitra", superUser);
+
+        createCompany("IND345", "PT Indomobil SuksesTbk", "financeadmin@indomobil.co.id", "Jakarta Timur", "DKI Jakarta",
+                "Wisma Indomobil, Jl. Letjen M.T. Haryono No.Kav 8 1 Lt.6, Bidara Cina, Kecamatan Jatinegara", "010101013", 1800000000d, 1800000000d, "082123456791",
+                "financeadmin@indomobil.co.id", "scfadmin_indomobil", superUser);
+    }
+
+    private void createCompany(String companyId, String companyName, String companyEmail, String city, String province,
+                                   String address, String accountNumber, Double financingLimit, Double remainingLimit,
+                                   String phoneNumber, String userEmail, String username, Roles superUser) {
         Company company = new Company();
-        company.setCompany_id("ROO123");
-        company.setCompanyName("PT. Enigma");
-        company.setCompanyEmail("root");
-        company.setCity("root");
-        company.setAddress("root");
-        company.setAccountNumber("root");
-        company.setFinancingLimit(100000000d);
-        company.setRemainingLimit(50000000d);
-        company.setPhoneNumber("root");
-        company.setProvince("root");
+        company.setCompany_id(companyId);
+        company.setCompanyName(companyName);
+        company.setCompanyEmail(companyEmail);
+        company.setCity(city);
+        company.setProvince(province);
+        company.setAddress(address);
+        company.setAccountNumber(accountNumber);
+        company.setFinancingLimit(financingLimit);
+        company.setRemainingLimit(remainingLimit);
+        company.setPhoneNumber(phoneNumber);
 
         companyRepository.saveAndFlush(company);
 
-        Company company2 = new Company();
-        company2.setCompany_id("ROO321");
-        company2.setCompanyName("PT. Camp");
-        company2.setCompanyEmail("root2");
-        company2.setCity("root");
-        company2.setAddress("root");
-        company2.setAccountNumber("root");
-        company2.setFinancingLimit(80000000d);
-        company2.setRemainingLimit(20000000d);
-        company2.setPhoneNumber("root");
-        company2.setProvince("root");
+        List<UserRole> roleUser = new ArrayList<>();
+        Credential userCredential = Credential.builder()
+                .email(userEmail)
+                .username(username)
+                .password(bCryptUtil.hashPassword("oreo123"))
+                .actor(ActorType.USER)
+                .roles(roleUser)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy(username)
+                .modifiedBy(username)
+                .build();
 
-        companyRepository.saveAndFlush(company2);
+        roleUser.add(
+                UserRole.builder()
+                        .role(superUser)
+                        .credential(userCredential)
+                        .build()
+        );
 
-        Company company3 = new Company();
-        company3.setCompany_id("ROO456");
-        company3.setCompanyName("PT. Toyota");
-        company3.setCompanyEmail("toyota");
-        company3.setCity("root");
-        company3.setAddress("root");
-        company3.setAccountNumber("root");
-        company3.setFinancingLimit(120000000d);
-        company3.setRemainingLimit(40000000d);
-        company3.setPhoneNumber("root");
-        company3.setProvince("root");
+        credentialRepository.saveAndFlush(userCredential);
 
-        companyRepository.saveAndFlush(company3);
+        User user = new User();
+        user.setCompany(company);
+        user.setCredential(userCredential);
+        user.setName(username);
+
+        userRepository.saveAndFlush(user);
     }
 
     public void rolesSeeder() {
