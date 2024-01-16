@@ -84,6 +84,34 @@ public class SeederConfiguration implements CommandLineRunner {
 
         credentialRepository.saveAndFlush(adminCredential);
         backOfficeRepository.saveAndFlush(backOffice);
+
+        Roles admin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+
+        List<UserRole> role2 = new ArrayList<>();
+        // Create and save seed data for Credential entity
+        Credential adminCredential2 = new Credential();
+        adminCredential2.setEmail("backoffice2@gmail.com");
+        adminCredential2.setUsername("backoffice2");
+        adminCredential2.setPassword(bCryptUtil.hashPassword(bo_password));
+        adminCredential2.setActor(ActorType.BACKOFFICE);
+        adminCredential2.setRoles(role2);
+        adminCredential2.setModifiedDate(LocalDateTime.now());
+        adminCredential2.setCreatedDate(LocalDateTime.now());
+        adminCredential2.setCreatedBy("BO2");
+        adminCredential2.setModifiedBy("BO2");
+
+        BackOffice backOffice2 = new BackOffice();
+        backOffice2.setCredential(adminCredential2);
+
+        role.add(
+                UserRole.builder()
+                        .role(admin)
+                        .credential(adminCredential2)
+                        .build()
+        );
+
+        credentialRepository.saveAndFlush(adminCredential2);
+        backOfficeRepository.saveAndFlush(backOffice2);
     }
 
     public void userSeeder(){
