@@ -183,6 +183,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
             MailSender.mailer("Register Back Office Account", mail, credential.getEmail());
 
             return BackOfficeRegisterResponse.builder()
+                    .user_type(credential.getActor().getName())
                     .username(credential.getUsername())
                     .email(credential.getEmail())
                     .build();
@@ -271,7 +272,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
         List<String> collect = data.getRoles().stream().map(r -> RoleType.valueOf(r.getRole().getRoleName()).getName()).toList();
         return BackOfficeUserResponse.builder()
                 .id(data.getBackOffice().getBackoffice_id())
-                .username(data.getUsername())
+                .username(data.getUsername2())
                 .email(data.getEmail())
                 .roles(collect.stream().findFirst().orElse(null))
                 .build();

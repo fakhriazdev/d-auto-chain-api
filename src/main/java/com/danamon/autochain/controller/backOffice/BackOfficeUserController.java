@@ -16,6 +16,7 @@ import com.danamon.autochain.service.BackOfficeUserService;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -70,10 +71,11 @@ public class BackOfficeUserController {
     }
 
     @GetMapping("/view/relationship-manager")
-    private ResponseEntity<?> getRelationshipManagerView(@RequestParam(name = "name", required = false) String name,
-                                                         @RequestParam(required = false, defaultValue = "1") Integer page,
+    private ResponseEntity<?> getRelationshipManagerView(@RequestParam(required = false, defaultValue = "1") Integer page,
                                                          @RequestParam(required = false, defaultValue = "10") Integer size,
-                                                         @RequestParam(required = false, defaultValue = "asc") String direction){
+                                                         @RequestParam(required = false, defaultValue = "asc") String direction,
+                                                         @RequestParam(required = false) String status,
+                                                         @RequestParam(required = false) String name){
         // set up request
         SearchCompanyRequest searchCompanyRequest = SearchCompanyRequest.builder()
                 .name(name)
@@ -81,6 +83,7 @@ public class BackOfficeUserController {
                 .direction(direction)
                 .page(page)
                 .size(size)
+                .status(status)
                 .build();
         Page<CompanyResponse> companies = companyService.getAll(searchCompanyRequest);
 
