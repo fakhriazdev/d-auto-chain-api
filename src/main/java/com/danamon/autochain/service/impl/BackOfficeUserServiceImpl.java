@@ -196,8 +196,9 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
     @Override
     public BackOfficeUserResponse getBackOfficeUserById(String id) {
-        Credential credential = credentialRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        BackOffice backOffice = backOfficeRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
+        Credential credential = backOffice.getCredential();
         return mapToResponse(credential);
     }
 
@@ -274,6 +275,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
                 .id(data.getBackOffice().getBackoffice_id())
                 .username(data.getUsername2())
                 .email(data.getEmail())
+                .name(data.getBackOffice().getName())
                 .roles(collect.stream().findFirst().orElse(null))
                 .build();
     }
