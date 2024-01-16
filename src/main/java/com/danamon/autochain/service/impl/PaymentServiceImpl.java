@@ -234,6 +234,7 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while converting string to JSON. Please contact administrator");
         }
+
         String paidDate = null;
         if(payment.getPaidDate() != null) paidDate = payment.getPaidDate().toString();
 

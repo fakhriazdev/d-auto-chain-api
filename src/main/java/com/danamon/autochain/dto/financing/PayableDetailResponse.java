@@ -21,4 +21,5 @@ public class PayableDetailResponse {
     Integer tenure;
     Double amount_instalment;
     List<TenureDetailResponse> tenure_list_detail;
+    String status;
 }

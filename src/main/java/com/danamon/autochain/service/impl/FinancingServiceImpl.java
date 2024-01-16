@@ -7,6 +7,7 @@ import com.danamon.autochain.constant.financing.FinancingType;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
+import com.danamon.autochain.dto.backoffice_dashboard.PerformanceCompanyResponse;
 import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.dto.transaction.TransactionRequest;
 import com.danamon.autochain.entity.*;
@@ -15,7 +16,6 @@ import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.service.TransactionService;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -30,7 +30,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -195,6 +194,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .tenure(financingPayable.getTenure())
                 .amount_instalment(financingPayable.getMonthly_installment())
                 .tenure_list_detail(listTenure)
+                .status(financingPayable.getStatus().toString())
                 .build();
     }
 
@@ -324,6 +324,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .total(financingReceivable.getTotal())
                 .type(financingReceivable.getFinancingType().name())
                 .created_date(financingReceivable.getDisbursment_date())
+                .status(financingReceivable.getStatus().toString())
                 .build();
     }
 
@@ -505,6 +506,88 @@ public class FinancingServiceImpl implements FinancingService {
 
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
+        }
+    }
+
+    @Override
+    public List<PerformanceCompanyResponse> get_performance(String filter) {
+        List<PerformanceCompanyResponse> data = new ArrayList<>();
+
+//        =================== TOTAL =============
+
+        if(filter.equalsIgnoreCase("total")){
+            List<Object[]> fpr = financingPayableRepository.findAllAndSumByAmountGroupByCompanyName();
+            List<Object[]> fpc = financingReceivableRepository.findAllAndSumByAmountGroupByCompanyName();
+
+            for (Object[] row : fpr) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+
+            for (Object[] row : fpc) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+
+            Collections.sort(data, Comparator.comparingDouble(PerformanceCompanyResponse::getValue).reversed());
+            return data;
+
+//            ================= AVERAGE =============
+
+        } else if (filter.equalsIgnoreCase("average")) {
+            List<Object[]> fpr = financingPayableRepository.findAllByAverageSumGroupByCompanyName();
+            List<Object[]> fpc = financingReceivableRepository.findAllByAverageSumGroupByCompanyName();
+
+            for (Object[] row : fpr) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+
+            for (Object[] row : fpc) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+
+            Collections.sort(data, Comparator.comparingDouble(PerformanceCompanyResponse::getValue).reversed());
+            return data;
+
+//            ============= APPROVED COUNT =============
+
+        } else if (filter.equalsIgnoreCase("approved")) {
+            List<Object[]> fpr = financingPayableRepository.findAllByStatusGroupByCompanyName("ONGOING");
+            List<Object[]> fpc = financingReceivableRepository.findAllByStatusGroupByCompanyName("ONGOING");
+
+            for (Object[] row : fpr) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+
+            for (Object[] row : fpc) {
+                data.add(PerformanceCompanyResponse.builder()
+                        .company_name((String) row[0])
+                        .value((Double)row[1])
+                        .build()
+                );
+            }
+            Collections.sort(data, Comparator.comparingDouble(PerformanceCompanyResponse::getValue).reversed());
+            return data;
+        }else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "filter available(TOTAL, AVERAGE, APPROVED)");
         }
     }
 
