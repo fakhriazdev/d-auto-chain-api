@@ -29,7 +29,7 @@ public class BackOfficeDashboardController {
     private final FinancingService financingService;
     private final CompanyService companyService;
 
-    @GetMapping("/performance/filter")
+    @GetMapping("/performance/{filter}")
     @PermitAll
     public ResponseEntity<?> get_company_performance(@PathVariable(name = "filter") String filter){
         List<PerformanceCompanyResponse> data = financingService.get_performance(filter);
