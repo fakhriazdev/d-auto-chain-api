@@ -1,7 +1,8 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
-import com.danamon.autochain.constant.invoice.ProcessingStatusType;
+import com.danamon.autochain.constant.TenureStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -301,14 +302,6 @@ public class PaymentServiceImpl implements PaymentService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
-        LocalDateTime currentDateTime = LocalDateTime.now();
-
-        LocalDateTime currentMonthStartDateTime = currentDateTime.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime currentMonthEndDateTime = currentDateTime.withDayOfMonth(currentDateTime.getMonth().length(currentDateTime.toLocalDate().isLeapYear())).withHour(23).withMinute(59).withSecond(59);
-
-        LocalDateTime lastMonthStartDateTime = currentDateTime.minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime lastMonthEndDateTime = currentDateTime.minusMonths(1).withDayOfMonth(currentDateTime.getMonth().length(currentDateTime.toLocalDate().isLeapYear())).withHour(23).withMinute(59).withSecond(59);
-
         YearMonth currentMonth = YearMonth.now();
 
         Date currentMonthStartDate = java.sql.Date.valueOf(currentMonth.atDay(1));
@@ -319,52 +312,35 @@ public class PaymentServiceImpl implements PaymentService {
         Date lastMonthStartDate = java.sql.Date.valueOf(lastMonth.atDay(1));
         Date lastMonthEndDate = java.sql.Date.valueOf(lastMonth.atEndOfMonth());
 
-        List<Invoice> currentMonthIncome = invoiceService.getPaidBetweenCreatedDate(user.getCompany(), List.of(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID), currentMonthStartDateTime, currentMonthEndDateTime);
-//        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndCreatedDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
         Double sumCurrentMonthIncome = currentMonthIncome.stream()
-                .mapToDouble(Invoice::getAmount)
+                .mapToDouble(Payment::getAmount)
                 .sum();
 
-        List<Invoice> lastMonthIncome = invoiceService.getPaidBetweenCreatedDate(user.getCompany(), List.of(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID), currentMonthStartDateTime, currentMonthEndDateTime);
-//        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndCreatedDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
         Double sumLastMonthIncome = lastMonthIncome.stream()
-                .mapToDouble(Invoice::getAmount)
+                .mapToDouble(Payment::getAmount)
                 .sum();
 
-        Double percentageIncome = sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome;
-
-        if (sumLastMonthIncome > sumCurrentMonthIncome) {
-            percentageIncome *= -1;
-        }
-
-        List<Invoice> invoiceApprove = invoiceService.getInvoiceApprove(user.getCompany(), ProcessingStatusType.APPROVE_INVOICE);
-        List<Payment> currentMonthExpense = paymentRepository.findAllByInvoiceInAndCreatedDateBetween(invoiceApprove, currentMonthStartDate, currentMonthEndDate);
-//        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndCreatedDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
         Double sumCurrentMonthExpense = currentMonthExpense.stream()
                 .mapToDouble(Payment::getAmount)
                 .sum();
 
-        List<Payment> lastMonthExpense = paymentRepository.findAllByInvoiceInAndCreatedDateBetween(invoiceApprove, lastMonthStartDate, lastMonthEndDate);
-//        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndCreatedDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
         double sumLastMonthExpense = lastMonthExpense.stream()
                 .mapToDouble(Payment::getAmount)
                 .sum();
-
-        Double percentageExpense = sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense;
-
-        if (sumLastMonthIncome > sumCurrentMonthIncome) {
-            percentageExpense *= -1;
-        }
 
         return LimitResponse.builder()
                 .limit(user.getCompany().getFinancingLimit())
                 .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
                 .income(sumCurrentMonthIncome)
                 .incomeLastMonth(sumLastMonthIncome)
-                .incomeDifferencePercentage(percentageIncome)
+                .incomeDifferencePercentage(sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome)
                 .expense(sumCurrentMonthExpense)
                 .expenseLastMonth(sumLastMonthExpense)
-                .expenseDifferencePercentage(percentageExpense)
+                .expenseDifferencePercentage(sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense)
                 .build();
     }
 
@@ -406,22 +382,24 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse updatePaymentInvoicing(String id) {
         Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
+        if (payment.getStatus().equals(PaymentStatus.PAID) || payment.getStatus().equals(PaymentStatus.COMPLETED)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bill has been paid");
+        }
+
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
 
-        if (payment.getType().equals(PaymentType.INVOICING)){
-            if (from.before(payment.getDueDate())){
+            if (from.before(payment.getDueDate())) {
                 payment.setStatus(PaymentStatus.PAID);
                 payment.getInvoice().setStatus(InvoiceStatus.PAID);
-            }else {
+            } else {
                 payment.setStatus(PaymentStatus.LATE_PAID);
                 payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
             }
-        }
         paymentRepository.saveAndFlush(payment);
-
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
@@ -434,8 +412,31 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse updatePaymentFinancing(String id) {
-        return null;
+        Tenure tenure = tenureRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        if (!tenure.getStatus().equals(TenureStatus.UNPAID)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Paid Payment With Status " + tenure.getStatus().name());
+        }
+
+        if (tenure.getDueDate().after(from)){
+            tenure.getFinancingPayableId().getPayment().setStatus(PaymentStatus.LATE_PAID);
+        }
+
+        tenure.setStatus(TenureStatus.COMPLETED);
+        tenure.setPaidDate(from);
+
+        tenureRepository.saveAndFlush(tenure);
+        return new UpdatePaymentResponse(
+                tenure.getFinancingPayableId().getPayment().getPaymentId(),
+                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
+                tenure.getFinancingPayableId().getPayment().getMethod().name(),
+                tenure.getFinancingPayableId().getPayment().getSenderId().getCompanyName(),
+                tenure.getFinancingPayableId().getPayment().getRecipientId().getCompanyName(),
+                tenure.getFinancingPayableId().getPayment().getAmount(),
+                0.02*tenure.getFinancingPayableId().getPayment().getAmount()
+        );
     }
 
 

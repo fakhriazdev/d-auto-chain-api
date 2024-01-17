@@ -17,6 +17,7 @@ import com.danamon.autochain.dto.payment.SearchPaymentRequest;
 import com.danamon.autochain.entity.Payment;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
+import com.danamon.autochain.service.impl.PaymentServiceImpl;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -172,5 +173,29 @@ public class PaymentController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PutMapping("/payment/invoice/{id}")
+    public ResponseEntity<?> paymentProceedInvoicing(@PathVariable(name = "id") String id){
+        PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.updatePaymentInvoicing(id);
+
+        DataResponse<PaymentServiceImpl.UpdatePaymentResponse> build = DataResponse.<PaymentServiceImpl.UpdatePaymentResponse>builder()
+                .data(updatePaymentResponse)
+                .message("Payment Success!")
+                .statusCode(HttpStatus.OK.value())
+                .build();
+        return ResponseEntity.ok(build);
+    }
+
+    @PutMapping("/payment/financing/{id}")
+    public ResponseEntity<?> paymentProceedFinancing(@PathVariable(name = "id") String id){
+        PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.updatePaymentFinancing(id);
+
+        DataResponse<PaymentServiceImpl.UpdatePaymentResponse> build = DataResponse.<PaymentServiceImpl.UpdatePaymentResponse>builder()
+                .data(updatePaymentResponse)
+                .message("Payment Success!")
+                .statusCode(HttpStatus.OK.value())
+                .build();
+        return ResponseEntity.ok(build);
     }
 }
