@@ -8,6 +8,7 @@ import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.Payment;
+import com.danamon.autochain.service.impl.PaymentServiceImpl;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -26,4 +27,6 @@ public interface PaymentService {
     InvoiceDetailResponse getPaymentDetailInvoice(Payment payment);
     Payment getPaymentDetailType(String transactionId);
     List<PaymentResponse> getPaymentForFinancingPayable();
+    PaymentServiceImpl.UpdatePaymentResponse updatePaymentInvoicing(String id);
+    PaymentServiceImpl.UpdatePaymentResponse updatePaymentFinancing(String id);
 }

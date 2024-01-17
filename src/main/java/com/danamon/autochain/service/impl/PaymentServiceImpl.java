@@ -15,6 +15,7 @@ import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.FinancingPayableRepository;
 import com.danamon.autochain.repository.PaymentRepository;
+import com.danamon.autochain.repository.TenureRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,9 +36,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -49,6 +52,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final CompanyService companyService;
     private final InvoiceService invoiceService;
     private final FinancingPayableRepository financingPayableRepository;
+    private final TenureRepository tenureRepository;
     private final AuthService authService;
 
     @Override
@@ -400,4 +404,40 @@ public class PaymentServiceImpl implements PaymentService {
         List<Payment> payments = paymentRepository.findAllByStatusInAndAmountGreaterThanEqual(List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L);
         return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }
+
+    @Override
+    public UpdatePaymentResponse updatePaymentInvoicing(String id) {
+        Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+
+        if (payment.getType().equals(PaymentType.INVOICING)){
+            if (from.before(payment.getDueDate())){
+                payment.setStatus(PaymentStatus.PAID);
+                payment.getInvoice().setStatus(InvoiceStatus.PAID);
+            }else {
+                payment.setStatus(PaymentStatus.LATE_PAID);
+                payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+            }
+        }
+        paymentRepository.saveAndFlush(payment);
+
+        return new UpdatePaymentResponse(
+                payment.getPaymentId(),
+                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
+                payment.getMethod().name(),
+                payment.getSenderId().getCompanyName(),
+                payment.getRecipientId().getCompanyName(),
+                payment.getAmount(),
+                0.02*payment.getAmount()
+        );
+    }
+
+    @Override
+    public UpdatePaymentResponse updatePaymentFinancing(String id) {
+        return null;
+    }
+
+
+    public record UpdatePaymentResponse(String id, String time, String method, String senderName, String recipient, Long amount, Double fee){}
 }

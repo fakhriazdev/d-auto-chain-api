@@ -2,6 +2,8 @@ package com.danamon.autochain.dto.backoffice;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,4 +15,5 @@ public class BackOfficeUserResponse {
     private String id;
     private String roles;
     private String name;
+    private List<String> companies;
 }
