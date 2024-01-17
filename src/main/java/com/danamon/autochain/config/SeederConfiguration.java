@@ -10,15 +10,18 @@ import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -33,13 +36,15 @@ public class SeederConfiguration implements CommandLineRunner {
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
     private final BCryptUtil bCryptUtil;
+    private final UserRolesRepository userRolesRepository;
+    private final BackofficeAccessRepository backofficeAccessRepository;
 
-//    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
+    //    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
     private final String bo_email = "rizdaagisa99@gmail.com";
     private final String bo_username = "rizda backoffice";
     private final String bo_password = "string";
 
-//    ====================== USER ACCOUNT as SUPER USER =========================
+    //    ====================== USER ACCOUNT as SUPER USER =========================
     private final String user_email = "rizdaagisa@gmail.com";
     private final String user_username = "rizda user";
     private final String user_password = "string";
@@ -49,10 +54,13 @@ public class SeederConfiguration implements CommandLineRunner {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
-            backofficeSeeder();
             companySeeder();
+            newBackOfficeSeeder();
+//            backofficeSeeder();
 //            userSeeder();
-            invoiceAndPaymentSeeder();
+            newUserSeeder();
+//            partnershipSeeder();
+//            invoiceAndPaymentSeeder();
         }
     }
 
@@ -114,7 +122,7 @@ public class SeederConfiguration implements CommandLineRunner {
         backOfficeRepository.saveAndFlush(backOffice2);
     }
 
-    public void userSeeder(){
+    public void userSeeder() {
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
@@ -321,13 +329,11 @@ public class SeederConfiguration implements CommandLineRunner {
         createCompany("IND345", "PT Indomobil SuksesTbk", "financeadmin@indomobil.co.id", "Jakarta Timur", "DKI Jakarta",
                 "Wisma Indomobil, Jl. Letjen M.T. Haryono No.Kav 8 1 Lt.6, Bidara Cina, Kecamatan Jatinegara", "010101013", 1800000000d, 1800000000d, "082123456791",
                 "financeadmin@indomobil.co.id", "scfadmin_indomobil", superUser);
-
-        partnershipSeeder();
     }
 
     private void createCompany(String companyId, String companyName, String companyEmail, String city, String province,
-                                   String address, String accountNumber, Double financingLimit, Double remainingLimit,
-                                   String phoneNumber, String userEmail, String username, Roles superUser) {
+                               String address, String accountNumber, Double financingLimit, Double remainingLimit,
+                               String phoneNumber, String userEmail, String username, Roles superUser) {
         Company company = new Company();
         company.setCompany_id(companyId);
         company.setCompanyName(companyName);
@@ -560,8 +566,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void invoiceAndPaymentSeeder() {
-        Company company = companyService.getById("AST123");
-        Company partner = companyService.getById("ITA567");
+        Company company = companyService.getById("ROO123");
+        Company partner = companyService.getById("ROO321");
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
@@ -638,5 +644,140 @@ public class SeederConfiguration implements CommandLineRunner {
                 .build();
 
         paymentRepository.saveAndFlush(payment2);
+    }
+
+    private void createUser(String username, String name, String email, String company, List<String> handleCompany, List<String> role) {
+        List<UserRole> userRoles = new ArrayList<>();
+
+        Credential credential = Credential.builder()
+                .createdDate(LocalDateTime.now())
+                .email(email)
+                .username(username)
+                .roles(userRoles)
+                .createdBy(username)
+                .actor(ActorType.USER)
+                .password(bCryptUtil.hashPassword("string"))
+                .modifiedBy(username)
+                .modifiedDate(LocalDateTime.now())
+                .build();
+
+        credentialRepository.saveAndFlush(credential);
+
+        Company getCompany = companyRepository.findById(company).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Company Not Found"));
+
+        List<UserAccsess> userAccsesses = new ArrayList<>();
+
+        User user = User.builder()
+                .company(getCompany)
+                .credential(credential)
+                .userAccsess(userAccsesses)
+                .credential(credential)
+                .name(name)
+                .build();
+
+        handleCompany.forEach(c -> {
+            Company get = companyRepository.findById(c).orElseThrow(() -> new EntityNotFoundException("company not found"));
+            userAccsesses.add(
+                    UserAccsess.builder()
+                            .user(user)
+                            .company(get)
+                            .build()
+            );
+        });
+        role.forEach(r ->
+                {
+                    Roles roles = rolesRepository.findByRoleName(r).orElseThrow(() -> new EntityNotFoundException("role not found"));
+                    userRoles.add(
+                            UserRole.builder()
+                                    .credential(credential)
+                                    .role(roles)
+                                    .build()
+                    );
+                }
+        );
+
+        userRepository.saveAndFlush(user);
+        userRolesRepository.saveAllAndFlush(userRoles);
+    }
+
+    private void newUserSeeder(){
+        createUser("oreo_123" , "Oreo Jaya", "oreofinalprojectdtt@gmail.com","AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
+
+        createUser("nand_123" , "Nand", "dinandtambunan28@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
+
+        createUser("abra_123" , "Abraham", "abramyct@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+
+
+        createUser("edia_123" , "Ediashta", "ediashtarevin77@gmail.com","GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+
+        createUser("jere_123" , "Jeremy", "jeremysilaban3@gmail.com","GAR123", List.of("UNI456"), List.of("INVOICE_STAFF"));
+
+        createUser("oliv_123" , "Oliver", "olivermuhammadf@gmail.com","GAR123", List.of("IND345"), List.of("PAYMENT_STAFF", "FINANCE_STAFF"));
+    }
+
+    private void createBackoffice(String username, String name, String email, String role, List<String> handleCompany){
+        List<UserRole> userRoles = new ArrayList<>();
+
+        Credential credential = Credential.builder()
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy(username)
+                .modifiedDate(LocalDateTime.now())
+                .modifiedBy(username)
+                .actor(ActorType.BACKOFFICE)
+                .roles(userRoles)
+                .email(email)
+                .password(bCryptUtil.hashPassword("string"))
+                .username(username)
+                .build();
+
+        Roles roles = rolesRepository.findByRoleName(role).orElseThrow(() -> new EntityNotFoundException("Role not found"));
+
+        userRoles.add(
+                UserRole.builder()
+                        .role(roles)
+                        .credential(credential)
+                        .build()
+        );
+
+
+        BackOffice backOffice = BackOffice.builder()
+                .name(name)
+                .credential(credential)
+                .build();
+
+        credential.setBackOffice(backOffice);
+
+        credentialRepository.saveAndFlush(credential);
+
+
+        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && ! handleCompany.isEmpty()){
+            List<BackofficeUserAccess> backofficeUserAccesses = new ArrayList<>();
+            handleCompany.forEach(c ->
+                    {
+                        Company company = companyRepository.findById(c).orElseThrow(() -> new EntityNotFoundException("Company With ID " + c + " Not Found"));
+                        backofficeUserAccesses.add(
+                                BackofficeUserAccess.builder()
+                                        .backOffice(backOffice)
+                                        .company(company)
+                                        .build()
+                        );
+                    }
+            );
+            backOffice.setBackofficeUserAccesses(backofficeUserAccesses);
+        }
+
+        backOfficeRepository.saveAndFlush(backOffice);
+        userRolesRepository.saveAllAndFlush(userRoles);
+    }
+
+    private void newBackOfficeSeeder(){
+        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
+
+        createBackoffice("admin_1", "Admin A", "admin@gmail.com","ADMIN", null);
+
+        createBackoffice("ca_1", "Credit Analyst A", "ca@gmail.com","CREDIT_ANALYST", null);
+
+        createBackoffice("rm_1", "Relation Manager A", "rm@gmail.com","RELATIONSHIP_MANAGER", List.of("GAJ456"));
     }
 }
