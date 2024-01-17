@@ -45,6 +45,9 @@ public class Payment {
     @Column
     private Date paidDate;
 
+    @Column
+    private Date createdDate;
+
     @Enumerated(EnumType.STRING)
     private PaymentType type;
 
