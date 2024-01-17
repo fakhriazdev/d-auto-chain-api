@@ -375,5 +375,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         return total;
     }
 
+    @Override
+    public List<Invoice> getPaidBetweenCreatedDate(Company company, List<InvoiceStatus> statuses, LocalDateTime createdDate, LocalDateTime createdDate2) {
+        return invoiceRepository.findAllByRecipientIdAndStatusInAndCreatedDateBetween(company, statuses, createdDate, createdDate2);
+    }
 
+    @Override
+    public List<Invoice> getInvoiceApprove(Company company, ProcessingStatusType processingStatusType) {
+        return invoiceRepository.findAllByRecipientIdAndProcessingStatusEquals(company, processingStatusType);
+    }
 }
