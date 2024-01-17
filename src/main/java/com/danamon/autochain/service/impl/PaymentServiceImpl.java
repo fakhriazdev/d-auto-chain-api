@@ -144,7 +144,7 @@ public class PaymentServiceImpl implements PaymentService {
                 ));
 
                 if (!isSuperUser) {
-                    predicates.add(root.get("senderId").in(accessCompanies));
+                    predicates.add(root.get("recipientId").in(accessCompanies));
                 }
 
                 if (recipients != null) {

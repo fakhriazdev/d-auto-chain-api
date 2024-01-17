@@ -49,10 +49,9 @@ public class SeederConfiguration implements CommandLineRunner {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
-            companySeeder();
             backofficeSeeder();
-            userSeeder();
-            partnershipSeeder();
+            companySeeder();
+//            userSeeder();
             invoiceAndPaymentSeeder();
         }
     }
@@ -322,6 +321,8 @@ public class SeederConfiguration implements CommandLineRunner {
         createCompany("IND345", "PT Indomobil SuksesTbk", "financeadmin@indomobil.co.id", "Jakarta Timur", "DKI Jakarta",
                 "Wisma Indomobil, Jl. Letjen M.T. Haryono No.Kav 8 1 Lt.6, Bidara Cina, Kecamatan Jatinegara", "010101013", 1800000000d, 1800000000d, "082123456791",
                 "financeadmin@indomobil.co.id", "scfadmin_indomobil", superUser);
+
+        partnershipSeeder();
     }
 
     private void createCompany(String companyId, String companyName, String companyEmail, String city, String province,
@@ -559,8 +560,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void invoiceAndPaymentSeeder() {
-        Company company = companyService.getById("ROO123");
-        Company partner = companyService.getById("ROO321");
+        Company company = companyService.getById("AST123");
+        Company partner = companyService.getById("ITA567");
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
