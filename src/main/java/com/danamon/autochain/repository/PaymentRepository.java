@@ -16,4 +16,6 @@ public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSp
     List<Payment> findAllByStatusEquals(String status);
     List<Payment> findAllByStatusInAndAmountGreaterThanEqual(List<PaymentStatus> statuses, Long amount);
     List<Payment> findAllByInvoiceInAndCreatedDateBetween(List<Invoice> invoices, Date startDate, Date endDate);
+    List<Payment> findAllByRecipientIdAndDueDateBetween(Company recipientId, Date dueDate, Date dueDat2);
+    List<Payment> findAllBySenderIdAndDueDateBetween(Company senderId, Date dueDate, Date dueDate2);
 }
