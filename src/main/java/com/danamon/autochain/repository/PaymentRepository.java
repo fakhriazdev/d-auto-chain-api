@@ -1,5 +1,6 @@
 package com.danamon.autochain.repository;
 
+import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSp
     List<Payment> findAllBySenderIdAndDueDateBetween(Company sender, Date startDate, Date endDate);
     List<Payment> findAllByRecipientIdAndDueDateBetween(Company recipient, Date startDate, Date endDate);
     List<Payment> findAllByStatusEquals(String status);
+    List<Payment> findAllByStatusInAndAmountGreaterThanEqual(List<PaymentStatus> statuses, Long amount);
 }

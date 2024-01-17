@@ -54,13 +54,12 @@ public class SeederConfiguration implements CommandLineRunner {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
+            backofficeSeeder();
             companySeeder();
             newBackOfficeSeeder();
-//            backofficeSeeder();
 //            userSeeder();
             newUserSeeder();
-//            partnershipSeeder();
-//            invoiceAndPaymentSeeder();
+            invoiceAndPaymentSeeder();
         }
     }
 
@@ -92,34 +91,6 @@ public class SeederConfiguration implements CommandLineRunner {
 
         credentialRepository.saveAndFlush(adminCredential);
         backOfficeRepository.saveAndFlush(backOffice);
-
-        Roles admin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
-
-        List<UserRole> role2 = new ArrayList<>();
-        // Create and save seed data for Credential entity
-        Credential adminCredential2 = new Credential();
-        adminCredential2.setEmail("backoffice2@gmail.com");
-        adminCredential2.setUsername("backoffice2");
-        adminCredential2.setPassword(bCryptUtil.hashPassword(bo_password));
-        adminCredential2.setActor(ActorType.BACKOFFICE);
-        adminCredential2.setRoles(role2);
-        adminCredential2.setModifiedDate(LocalDateTime.now());
-        adminCredential2.setCreatedDate(LocalDateTime.now());
-        adminCredential2.setCreatedBy("BO2");
-        adminCredential2.setModifiedBy("BO2");
-
-        BackOffice backOffice2 = new BackOffice();
-        backOffice2.setCredential(adminCredential2);
-
-        role.add(
-                UserRole.builder()
-                        .role(admin)
-                        .credential(adminCredential2)
-                        .build()
-        );
-
-        credentialRepository.saveAndFlush(adminCredential2);
-        backOfficeRepository.saveAndFlush(backOffice2);
     }
 
     public void userSeeder() {
@@ -329,6 +300,8 @@ public class SeederConfiguration implements CommandLineRunner {
         createCompany("IND345", "PT Indomobil SuksesTbk", "financeadmin@indomobil.co.id", "Jakarta Timur", "DKI Jakarta",
                 "Wisma Indomobil, Jl. Letjen M.T. Haryono No.Kav 8 1 Lt.6, Bidara Cina, Kecamatan Jatinegara", "010101013", 1800000000d, 1800000000d, "082123456791",
                 "financeadmin@indomobil.co.id", "scfadmin_indomobil", superUser);
+
+        partnershipSeeder();
     }
 
     private void createCompany(String companyId, String companyName, String companyEmail, String city, String province,
@@ -566,8 +539,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void invoiceAndPaymentSeeder() {
-        Company company = companyService.getById("ROO123");
-        Company partner = companyService.getById("ROO321");
+        Company company = companyService.getById("AST123");
+        Company partner = companyService.getById("ITA567");
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
@@ -772,7 +745,7 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void newBackOfficeSeeder(){
-        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
+//        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
 
         createBackoffice("admin_1", "Admin A", "admin@gmail.com","ADMIN", null);
 
