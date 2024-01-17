@@ -1,14 +1,17 @@
 package com.danamon.autochain.service;
 
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
+import com.danamon.autochain.entity.Company;
 import com.danamon.autochain.entity.Invoice;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface InvoiceService {
@@ -32,4 +35,6 @@ public interface InvoiceService {
 
     Long getTotalPaidInvoiceReceivable();
     Long getTotalUnpaidInvoiceReceivable();
+    List<Invoice> getPaidBetweenCreatedDate(Company company, List<InvoiceStatus> statuses, LocalDateTime createdDate, LocalDateTime createdDate2);
+    List<Invoice> getInvoiceApprove(Company company, ProcessingStatusType processingStatusType);
 }
