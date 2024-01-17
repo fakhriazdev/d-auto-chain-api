@@ -1,6 +1,7 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -300,6 +301,14 @@ public class PaymentServiceImpl implements PaymentService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
+        LocalDateTime currentMonthStartDateTime = currentDateTime.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime currentMonthEndDateTime = currentDateTime.withDayOfMonth(currentDateTime.getMonth().length(currentDateTime.toLocalDate().isLeapYear())).withHour(23).withMinute(59).withSecond(59);
+
+        LocalDateTime lastMonthStartDateTime = currentDateTime.minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime lastMonthEndDateTime = currentDateTime.minusMonths(1).withDayOfMonth(currentDateTime.getMonth().length(currentDateTime.toLocalDate().isLeapYear())).withHour(23).withMinute(59).withSecond(59);
+
         YearMonth currentMonth = YearMonth.now();
 
         Date currentMonthStartDate = java.sql.Date.valueOf(currentMonth.atDay(1));
@@ -310,35 +319,52 @@ public class PaymentServiceImpl implements PaymentService {
         Date lastMonthStartDate = java.sql.Date.valueOf(lastMonth.atDay(1));
         Date lastMonthEndDate = java.sql.Date.valueOf(lastMonth.atEndOfMonth());
 
-        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        List<Invoice> currentMonthIncome = invoiceService.getPaidBetweenCreatedDate(user.getCompany(), List.of(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID), currentMonthStartDateTime, currentMonthEndDateTime);
+//        List<Payment> currentMonthIncome = paymentRepository.findAllBySenderIdAndCreatedDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
         Double sumCurrentMonthIncome = currentMonthIncome.stream()
-                .mapToDouble(Payment::getAmount)
+                .mapToDouble(Invoice::getAmount)
                 .sum();
 
-        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        List<Invoice> lastMonthIncome = invoiceService.getPaidBetweenCreatedDate(user.getCompany(), List.of(InvoiceStatus.PAID, InvoiceStatus.LATE_PAID), currentMonthStartDateTime, currentMonthEndDateTime);
+//        List<Payment> lastMonthIncome = paymentRepository.findAllBySenderIdAndCreatedDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
         Double sumLastMonthIncome = lastMonthIncome.stream()
-                .mapToDouble(Payment::getAmount)
+                .mapToDouble(Invoice::getAmount)
                 .sum();
 
-        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
+        Double percentageIncome = sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome;
+
+        if (sumLastMonthIncome > sumCurrentMonthIncome) {
+            percentageIncome *= -1;
+        }
+
+        List<Invoice> invoiceApprove = invoiceService.getInvoiceApprove(user.getCompany(), ProcessingStatusType.APPROVE_INVOICE);
+        List<Payment> currentMonthExpense = paymentRepository.findAllByInvoiceInAndCreatedDateBetween(invoiceApprove, currentMonthStartDate, currentMonthEndDate);
+//        List<Payment> currentMonthExpense = paymentRepository.findAllByRecipientIdAndCreatedDateBetween(user.getCompany(), currentMonthStartDate, currentMonthEndDate);
         Double sumCurrentMonthExpense = currentMonthExpense.stream()
                 .mapToDouble(Payment::getAmount)
                 .sum();
 
-        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndDueDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
+        List<Payment> lastMonthExpense = paymentRepository.findAllByInvoiceInAndCreatedDateBetween(invoiceApprove, lastMonthStartDate, lastMonthEndDate);
+//        List<Payment> lastMonthExpense = paymentRepository.findAllByRecipientIdAndCreatedDateBetween(user.getCompany(), lastMonthStartDate, lastMonthEndDate);
         double sumLastMonthExpense = lastMonthExpense.stream()
                 .mapToDouble(Payment::getAmount)
                 .sum();
+
+        Double percentageExpense = sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense;
+
+        if (sumLastMonthIncome > sumCurrentMonthIncome) {
+            percentageExpense *= -1;
+        }
 
         return LimitResponse.builder()
                 .limit(user.getCompany().getFinancingLimit())
                 .limitUsed(user.getCompany().getFinancingLimit() - user.getCompany().getRemainingLimit())
                 .income(sumCurrentMonthIncome)
                 .incomeLastMonth(sumLastMonthIncome)
-                .incomeDifferencePercentage(sumLastMonthIncome == 0 ? 0 : (sumCurrentMonthIncome - sumLastMonthIncome) / sumLastMonthIncome)
+                .incomeDifferencePercentage(percentageIncome)
                 .expense(sumCurrentMonthExpense)
                 .expenseLastMonth(sumLastMonthExpense)
-                .expenseDifferencePercentage(sumLastMonthExpense == 0 ? 0 : (sumCurrentMonthExpense - sumLastMonthExpense) / sumLastMonthExpense)
+                .expenseDifferencePercentage(percentageExpense)
                 .build();
     }
 

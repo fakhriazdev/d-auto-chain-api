@@ -584,6 +584,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .type(PaymentType.INVOICING)
                 .dueDate(new Date())
                 .paidDate(new Date())
+                .createdDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
                 .status(PaymentStatus.UNPAID)
                 .build();
@@ -612,6 +613,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .type(PaymentType.INVOICING)
                 .dueDate(new Date())
                 .paidDate(new Date())
+                .createdDate(new Date())
                 .method(PaymentMethod.BANK_TRANSFER)
                 .status(PaymentStatus.UNPAID)
                 .build();

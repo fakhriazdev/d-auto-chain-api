@@ -2,6 +2,7 @@ package com.danamon.autochain.repository;
 
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.entity.Company;
+import com.danamon.autochain.entity.Invoice;
 import com.danamon.autochain.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -10,8 +11,9 @@ import java.util.Date;
 import java.util.List;
 
 public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSpecificationExecutor<Payment> {
-    List<Payment> findAllBySenderIdAndDueDateBetween(Company sender, Date startDate, Date endDate);
-    List<Payment> findAllByRecipientIdAndDueDateBetween(Company recipient, Date startDate, Date endDate);
+    List<Payment> findAllBySenderIdAndCreatedDateBetween(Company sender, Date startDate, Date endDate);
+    List<Payment> findAllByRecipientIdAndCreatedDateBetween(Company recipient, Date startDate, Date endDate);
     List<Payment> findAllByStatusEquals(String status);
     List<Payment> findAllByStatusInAndAmountGreaterThanEqual(List<PaymentStatus> statuses, Long amount);
+    List<Payment> findAllByInvoiceInAndCreatedDateBetween(List<Invoice> invoices, Date startDate, Date endDate);
 }
