@@ -399,7 +399,7 @@ public class FinancingServiceImpl implements FinancingService {
                 Date dueDate = calendar.getTime();
 
                 // Set the tenure status
-                TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.ONGOING;
+                TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.UNPAID;
 
                 tenureRepository.saveAndFlush(
                         Tenure.builder()

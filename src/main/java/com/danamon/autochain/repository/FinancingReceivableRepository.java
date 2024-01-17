@@ -15,11 +15,11 @@ import java.util.Optional;
 @Repository
 public interface FinancingReceivableRepository extends JpaRepository<FinancingReceivable, String>,  JpaSpecificationExecutor<FinancingReceivable> {
 
-    @Query(value = "SELECT company_name, SUM(amount) FROM FinancingReceivable GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, SUM(c.amount) FROM t_financing_receivable c LEFT JOIN m_company j ON j.company_id = c.company_id GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllAndSumByAmountGroupByCompanyName();
-    @Query(value = "SELECT company_name, AVG(amount) FROM FinancingReceivable GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, AVG(c.amount) FROM t_financing_receivable c LEFT JOIN m_company j ON j.company_id = c.company_id GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllByAverageSumGroupByCompanyName();
-    @Query(value = "SELECT company_name, COUNT(*) FROM FinancingReceivable WHERE status = :status GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, COUNT(*) FROM t_financing_receivable c LEFT JOIN m_company j ON j.company_id = c.company_id WHERE c.status = :status GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllByStatusGroupByCompanyName(@Param("status") String status);
 
 //    =============================================================
