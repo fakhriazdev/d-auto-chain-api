@@ -1,6 +1,8 @@
 package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
+import com.danamon.autochain.constant.TenureStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -380,22 +382,24 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse updatePaymentInvoicing(String id) {
         Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
+        if (payment.getStatus().equals(PaymentStatus.PAID) || payment.getStatus().equals(PaymentStatus.COMPLETED)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bill has been paid");
+        }
+
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
 
-        if (payment.getType().equals(PaymentType.INVOICING)){
-            if (from.before(payment.getDueDate())){
+            if (from.before(payment.getDueDate())) {
                 payment.setStatus(PaymentStatus.PAID);
                 payment.getInvoice().setStatus(InvoiceStatus.PAID);
-            }else {
+            } else {
                 payment.setStatus(PaymentStatus.LATE_PAID);
                 payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
             }
-        }
         paymentRepository.saveAndFlush(payment);
-
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
@@ -408,8 +412,31 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse updatePaymentFinancing(String id) {
-        return null;
+        Tenure tenure = tenureRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+        Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        if (!tenure.getStatus().equals(TenureStatus.UNPAID)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Paid Payment With Status " + tenure.getStatus().name());
+        }
+
+        if (tenure.getDueDate().after(from)){
+            tenure.getFinancingPayableId().getPayment().setStatus(PaymentStatus.LATE_PAID);
+        }
+
+        tenure.setStatus(TenureStatus.COMPLETED);
+        tenure.setPaidDate(from);
+
+        tenureRepository.saveAndFlush(tenure);
+        return new UpdatePaymentResponse(
+                tenure.getFinancingPayableId().getPayment().getPaymentId(),
+                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
+                tenure.getFinancingPayableId().getPayment().getMethod().name(),
+                tenure.getFinancingPayableId().getPayment().getSenderId().getCompanyName(),
+                tenure.getFinancingPayableId().getPayment().getRecipientId().getCompanyName(),
+                tenure.getFinancingPayableId().getPayment().getAmount(),
+                0.02*tenure.getFinancingPayableId().getPayment().getAmount()
+        );
     }
 
 
