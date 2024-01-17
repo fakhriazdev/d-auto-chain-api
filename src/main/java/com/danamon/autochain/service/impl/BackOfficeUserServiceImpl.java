@@ -278,6 +278,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
                 .email(data.getEmail())
                 .name(data.getBackOffice().getName())
                 .roles(collect.stream().findFirst().orElse(null))
+                .companies(data.getBackOffice().getBackofficeUserAccesses().stream().map(b -> b.getCompany().getCompany_id()).collect(Collectors.toList()))
                 .build();
     }
 

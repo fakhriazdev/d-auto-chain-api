@@ -1,7 +1,5 @@
 package com.danamon.autochain.util;
 
-import com.danamon.autochain.dto.auth.OtpResponse;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
@@ -9,7 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.Month;
 
-public class InvoiceIdGeneratorUtil {
+public class IdsGeneratorUtil {
     public static String generate(String param1, String param2) throws NoSuchAlgorithmException, IOException, URISyntaxException, InvalidKeyException {
         String rawYear = String.valueOf(LocalDateTime.now().getYear()) ;
         String year = String.valueOf(rawYear.charAt(2) + rawYear.charAt(3));
