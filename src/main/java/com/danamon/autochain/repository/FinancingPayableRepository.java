@@ -23,10 +23,10 @@ public interface FinancingPayableRepository extends JpaRepository<FinancingPayab
     List<FinancingPayable> findAllByCompanyAndStatusIs(Company company, FinancingStatus status2);
 
     //    =============================================================
-    @Query(value = "SELECT company_name, SUM(amount) FROM FinancingPayable GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, SUM(c.amount) FROM t_financing_payable c LEFT JOIN m_company j ON j.company_id = c.company_id GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllAndSumByAmountGroupByCompanyName();
-    @Query(value = "SELECT company_name, AVG(amount) FROM FinancingPayable GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, AVG(c.amount) FROM t_financing_receivable c LEFT JOIN m_company j ON j.company_id = c.company_id GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllByAverageSumGroupByCompanyName();
-    @Query(value = "SELECT company_name, COUNT(*) FROM FinancingPayable WHERE status = :status GROUP BY company_name", nativeQuery = true)
+    @Query(value = "SELECT j.company_name, COUNT(*) FROM t_financing_receivable c LEFT JOIN m_company j ON j.company_id = c.company_id WHERE c.status = :status GROUP BY j.company_name", nativeQuery = true)
     List<Object[]> findAllByStatusGroupByCompanyName(@Param("status") String status);
 }
