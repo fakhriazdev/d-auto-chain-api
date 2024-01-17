@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @RequestMapping("/api/user-dashboard")
-@PreAuthorize("hasAnyAuthority('SUPER_USER')")
+@PreAuthorize("hasAnyAuthority('SUPER_USER', 'FINANCE_STAFF', 'INVOICE_STAFF', 'PAYMENT_STAFF')")
 public class UserDashboardController {
     private final PaymentService paymentService;
     private final InvoiceService invoiceService;
