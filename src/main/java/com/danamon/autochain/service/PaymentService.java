@@ -22,10 +22,8 @@ public interface PaymentService {
 //    List<PaymentResponse> getHistoryPayments(SearchPaymentRequest request);
     PaymentResponse changeMethodPayment(PaymentChangeMethodRequest request);
     LimitResponse getLimitDashboard();
-
     PaymentDetailFinancing getPaymentDetailFinancing(Payment payment);
     InvoiceDetailResponse getPaymentDetailInvoice(Payment payment);
     Payment getPaymentDetailType(String transactionId);
-
-
+    List<PaymentResponse> getPaymentForFinancingPayable();
 }

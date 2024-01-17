@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.payment.PaymentMethod;
+import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.dto.Invoice.ItemList;
@@ -241,7 +242,7 @@ public class PaymentServiceImpl implements PaymentService {
         String recipient = "";
         if(request != null) {
             if(request.getGroupBy().equals("payable")) {
-                recipient = payment.getSenderId().getCompanyName();
+                recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON";
             } else {
                 recipient = payment.getRecipientId().getCompanyName();
             }
@@ -249,9 +250,8 @@ public class PaymentServiceImpl implements PaymentService {
             Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
-            recipient = Objects.equals(user.getCompany(), payment.getSenderId()) ? payment.getRecipientId().getCompanyName() : payment.getSenderId().getCompanyName();
+            recipient = Objects.equals(user.getCompany(), payment.getSenderId()) ? payment.getRecipientId().getCompanyName() : (payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON");
         }
-
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .transactionId(payment.getPaymentId())
@@ -365,5 +365,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment getPaymentDetailType(String paymentId) {
         return paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+    }
+
+    @Override
+    public List<PaymentResponse> getPaymentForFinancingPayable() {
+        List<Payment> payments = paymentRepository.findAllByStatusInAndAmountGreaterThanEqual(List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L);
+        return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }
 }
