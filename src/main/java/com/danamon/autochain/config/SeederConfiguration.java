@@ -11,6 +11,7 @@ import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
@@ -754,5 +755,23 @@ public class SeederConfiguration implements CommandLineRunner {
         createBackoffice("ca_1", "Credit Analyst A", "ca@gmail.com","CREDIT_ANALYST", null);
 
         createBackoffice("rm_1", "Relation Manager A", "rm@gmail.com","RELATIONSHIP_MANAGER", List.of("GAJ456"));
+    }
+
+    private void InvoiceSeeder(){
+
+    }
+
+    private void paymentSeeder(){
+
+    }
+
+    private void generateInvoice(){
+        Invoice.builder()
+                .build();
+    }
+
+
+    private void generatePayment(){
+
     }
 }
