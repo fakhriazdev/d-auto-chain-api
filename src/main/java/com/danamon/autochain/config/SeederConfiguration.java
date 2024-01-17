@@ -34,14 +34,14 @@ public class SeederConfiguration implements CommandLineRunner {
     private final BCryptUtil bCryptUtil;
 
 //    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
-    private final String bo_email = "rizdaagisa99@gmail.com";
-    private final String bo_username = "rizda backoffice";
-    private final String bo_password = "string";
+    private final String bo_email = "tambunanferdinand1@gmail.com";
+    private final String bo_username = "tambunanferdinand";
+    private final String bo_password = "123456";
 
 //    ====================== USER ACCOUNT as SUPER USER =========================
-    private final String user_email = "rizdaagisa@gmail.com";
-    private final String user_username = "rizda user";
-    private final String user_password = "string";
+    private final String user_email = "oreofinalprojectdtt@gmail.com";
+    private final String user_username = "oreofinalprojectdtt";
+    private final String user_password = "123456";
 
     @Override
     public void run(String... args) {
