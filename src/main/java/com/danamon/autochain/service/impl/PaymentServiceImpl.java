@@ -241,7 +241,7 @@ public class PaymentServiceImpl implements PaymentService {
         String recipient = "";
         if(request != null) {
             if(request.getGroupBy().equals("payable")) {
-                recipient = payment.getSenderId().getCompanyName();
+                recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON";
             } else {
                 recipient = payment.getRecipientId().getCompanyName();
             }
@@ -251,7 +251,6 @@ public class PaymentServiceImpl implements PaymentService {
 
             recipient = Objects.equals(user.getCompany(), payment.getSenderId()) ? payment.getRecipientId().getCompanyName() : payment.getSenderId().getCompanyName();
         }
-
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .transactionId(payment.getPaymentId())

@@ -59,7 +59,7 @@ public class SeederConfiguration implements CommandLineRunner {
             newBackOfficeSeeder();
 //            userSeeder();
             newUserSeeder();
-//            invoiceAndPaymentSeeder();
+            invoiceAndPaymentSeeder();
         }
     }
 
@@ -539,8 +539,8 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void invoiceAndPaymentSeeder() {
-        Company company = companyService.getById("ROO123");
-        Company partner = companyService.getById("ROO321");
+        Company company = companyService.getById("AST123");
+        Company partner = companyService.getById("ITA567");
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
