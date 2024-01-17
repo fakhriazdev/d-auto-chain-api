@@ -110,7 +110,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
             validationUtil.validate(backOfficeUserRequest);
             Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-            Roles roles = rolesRepository.findById(backOfficeUserRequest.getRolesList()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Role ID Not Found"));
+            Roles roles = rolesRepository.findByRoleName(backOfficeUserRequest.getRolesList()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Role ID Not Found"));
 
             if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && backOfficeUserRequest.getCompanyRequests().isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "You must choose one or more company");
@@ -210,7 +210,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
         List<UserRole> userRoles = new ArrayList<>();
 
         //get role
-        Roles roles = rolesRepository.findById(request.roles().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT))).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
+        Roles roles = rolesRepository.findByRoleName(request.roles().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT))).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
 
         //get BackOffice Data
         BackOffice backOffice = backOfficeRepository.findById(request.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
@@ -235,7 +235,8 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
 
         credential.setRoles(userRoles);
 
-        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName())) {
+        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && !
+                request.companies().isEmpty()) {
             // checking company
             List<Company> companies = companyService.findById(request.companies());
 
