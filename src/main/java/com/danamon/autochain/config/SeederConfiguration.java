@@ -10,14 +10,18 @@ import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -32,16 +36,18 @@ public class SeederConfiguration implements CommandLineRunner {
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
     private final BCryptUtil bCryptUtil;
+    private final UserRolesRepository userRolesRepository;
+    private final BackofficeAccessRepository backofficeAccessRepository;
 
-//    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
-    private final String bo_email = "tambunanferdinand1@gmail.com";
-    private final String bo_username = "tambunanferdinand";
-    private final String bo_password = "123456";
+    //    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
+    private final String bo_email = "rizdaagisa99@gmail.com";
+    private final String bo_username = "rizda backoffice";
+    private final String bo_password = "string";
 
-//    ====================== USER ACCOUNT as SUPER USER =========================
-    private final String user_email = "oreofinalprojectdtt@gmail.com";
-    private final String user_username = "oreofinalprojectdtt";
-    private final String user_password = "123456";
+    //    ====================== USER ACCOUNT as SUPER USER =========================
+    private final String user_email = "rizdaagisa@gmail.com";
+    private final String user_username = "rizda user";
+    private final String user_password = "string";
 
     @Override
     public void run(String... args) {
@@ -49,10 +55,12 @@ public class SeederConfiguration implements CommandLineRunner {
         if (byUsername.isEmpty()) {
             rolesSeeder();
             companySeeder();
-            backofficeSeeder();
-            userSeeder();
-            partnershipSeeder();
-            invoiceAndPaymentSeeder();
+            newBackOfficeSeeder();
+//            backofficeSeeder();
+//            userSeeder();
+            newUserSeeder();
+//            partnershipSeeder();
+//            invoiceAndPaymentSeeder();
         }
     }
 
@@ -114,7 +122,7 @@ public class SeederConfiguration implements CommandLineRunner {
         backOfficeRepository.saveAndFlush(backOffice2);
     }
 
-    public void userSeeder(){
+    public void userSeeder() {
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
@@ -268,47 +276,106 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     public void companySeeder() {
+        Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
+
+        createCompany("AST123", "PT. Astra Otopart Tbk", "supplychainfinanceadmin@astraotopart.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Raya Pegangsaan Dua Km. 2,2", "010101001", 2000000000d, 2000000000d, "082123456780",
+                "supplychainfinanceadmin@astraotopart.co.id", "scfadminotopart", superUser);
+
+        createCompany("GAJ456", "PT. Gajah Tunggal Tbk", "scfgajahtunggal@gajahtunggal.co.id", "Karawang", "Jawa Barat",
+                "Jl. Trans Heksa, Kawasan Industri KJIE, Wanasari", "010101002", 2000000000d, 2000000000d, "082123456781",
+                "scfgajahtunggal@gajahtunggal.co.id", "scfadmingajahtunggal", superUser);
+
+        createCompany("ADI789", "PT. Adira Finance tbk", "adirafinancescf@adira.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Jl. Jenderal Sudirman No.Kav.25 12, RT.12/RW.1, Kuningan", "010101003", 5000000000d, 5000000000d, "082123456782",
+                "adirafinancescf@adira.co.id", "scfadminadira", superUser);
+
+        createCompany("IND234", "PT. Indospring Tbk", "indospringscfadmin@indospring.co.id", "Kabupaten Bekasi", "Jawa Barat",
+                "Jl. Kalibaru Timur No.10, RT.10/RW.15, Kali Baru", "010101004", 1500000000d, 1500000000d, "082123456783",
+                "indospringscfadmin@indospring.co.id", "scfadminindospring", superUser);
+
+        createCompany("ITA567", "PT. Itama Ranoraya Tbk", "supplychainfinancingadmin@itama.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Jl. Raya Pasar Minggu No.18 21st Floor, RT.1/RW.1, Pejaten Timur, Ps. Minggu", "010101005", 2000000000d, 2000000000d, "082123456784",
+                "supplychainfinancingadmin@itama.co.id", "scfadmin_itama", superUser);
+
+        createCompany("MUL890", "PT. Multistrada Arah Sarana Tbk", "financeadmin@multistrada.co.id", "Jakarta Selatan", "DKI Jakarta",
+                "Michelin Indonesia, RT.4/RW.3, Pondok Indah", "010101006", 2500000000d, 2500000000d, "082123456785",
+                "financeadmin@multistrada.co.id", "scfadmin_multistrada", superUser);
+
+        createCompany("GAR123", "PT Garuda Metalindo Tbk", "sc_finance@garudametalindo.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Kamal Muara No.23, RT.2/RW.2, Kamal Muara", "010101007", 3000000000d, 3000000000d, "082123456786",
+                "sc_finance@garudametalindo.co.id", "scfadmin_metalindo", superUser);
+
+        createCompany("UNI456", "PT United Tractors Tbk", "unitedtractors.scfadmin@ut.co.id", "Jakarta Timur", "DKI Jakarta",
+                "Jl. Raya Bekasi No.KM.22, RT.7/RW.1, Cakung Bar.", "010101008", 4000000000d, 4000000000d, "082123456787",
+                "unitedtractors.scfadmin@ut.co.id", "scfadmin.ut", superUser);
+
+        createCompany("GAY789", "PT. Gaya Makmur Tractors", "financeadmin@gayamakmur.co.id", "Jakarta Barat", "DKI Jakarta",
+                "Jl. Lingkar Luar Barat No.3 Rawa Buaya", "010101009", 3000000000d, 3000000000d, "082123456788",
+                "financeadmin@gayamakmur.co.id", "scfadmin_gayamakmur", superUser);
+
+        createCompany("SEL234", "PT. Selamat Sempurna Tbk", "admin.finance@selamat.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Pluit Raya I No. 1", "010101010", 2000000000d, 2000000000d, "082123456789",
+                "admin.finance@selamat.co.id", "scfadmin_selamatsempurna", superUser);
+
+        createCompany("REL567", "PT. Relindo Multi Traktor Tbk", "scf_admin@relindo.co.id", "Tangerang", "Banten",
+                "Rukan Crown, block C, Jl. Green Lake City Boulevard No.8, RT.004/RW.008", "010101011", 2500000000d, 2500000000d, "082123456790",
+                "scf_admin@relindo.co.id", "scfadmin.relindo", superUser);
+
+        createCompany("DWI890", "PT. Dwimitra Sejahtera BersamaTbk", "admin.scf@dwimitra.co.id", "Jakarta Utara", "DKI Jakarta",
+                "Jl. Pemandangan III No.5B, RT.1/RW.1, Pademangan Bar.", "010101012", 1500000000d, 1500000000d, "082123456791",
+                "admin.scf@dwimitra.co.id", "scfadmin_dwimitra", superUser);
+
+        createCompany("IND345", "PT Indomobil SuksesTbk", "financeadmin@indomobil.co.id", "Jakarta Timur", "DKI Jakarta",
+                "Wisma Indomobil, Jl. Letjen M.T. Haryono No.Kav 8 1 Lt.6, Bidara Cina, Kecamatan Jatinegara", "010101013", 1800000000d, 1800000000d, "082123456791",
+                "financeadmin@indomobil.co.id", "scfadmin_indomobil", superUser);
+    }
+
+    private void createCompany(String companyId, String companyName, String companyEmail, String city, String province,
+                               String address, String accountNumber, Double financingLimit, Double remainingLimit,
+                               String phoneNumber, String userEmail, String username, Roles superUser) {
         Company company = new Company();
-        company.setCompany_id("ROO123");
-        company.setCompanyName("PT. Enigma");
-        company.setCompanyEmail("root");
-        company.setCity("root");
-        company.setAddress("root");
-        company.setAccountNumber("root");
-        company.setFinancingLimit(100000000d);
-        company.setRemainingLimit(50000000d);
-        company.setPhoneNumber("root");
-        company.setProvince("root");
+        company.setCompany_id(companyId);
+        company.setCompanyName(companyName);
+        company.setCompanyEmail(companyEmail);
+        company.setCity(city);
+        company.setProvince(province);
+        company.setAddress(address);
+        company.setAccountNumber(accountNumber);
+        company.setFinancingLimit(financingLimit);
+        company.setRemainingLimit(remainingLimit);
+        company.setPhoneNumber(phoneNumber);
 
         companyRepository.saveAndFlush(company);
 
-        Company company2 = new Company();
-        company2.setCompany_id("ROO321");
-        company2.setCompanyName("PT. Camp");
-        company2.setCompanyEmail("root2");
-        company2.setCity("root");
-        company2.setAddress("root");
-        company2.setAccountNumber("root");
-        company2.setFinancingLimit(80000000d);
-        company2.setRemainingLimit(20000000d);
-        company2.setPhoneNumber("root");
-        company2.setProvince("root");
+        List<UserRole> roleUser = new ArrayList<>();
+        Credential userCredential = Credential.builder()
+                .email(userEmail)
+                .username(username)
+                .password(bCryptUtil.hashPassword("oreo123"))
+                .actor(ActorType.USER)
+                .roles(roleUser)
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy(username)
+                .modifiedBy(username)
+                .build();
 
-        companyRepository.saveAndFlush(company2);
+        roleUser.add(
+                UserRole.builder()
+                        .role(superUser)
+                        .credential(userCredential)
+                        .build()
+        );
 
-        Company company3 = new Company();
-        company3.setCompany_id("ROO456");
-        company3.setCompanyName("PT. Toyota");
-        company3.setCompanyEmail("toyota");
-        company3.setCity("root");
-        company3.setAddress("root");
-        company3.setAccountNumber("root");
-        company3.setFinancingLimit(120000000d);
-        company3.setRemainingLimit(40000000d);
-        company3.setPhoneNumber("root");
-        company3.setProvince("root");
+        credentialRepository.saveAndFlush(userCredential);
 
-        companyRepository.saveAndFlush(company3);
+        User user = new User();
+        user.setCompany(company);
+        user.setCredential(userCredential);
+        user.setName(username);
+
+        userRepository.saveAndFlush(user);
     }
 
     public void rolesSeeder() {
@@ -334,16 +401,15 @@ public class SeederConfiguration implements CommandLineRunner {
     private void partnershipSeeder() {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
 
-        Company company = companyService.getById("ROO123");
-        Company partner = companyService.getById("ROO321");
+        Company company = companyService.getById("AST123");
+        Company CompanyPartner = companyService.getById("IND345");
 
-        String id = "CP-ROO123-ROO321";
+        String id = "CP-AST123-IND345";
 
-        System.out.println();
         Partnership partnership = Partnership.builder()
                 .partnershipNo(id)
                 .company(company)
-                .partner(partner)
+                .partner(CompanyPartner)
                 .partnerStatus(PartnershipStatus.IN_PARTNER)
                 .partnerRequestedDate(LocalDateTime.now())
                 .partnerConfirmationDate(null)
@@ -352,6 +418,151 @@ public class SeederConfiguration implements CommandLineRunner {
                 .build();
 
         partnershipRepository.saveAndFlush(partnership);
+
+        Company CompanyPartner2 = companyService.getById("ITA567");
+
+        id = "CP-AST123-ITA567";
+
+        Partnership partnership2 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company)
+                .partner(CompanyPartner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership2);
+
+        Company CompanyPartner3 = companyService.getById("GAR123");
+
+        id = "CP-AST123-GAR123";
+
+        Partnership partnership3 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company)
+                .partner(CompanyPartner3)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership3);
+
+        //=======================================================
+
+        Company company2 = companyService.getById("GAJ456");
+        Company Company2Partner = companyService.getById("IND234");
+
+        id = "CP-GAJ456-IND234";
+
+        Partnership partnership4 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company2)
+                .partner(Company2Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership4);
+
+        Company Company2Partner2 = companyService.getById("MUL890");
+
+        id = "CP-GAJ456-MUL890";
+
+        Partnership partnership5 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company2)
+                .partner(Company2Partner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership5);
+
+        //=======================================================
+
+        Company company3 = companyService.getById("REL567");
+        Company Company3Partner = companyService.getById("UNI456");
+
+        id = "CP-REL567-UNI456";
+
+        Partnership partnership6 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership6);
+
+        Company Company3Partner2 = companyService.getById("SEL234");
+
+        id = "CP-REL567-SEL234";
+
+        Partnership partnership7 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner2)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership7);
+
+        Company Company3Partner3 = companyService.getById("GAR123");
+
+        id = "CP-REL567-GAR123";
+
+        Partnership partnership8 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company3)
+                .partner(Company3Partner3)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership8);
+
+        //=======================================================
+
+        Company company4 = companyService.getById("GAR123");
+        Company Company4Partner = companyService.getById("DWI890");
+
+        id = "CP-GAR123-DWI890";
+
+        Partnership partnership9 = Partnership.builder()
+                .partnershipNo(id)
+                .company(company4)
+                .partner(Company4Partner)
+                .partnerStatus(PartnershipStatus.IN_PARTNER)
+                .partnerRequestedDate(LocalDateTime.now())
+                .partnerConfirmationDate(null)
+                .requestedBy(byUsername.get())
+                .confirmedBy(null)
+                .build();
+
+        partnershipRepository.saveAndFlush(partnership9);
     }
 
     private void invoiceAndPaymentSeeder() {
@@ -433,5 +644,140 @@ public class SeederConfiguration implements CommandLineRunner {
                 .build();
 
         paymentRepository.saveAndFlush(payment2);
+    }
+
+    private void createUser(String username, String name, String email, String company, List<String> handleCompany, List<String> role) {
+        List<UserRole> userRoles = new ArrayList<>();
+
+        Credential credential = Credential.builder()
+                .createdDate(LocalDateTime.now())
+                .email(email)
+                .username(username)
+                .roles(userRoles)
+                .createdBy(username)
+                .actor(ActorType.USER)
+                .password(bCryptUtil.hashPassword("string"))
+                .modifiedBy(username)
+                .modifiedDate(LocalDateTime.now())
+                .build();
+
+        credentialRepository.saveAndFlush(credential);
+
+        Company getCompany = companyRepository.findById(company).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Company Not Found"));
+
+        List<UserAccsess> userAccsesses = new ArrayList<>();
+
+        User user = User.builder()
+                .company(getCompany)
+                .credential(credential)
+                .userAccsess(userAccsesses)
+                .credential(credential)
+                .name(name)
+                .build();
+
+        handleCompany.forEach(c -> {
+            Company get = companyRepository.findById(c).orElseThrow(() -> new EntityNotFoundException("company not found"));
+            userAccsesses.add(
+                    UserAccsess.builder()
+                            .user(user)
+                            .company(get)
+                            .build()
+            );
+        });
+        role.forEach(r ->
+                {
+                    Roles roles = rolesRepository.findByRoleName(r).orElseThrow(() -> new EntityNotFoundException("role not found"));
+                    userRoles.add(
+                            UserRole.builder()
+                                    .credential(credential)
+                                    .role(roles)
+                                    .build()
+                    );
+                }
+        );
+
+        userRepository.saveAndFlush(user);
+        userRolesRepository.saveAllAndFlush(userRoles);
+    }
+
+    private void newUserSeeder(){
+        createUser("oreo_123" , "Oreo Jaya", "oreofinalprojectdtt@gmail.com","AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
+
+        createUser("nand_123" , "Nand", "dinandtambunan28@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
+
+        createUser("abra_123" , "Abraham", "abramyct@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+
+
+        createUser("edia_123" , "Ediashta", "ediashtarevin77@gmail.com","GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+
+        createUser("jere_123" , "Jeremy", "jeremysilaban3@gmail.com","GAR123", List.of("UNI456"), List.of("INVOICE_STAFF"));
+
+        createUser("oliv_123" , "Oliver", "olivermuhammadf@gmail.com","GAR123", List.of("IND345"), List.of("PAYMENT_STAFF", "FINANCE_STAFF"));
+    }
+
+    private void createBackoffice(String username, String name, String email, String role, List<String> handleCompany){
+        List<UserRole> userRoles = new ArrayList<>();
+
+        Credential credential = Credential.builder()
+                .modifiedDate(LocalDateTime.now())
+                .createdDate(LocalDateTime.now())
+                .createdBy(username)
+                .modifiedDate(LocalDateTime.now())
+                .modifiedBy(username)
+                .actor(ActorType.BACKOFFICE)
+                .roles(userRoles)
+                .email(email)
+                .password(bCryptUtil.hashPassword("string"))
+                .username(username)
+                .build();
+
+        Roles roles = rolesRepository.findByRoleName(role).orElseThrow(() -> new EntityNotFoundException("Role not found"));
+
+        userRoles.add(
+                UserRole.builder()
+                        .role(roles)
+                        .credential(credential)
+                        .build()
+        );
+
+
+        BackOffice backOffice = BackOffice.builder()
+                .name(name)
+                .credential(credential)
+                .build();
+
+        credential.setBackOffice(backOffice);
+
+        credentialRepository.saveAndFlush(credential);
+
+
+        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && ! handleCompany.isEmpty()){
+            List<BackofficeUserAccess> backofficeUserAccesses = new ArrayList<>();
+            handleCompany.forEach(c ->
+                    {
+                        Company company = companyRepository.findById(c).orElseThrow(() -> new EntityNotFoundException("Company With ID " + c + " Not Found"));
+                        backofficeUserAccesses.add(
+                                BackofficeUserAccess.builder()
+                                        .backOffice(backOffice)
+                                        .company(company)
+                                        .build()
+                        );
+                    }
+            );
+            backOffice.setBackofficeUserAccesses(backofficeUserAccesses);
+        }
+
+        backOfficeRepository.saveAndFlush(backOffice);
+        userRolesRepository.saveAllAndFlush(userRoles);
+    }
+
+    private void newBackOfficeSeeder(){
+        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
+
+        createBackoffice("admin_1", "Admin A", "admin@gmail.com","ADMIN", null);
+
+        createBackoffice("ca_1", "Credit Analyst A", "ca@gmail.com","CREDIT_ANALYST", null);
+
+        createBackoffice("rm_1", "Relation Manager A", "rm@gmail.com","RELATIONSHIP_MANAGER", List.of("GAJ456"));
     }
 }
