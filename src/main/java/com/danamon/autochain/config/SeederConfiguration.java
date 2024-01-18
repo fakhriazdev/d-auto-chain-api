@@ -64,16 +64,17 @@ public class SeederConfiguration implements CommandLineRunner {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
+            superBackofficeSeeder();
             companySeeder();
 
-//            superBackofficeSeeder();
-//            newBackOfficeSeeder();
-//            newUserSeeder();
-//            userSeeder();
-//            superUserSeeder();
+            newBackOfficeSeeder();
+            newUserSeeder();
 
-//            invoiceSeeder();
-//            paymentSeeder();
+//            userSeeder();
+            superUserSeeder();
+
+            invoiceSeeder();
+            paymentSeeder();
 //            invoiceAndPaymentSeeder();
         }
     }
