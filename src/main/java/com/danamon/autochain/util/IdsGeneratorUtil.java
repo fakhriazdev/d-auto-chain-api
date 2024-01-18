@@ -15,7 +15,7 @@ public class IdsGeneratorUtil {
     public static String generate(String param1, String param2) {
         try {
             String rawYear = String.valueOf(LocalDateTime.now().getYear()) ;
-            String year = String.valueOf(rawYear.charAt(2) + rawYear.charAt(3));
+            String year = String.valueOf(rawYear.charAt(2)) + String.valueOf(rawYear.charAt(3));
             String month = getMonth(LocalDateTime.now().getMonth());
             String code = OTPGenerator.generateOtp("ids").getCode();
 
