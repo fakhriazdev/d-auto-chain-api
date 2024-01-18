@@ -22,6 +22,7 @@ import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
+import com.danamon.autochain.util.IdsGeneratorUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -103,6 +104,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         //setup Invoice
         Invoice invoice = Invoice.builder()
+                .invoiceId(IdsGeneratorUtil.generate("INV", currentUserLogin.getCompany().getCompany_id()))
                 .senderId(currentUserLogin.getCompany())
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())

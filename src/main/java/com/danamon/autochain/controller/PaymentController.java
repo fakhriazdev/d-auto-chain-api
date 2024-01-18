@@ -2,20 +2,13 @@ package com.danamon.autochain.controller;
 
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.DataResponse;
-import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
-import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
-import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
-import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.PagingResponse;
-import com.danamon.autochain.dto.company.CompanyResponse;
-import com.danamon.autochain.dto.company.UpdateCompanyRequest;
 import com.danamon.autochain.dto.payment.PaymentChangeMethodRequest;
 import com.danamon.autochain.dto.payment.PaymentDetailFinancing;
 import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.dto.payment.SearchPaymentRequest;
 import com.danamon.autochain.entity.Payment;
-import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.service.impl.PaymentServiceImpl;
 import com.danamon.autochain.util.PagingUtil;
@@ -23,11 +16,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -189,7 +179,7 @@ public class PaymentController {
 
     @PutMapping("/payment/financing/{id}")
     public ResponseEntity<?> paymentProceedFinancing(@PathVariable(name = "id") String id){
-        PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.updatePaymentFinancing(id);
+        PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.proceedPayment(id);
 
         DataResponse<PaymentServiceImpl.UpdatePaymentResponse> build = DataResponse.<PaymentServiceImpl.UpdatePaymentResponse>builder()
                 .data(updatePaymentResponse)

@@ -14,6 +14,6 @@ public class PaymentDetailFinancing {
     private String financingId;
     private String tenor;
     private String supplier;
-    private Long amount;
+    private Double amount;
     private String paymentMethod;
 }
