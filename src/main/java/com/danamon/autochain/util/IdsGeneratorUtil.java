@@ -19,9 +19,9 @@ public class IdsGeneratorUtil {
             String month = getMonth(LocalDateTime.now().getMonth());
             String code = OTPGenerator.generateOtp("ids").getCode();
 
-            return param1 + "/" +
-                    param2 + "/" +
-                    year + month + "/" +
+            return param1 + "-" +
+                    param2 + "-" +
+                    year + month + "-" +
                     code;
         }catch (NoSuchAlgorithmException | IOException | URISyntaxException | InvalidKeyException e){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot Generate ID");

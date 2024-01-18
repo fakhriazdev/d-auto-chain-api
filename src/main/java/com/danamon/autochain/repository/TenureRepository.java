@@ -17,4 +17,6 @@ public interface TenureRepository extends JpaRepository<Tenure,String> {
     List<Tenure> findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(FinancingPayable financingPayableId, TenureStatus status);
 
     Optional<Tenure> findByFinancingPayableIdAndStatusIs(FinancingPayable financingPayableId, TenureStatus status);
+
+    List<Tenure> findAllByFinancingPayableIdOrderByDueDateAsc(FinancingPayable financingPayableId);
 }
