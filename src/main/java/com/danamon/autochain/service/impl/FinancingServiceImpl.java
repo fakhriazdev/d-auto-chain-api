@@ -4,6 +4,8 @@ import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
+import com.danamon.autochain.constant.invoice.InvoiceStatus;
+import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -238,6 +240,7 @@ public class FinancingServiceImpl implements FinancingService {
 
             financingReceivables.add(
                     FinancingReceivable.builder()
+                            .financingId(IdsGeneratorUtil.generate("FIN",company.getCompanyName()))
                             .invoice(invoice)
                             .company(company)
                             .status(FinancingStatus.PENDING)
@@ -640,7 +643,9 @@ public class FinancingServiceImpl implements FinancingService {
 
     public AcceptResponse receivableFinancing(AcceptRequest request){
         FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-
+        if(financingReceivable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.WAITING_STATUS)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice not yet approved by company recipient");
+        if(financingReceivable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already rejected by company recipient");
+        if(financingReceivable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already canceled by company sender");
         if(financingReceivable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
 
         Payment payment = financingReceivable.getInvoice().getPayment();
