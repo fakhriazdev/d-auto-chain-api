@@ -4,6 +4,7 @@ import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
 import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.financing.FinancingType;
+import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
@@ -16,6 +17,7 @@ import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.service.TransactionService;
+import com.danamon.autochain.util.IdsGeneratorUtil;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -91,10 +93,12 @@ public class FinancingServiceImpl implements FinancingService {
 //                    (interest * Math.pow((1 + interest), request.getTenure())) /
 //                            ((Math.pow(1 + interest, request.getTenure())) - 1)
 //            );
-
+            String id = IdsGeneratorUtil.generate("FIN", company.getCompanyName());
             Payment payment = paymentRepository.findById(request.getPayment_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid payment id : " + request.getPayment_id()));
+
             financingPayableRepository.saveAndFlush(
                     FinancingPayable.builder()
+                            .financingPayableId(id)
                             .company(company)
                             .invoice(payment.getInvoice())
                             .payment(payment)
@@ -102,11 +106,12 @@ public class FinancingServiceImpl implements FinancingService {
                             .createdDate(LocalDateTime.now())
                             .amount(request.getAmount())
                             .monthly_installment(request.getMonthly_instalment())
-                            .interest(loanAmount * interest)
+                            .interest(interest)
                             .total(loanAmount + (loanAmount * interest))
                             .period_number(0)
                             .tenure(request.getTenure())
                             .status(FinancingStatus.PENDING)
+                            .paymentMethod(PaymentMethod.valueOf(request.getPayment_method()))
                             .build()
             );
         });
@@ -386,107 +391,9 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public AcceptResponse backoffice_accept(AcceptRequest request) {
         if (request.getType().equalsIgnoreCase("payable")) {
-            FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-
-            if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
-
-            Double tenure_amount = (double) (financingPayable.getAmount() / financingPayable.getTenure());
-
-            for (int i = 1; i <= financingPayable.getTenure(); i++) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(new Date());
-                calendar.add(Calendar.MONTH, i);
-                Date dueDate = calendar.getTime();
-
-                // Set the tenure status
-                TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.UNPAID;
-
-                tenureRepository.saveAndFlush(
-                        Tenure.builder()
-                                .financingPayableId(financingPayable)
-                                .dueDate(dueDate)
-                                .status(tenureStatus)
-                                .Amount(tenure_amount)
-                                .build()
-                );
-            }
-
-            paymentService.deletePayment(financingPayable.getPayment());
-            financingPayable.setStatus(FinancingStatus.ONGOING);
-            financingPayableRepository.saveAndFlush(financingPayable);
-
-            return AcceptResponse.builder().build();
-
+            return payableFinancing(request);
         } else if (request.getType().equalsIgnoreCase("receivable")) {
-            FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-
-            if(financingReceivable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
-
-            Payment payment = financingReceivable.getInvoice().getPayment();
-
-            Long financing_amount = financingReceivable.getAmount();
-            Long invoice_amount = financingReceivable.getInvoice().getAmount();
-            Long payable_amount = invoice_amount - financing_amount;
-
-            if (payable_amount < 0 || financing_amount > invoice_amount) {
-                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Invalid financing request amount");
-            }
-
-            PaymentType partialFinancing = PaymentType.PARTIAL_FINANCING;
-            AcceptDetailResponse buyyer = new AcceptDetailResponse();
-
-            if (payable_amount == 0) {
-                paymentService.deletePayment(payment);
-                partialFinancing = PaymentType.FINANCING;
-            }
-
-//            ========================== PARTIAL DANAMON ==========================
-//            buat partial payment danamon & seller
-            if (financing_amount < invoice_amount) {
-                payment.setAmount(payable_amount);
-                payment.setType(PaymentType.PARTIAL_FINANCING);
-                paymentRepository.saveAndFlush(payment);
-
-                transactionService.createTransaction(
-                        TransactionRequest.builder()
-                                .recipientId(financingReceivable.getInvoice().getRecipientId())
-                                .amount(payable_amount)
-                                .createdDate(new Date())
-                                .paymentStatus(PaymentStatus.COMPLETED)
-                                .financingType(FinancingType.PAYABLE)
-                                .build()
-                );
-
-                buyyer.setFinancingType(FinancingType.PAYABLE.name());
-                buyyer.setAmountPaid(payable_amount);
-                buyyer.setCompany_name(financingReceivable.getInvoice().getRecipientId().getCompanyName());
-            }
-
-            transactionService.createTransaction(
-                    TransactionRequest.builder()
-                            .recipientId(financingReceivable.getInvoice().getSenderId())
-                            .amount(financing_amount)
-                            .createdDate(new Date())
-                            .paymentStatus(PaymentStatus.COMPLETED)
-                            .financingType(FinancingType.RECEIVABLE)
-                            .build()
-            );
-
-            financingReceivable.setStatus(FinancingStatus.ONGOING);
-            financingReceivableRepository.saveAndFlush(financingReceivable);
-
-            AcceptDetailResponse seller = AcceptDetailResponse.builder()
-                    .company_name(financingReceivable.getInvoice().getSenderId().getCompanyName())
-                    .amountPaid(financing_amount)
-                    .financingType(FinancingType.RECEIVABLE.name())
-                    .build();
-
-            return AcceptResponse.builder()
-                    .payment_type(partialFinancing.name())
-                    .buyyer(buyyer)
-                    .seller(seller)
-                    .build();
-
+            return receivableFinancing(request);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type invalid");
         }
@@ -675,10 +582,130 @@ public class FinancingServiceImpl implements FinancingService {
     @Override
     public Long getTotalFinancingEarlyDisbursement() {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         return financingReceivableRepository.findAllByCompanyAndStatusIsAndStatusIs(principal.getUser().getCompany(), FinancingStatus.ONGOING, FinancingStatus.COMPLETED).orElse(0L);
     }
 
     public record BackofficeFinanceResponse(LocalDateTime financeDate, String issuer, FinancingStatus status) {
+    }
+
+    public AcceptResponse payableFinancing(AcceptRequest request){
+        FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+
+        if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
+        Double tenure_amount = financingPayable.getTotal() / financingPayable.getTenure();
+
+        for (int i = 1; i <= financingPayable.getTenure(); i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            calendar.add(Calendar.MONTH, i);
+            Date dueDate = calendar.getTime();
+
+            // Set the tenure status
+            TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.UNPAID;
+
+            tenureRepository.saveAndFlush(
+                    Tenure.builder()
+                            .financingPayableId(financingPayable)
+                            .dueDate(dueDate)
+                            .status(tenureStatus)
+                            .Amount(tenure_amount)
+                            .build()
+            );
+        }
+
+        Payment payment = financingPayable.getPayment();
+        payment.setType(PaymentType.FINANCING);
+        payment.setSenderId(null);
+        paymentRepository.saveAndFlush(payment);
+
+        financingPayable.setStatus(FinancingStatus.ONGOING);
+        financingPayableRepository.saveAndFlush(financingPayable);
+
+        AcceptDetailResponse buyyer = new AcceptDetailResponse();
+        buyyer.setFinancingType(FinancingType.PAYABLE.name());
+        buyyer.setAmountPaid(financingPayable.getTotal().longValue());
+        buyyer.setCompany_name(financingPayable.getInvoice().getRecipientId().getCompanyName());
+
+        AcceptDetailResponse seller = AcceptDetailResponse.builder()
+                .company_name(financingPayable.getInvoice().getSenderId().getCompanyName())
+                .amountPaid(financingPayable.getAmount())
+                .financingType(FinancingType.RECEIVABLE.name())
+                .build();
+
+        return AcceptResponse.builder()
+                .payment_type(FinancingType.PAYABLE.name())
+                .buyyer(buyyer)
+                .seller(seller)
+                .build();
+    }
+
+    public AcceptResponse receivableFinancing(AcceptRequest request){
+        FinancingReceivable financingReceivable = financingReceivableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
+
+        if(financingReceivable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
+
+        Payment payment = financingReceivable.getInvoice().getPayment();
+
+        Long financing_amount = financingReceivable.getAmount();
+        Long invoice_amount = financingReceivable.getInvoice().getAmount();
+        Long payable_amount = invoice_amount - financing_amount;
+
+        if (payable_amount < 0 || financing_amount > invoice_amount) {
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Invalid financing request amount with amount : "+financing_amount);
+        }
+
+        PaymentType partialFinancing = PaymentType.PARTIAL_FINANCING;
+        AcceptDetailResponse buyyer = new AcceptDetailResponse();
+
+        if (payable_amount == 0) {
+            partialFinancing = PaymentType.FINANCING;
+        }
+
+//            ========================== PARTIAL DANAMON ==========================
+//            buat partial payment ke danamon & seller
+        if (financing_amount < invoice_amount) {
+            payment.setAmount(payable_amount);
+            payment.setType(PaymentType.PARTIAL_FINANCING);
+            paymentRepository.saveAndFlush(payment);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            calendar.add(Calendar.MONTH, 1);
+            Date dueDate = calendar.getTime();
+
+            paymentRepository.saveAndFlush(Payment.builder()
+                            .paymentId(IdsGeneratorUtil.generate("PAY","DANAMON"))
+                            .recipientId(financingReceivable.getInvoice().getRecipientId())
+                            .senderId(null)
+                            .invoice(financingReceivable.getInvoice())
+                            .type(PaymentType.PARTIAL_FINANCING)
+                            .status(PaymentStatus.UNPAID)
+                            .method(payment.getMethod())
+                            .amount(financing_amount)
+                            .createdDate(new Date())
+                            .dueDate(dueDate)
+                            .paidDate(null)
+                    .build());
+
+            buyyer.setFinancingType(FinancingType.PAYABLE.name());
+            buyyer.setAmountPaid(payable_amount);
+            buyyer.setCompany_name(financingReceivable.getInvoice().getRecipientId().getCompanyName());
+        }
+
+        financingReceivable.setStatus(FinancingStatus.ONGOING);
+        financingReceivableRepository.saveAndFlush(financingReceivable);
+
+        AcceptDetailResponse seller = AcceptDetailResponse.builder()
+                .company_name(financingReceivable.getInvoice().getSenderId().getCompanyName())
+                .amountPaid(financing_amount)
+                .financingType(FinancingType.RECEIVABLE.name())
+                .build();
+
+        return AcceptResponse.builder()
+                .payment_type(partialFinancing.name())
+                .buyyer(buyyer)
+                .seller(seller)
+                .build();
     }
 }

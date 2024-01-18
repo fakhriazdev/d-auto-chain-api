@@ -66,13 +66,12 @@ public class SeederConfiguration implements CommandLineRunner {
             rolesSeeder();
             superBackofficeSeeder();
             companySeeder();
+            superUserSeeder();
 
             newBackOfficeSeeder();
             newUserSeeder();
 
 //            userSeeder();
-            superUserSeeder();
-
             invoiceSeeder();
             paymentSeeder();
 //            invoiceAndPaymentSeeder();

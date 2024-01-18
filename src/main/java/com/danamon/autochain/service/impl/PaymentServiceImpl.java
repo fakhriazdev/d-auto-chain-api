@@ -19,6 +19,7 @@ import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.TenureRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.*;
+import com.danamon.autochain.util.IdsGeneratorUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +60,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void createPayment(CreatePaymentRequest request) {
+        String id = IdsGeneratorUtil.generate("PAY", request.getSenderPayment());
         Payment payment = Payment.builder()
+                .paymentId(id)
                 .amount(request.getAmount())
                 .dueDate(request.getDueDate())
                 .invoice(request.getInvoice())

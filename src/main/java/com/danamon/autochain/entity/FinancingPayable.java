@@ -1,6 +1,7 @@
 package com.danamon.autochain.entity;
 
 import com.danamon.autochain.constant.financing.FinancingStatus;
+import com.danamon.autochain.constant.payment.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,6 +53,9 @@ public class FinancingPayable extends HistoryLog{
 
     @Column
     private Double monthly_installment; // jumlah amount cicilan perbulan
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     @Column
     private Integer period_number; // intallment progress count, status will change if matches with installments number
