@@ -20,8 +20,6 @@ import java.util.Date;
 @Table(name = "t_payment")
 public class Payment {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
     private String paymentId;
 
     @OneToOne

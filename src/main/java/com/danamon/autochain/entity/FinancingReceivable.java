@@ -19,7 +19,6 @@ import java.util.Date;
 @Table(name = "t_financing_receivable")
 public class FinancingReceivable extends HistoryLog {
     @Id
-    @UuidGenerator
     @Column(name = "financingId", length = 128, nullable = false)
     private String financingId;
 
