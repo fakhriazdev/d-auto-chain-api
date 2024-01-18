@@ -151,13 +151,27 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/request-financing")
-    public ResponseEntity<?> getRequestFinancingPayment(){
+    @GetMapping("/request-financing-payable")
+    public ResponseEntity<?> getRequestFinancingPayable(){
         List<PaymentResponse> paymentForFinancingPayableResponse = paymentService.getPaymentForFinancingPayable();
         DataResponse<List<PaymentResponse>> response = DataResponse.<List<PaymentResponse>>builder()
                 .message("Success get payments")
                 .statusCode(HttpStatus.OK.value())
                 .data(paymentForFinancingPayableResponse)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @GetMapping("/request-financing-receivable")
+    public ResponseEntity<?> getRequestFinancingReceivable(){
+        List<PaymentResponse> paymentForFinancingReceivableResponse = paymentService.getPaymentForFinancingReceivable();
+        DataResponse<List<PaymentResponse>> response = DataResponse.<List<PaymentResponse>>builder()
+                .message("Success get payments")
+                .statusCode(HttpStatus.OK.value())
+                .data(paymentForFinancingReceivableResponse)
                 .build();
 
         return ResponseEntity

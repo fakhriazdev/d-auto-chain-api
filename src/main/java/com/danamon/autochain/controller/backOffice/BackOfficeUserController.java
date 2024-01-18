@@ -31,7 +31,7 @@ import java.util.List;
 @RequestMapping("/api/backoffice/users")
 @SecurityRequirement(name = "Bearer Authentication")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
+@PreAuthorize("hasAnyAuthority('SUPER_ADMIN','ADMIN','RELATIONSHIP_MANAGER','CREDIT_ANALYST')")
 public class BackOfficeUserController {
     private final BackOfficeUserService backOfficeUserService;
     private final CompanyService companyService;

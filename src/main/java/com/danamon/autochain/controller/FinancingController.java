@@ -52,7 +52,7 @@ public class FinancingController {
     }
 
     @GetMapping("/payable")
-    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN', 'FINANCE_STAFF')")
     public ResponseEntity<?> get_All_Financing_Payable(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
@@ -115,7 +115,7 @@ public class FinancingController {
     }
 
     @GetMapping("/receivable")
-    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF','SUPER_USER','SUPER_ADMIN','FINANCE_STAFF')")
     public ResponseEntity<?> get_all_financing_receivable(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
