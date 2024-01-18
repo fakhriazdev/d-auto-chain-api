@@ -10,13 +10,11 @@ import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.controller.dashboard.BackOfficeDashboardController;
 import com.danamon.autochain.dto.backoffice_dashboard.PerformanceCompanyResponse;
 import com.danamon.autochain.dto.financing.*;
-import com.danamon.autochain.dto.transaction.TransactionRequest;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.service.PaymentService;
-import com.danamon.autochain.service.TransactionService;
 import com.danamon.autochain.util.IdsGeneratorUtil;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +43,6 @@ public class FinancingServiceImpl implements FinancingService {
     private final UserRepository userRepository;
     private final CompanyService companyService;
     private final PaymentService paymentService;
-    private final TransactionService transactionService;
 
     @Override
     public Map<String, Double> get_limit() {
