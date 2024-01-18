@@ -18,8 +18,6 @@ import java.util.Date;
 @Table(name = "t_invoice")
 public class Invoice extends HistoryLog {
     @Id
-    @GenericGenerator(name = "uuid", strategy = "uuid")
-    @GeneratedValue(generator = "uuid")
     @Column(name = "invoiceId", nullable = false)
     private String invoiceId;
 

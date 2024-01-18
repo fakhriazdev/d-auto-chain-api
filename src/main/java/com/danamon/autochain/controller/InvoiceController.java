@@ -11,6 +11,7 @@ import com.danamon.autochain.dto.PagingResponse;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -100,8 +101,8 @@ public class InvoiceController {
             return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{invoice_id}")
-    public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "invoice_id")String invoice_id){
+    @GetMapping("/detail")
+    public ResponseEntity<?> invoiceDetailPayable(@RequestParam(name = "invoice_id")String invoice_id){
         InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(invoice_id);
         DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
                 .statusCode(HttpStatus.OK.value())
