@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
+import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -12,10 +13,7 @@ import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
-import com.danamon.autochain.repository.FinancingPayableRepository;
-import com.danamon.autochain.repository.PaymentRepository;
-import com.danamon.autochain.repository.TenureRepository;
-import com.danamon.autochain.repository.UserRepository;
+import com.danamon.autochain.repository.*;
 import com.danamon.autochain.service.*;
 import com.danamon.autochain.util.IdsGeneratorUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,6 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final InvoiceService invoiceService;
     private final FinancingPayableRepository financingPayableRepository;
     private final TenureRepository tenureRepository;
+    private final CompanyRepository companyRepository;
     private final AuthService authService;
 
     @Override
@@ -427,79 +426,100 @@ public class PaymentServiceImpl implements PaymentService {
     public UpdatePaymentResponse proceedPayment(String id) {
         Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
+        if (payment.getType().equals(PaymentType.INVOICING)){
+            return proceedPaymentInvoicing(payment);
+        } else if (payment.getType().equals(PaymentType.FINANCING_PAYABLE)) {
+            return proceedPaymentTenure(payment);
+        } else if (payment.getType().equals(PaymentType.PARTIAL_FINANCING)) {
+            return proceedPaymentInvoicing(payment);
+        } else {
+            return proceedPaymentInvoicing(payment);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UpdatePaymentResponse proceedPaymentInvoicing(Payment payment) {
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-
-        // get list of payment
-        Tenure t = tenureRepository.findByFinancingPayableIdAndStatusIs(payment.getFinancingPayable(), TenureStatus.UNPAID).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Not Found"));
-        t.setStatus(TenureStatus.COMPLETED);
-
-        if (t.getDueDate().after(from)){
-            payment.setStatus(PaymentStatus.LATE_PAID);
-        }
-
-        tenureRepository.saveAndFlush(t);
-        paymentRepository.saveAndFlush(payment);
-
-        // get current unpaid
-        List<Tenure> tenures = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(payment.getFinancingPayable(), TenureStatus.UPCOMING);
-        if (tenures.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payments Is Completed");
-        }
-        Tenure setNextTenure = tenures.stream().findFirst().get();
-
-        setNextTenure.setStatus(TenureStatus.UPCOMING);
-        tenureRepository.saveAndFlush(setNextTenure);
-
-        // get change status unpaid to paid
-        // check if payment have next payment
-
-        // if there have payment
-        // set next payment to unpaid
-
-        // if not have next payment
-        // set payment status to complete
-
-        // save payment
-        /*
-
-        FinancingPayable financingPayable = financingPayableRepository.findByPayment(payment).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Not Found"));
-
-        Tenure tenure = tenureRepository.findByFinancingPayableIdAndStatusIs(financingPayable, TenureStatus.UNPAID).orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Payment Not Found, Please Contact Admin"));
-
-        tenure.setPaidDate(from);
-        tenure.setStatus(TenureStatus.COMPLETED);
-
-        if (tenure.getDueDate().after(from)){
-            payment.setStatus(PaymentStatus.LATE_PAID);
-        }else{
+        if (payment.getDueDate().before(from)) {
             payment.setStatus(PaymentStatus.PAID);
+            payment.getInvoice().setStatus(InvoiceStatus.PAID);
+        }else {
+            payment.setStatus(PaymentStatus.LATE_PAID);
+            payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+        }
+        payment.setPaidDate(from);
+        paymentRepository.save(payment);
+        return new UpdatePaymentResponse(
+                payment.getPaymentId(),
+                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
+                payment.getMethod().name(),
+                payment.getSenderId().getCompanyName(),
+                payment.getRecipientId().getCompanyName(),
+                payment.getAmount(),
+                0.02 * payment.getAmount()
+        );
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UpdatePaymentResponse proceedPaymentTenure(Payment payment) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        // get data financing payable
+        FinancingPayable financingPayable = payment.getFinancingPayable();
+        List<Tenure> tenures = tenureRepository.findAllByFinancingPayableIdOrderByDueDateAsc(financingPayable);
+        // check if exist
+        if (tenures.isEmpty()) throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment`s Not Found");
+
+        // get tenures with status unpaid
+        Tenure tenure = tenures.stream().filter(t -> t.getStatus() == TenureStatus.UNPAID).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "error when making payment. Payments with unpaid status were not found"));
+
+        tenure.setStatus(TenureStatus.COMPLETED);
+        tenure.setPaidDate(from);
+
+        if (tenure.getDueDate().before(from)){
+            financingPayable.getInvoice().setStatus(InvoiceStatus.PAID);
+        }else{
+            financingPayable.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+            financingPayable.setModifiedBy(principal.getUsername2());
+            financingPayable.setModifiedDate(LocalDateTime.now());
         }
 
         tenureRepository.saveAndFlush(tenure);
 
-        // get tenure next month
-        Optional<Tenure> tenureNextMonth = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.UPCOMING).stream().findFirst();
+        // get next tenure unpaid
+        List<Tenure> nextMonthList = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.UPCOMING);
 
-        if (tenureNextMonth.isEmpty()){
-            updatePaymentInvoicing(payment.getPaymentId());
+        // if it doesn`t exist it`s mean payment are completed
+        if (nextMonthList.isEmpty()){
+            financingPayable.setStatus(FinancingStatus.COMPLETED);
+
+            Company company = financingPayable.getCompany();
+
+            Double totalPayable = financingPayable.getAmount().doubleValue();
+            Double remainingLimit = company.getRemainingLimit();
+
+            if (totalPayable + remainingLimit >= company.getFinancingLimit()) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred in the payment process.");
+
+            company.setRemainingLimit(totalPayable + remainingLimit);
+
+            companyRepository.save(company);
+        }else{
+            Tenure nextMonthTenure = nextMonthList.stream().findFirst().get();
+            nextMonthTenure.setStatus(TenureStatus.UNPAID);
+            tenureRepository.save(nextMonthTenure);
         }
 
-        Tenure setNextTenure = tenureNextMonth.get();
-
-        setNextTenure.setStatus(TenureStatus.UNPAID);
-
-        tenureRepository.save(setNextTenure);
-*/
-
         return new UpdatePaymentResponse(
-                t.getFinancingPayableId().getPayment().getPaymentId(),
+                payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
-                t.getFinancingPayableId().getPayment().getMethod().name(),
-                t.getFinancingPayableId().getPayment().getSenderId().getCompanyName(),
-                t.getFinancingPayableId().getPayment().getRecipientId().getCompanyName(),
-                t.getFinancingPayableId().getPayment().getAmount(),
-                0.02*t.getFinancingPayableId().getPayment().getAmount()
-        );
+                payment.getMethod().name(),
+                payment.getInvoice().getSenderId().getCompanyName(),
+                payment.getInvoice().getRecipientId().getCompanyName(),
+                tenure.getAmount().longValue(),
+                0.02 * tenure.getAmount()
+                );
     }
 
 
