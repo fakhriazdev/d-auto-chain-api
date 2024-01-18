@@ -25,4 +25,7 @@ public interface PaymentService {
     List<PaymentResponse> getPaymentForFinancingPayable();
     PaymentServiceImpl.UpdatePaymentResponse updatePaymentInvoicing(String id);
     PaymentServiceImpl.UpdatePaymentResponse proceedPayment(String id);
+
+    PaymentServiceImpl.UpdatePaymentResponse proceedPaymentInvoicing(Payment payment);
+    PaymentServiceImpl.UpdatePaymentResponse proceedPaymentTenure(Payment payment);
 }

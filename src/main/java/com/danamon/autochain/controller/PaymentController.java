@@ -188,4 +188,15 @@ public class PaymentController {
                 .build();
         return ResponseEntity.ok(build);
     }
+
+    @PutMapping("/payment/{id}")
+    public ResponseEntity<?> proceedPayment(@PathVariable String id){
+        PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.proceedPayment(id);
+        DataResponse<PaymentServiceImpl.UpdatePaymentResponse> response = DataResponse.<PaymentServiceImpl.UpdatePaymentResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Payment Success!")
+                .data(updatePaymentResponse)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 }
