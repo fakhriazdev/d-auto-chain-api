@@ -50,13 +50,13 @@ public class SeederConfiguration implements CommandLineRunner {
     private final BackofficeAccessRepository backofficeAccessRepository;
 
     //    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
-    private final String bo_email = "rizdaagisa99@gmail.com";
-    private final String bo_username = "rizda backoffice";
+    private final String bo_email = "oreofinalprojectdtt@gmail.com";
+    private final String bo_username = "oreofinalprojectdtt backoffice";
     private final String bo_password = "string";
 
     //    ====================== USER ACCOUNT as SUPER USER =========================
-    private final String user_email = "rizdaagisa@gmail.com";
-    private final String user_username = "rizda user";
+    private final String user_email = "tambunanferdinand1@gmail.com";
+    private final String user_username = "tambunanferdinand1 user";
     private final String user_password = "string";
 
     @Override
@@ -79,7 +79,7 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void superUserSeeder() {
-        createUser(user_username, "Oreo Jaya", user_email, "AST123", List.of("IND234", "ITA567"), List.of("SUPER_USER"));
+        createUser(user_username, user_username, user_email, "AST123", List.of("IND234", "ITA567"), List.of("SUPER_USER"));
     }
 
     public void superBackofficeSeeder() {
@@ -695,7 +695,7 @@ public class SeederConfiguration implements CommandLineRunner {
     }
 
     private void newUserSeeder() {
-        createUser("oreo_123", "Oreo Jaya", "oreofinalprojectdtt@gmail.com", "AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
+//        createUser("oreo_123", "Oreo Jaya", "oreofinalprojectdtt@gmail.com", "AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
 
         createUser("nand_123", "Nand", "dinandtambunan28@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
 

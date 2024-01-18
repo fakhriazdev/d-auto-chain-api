@@ -13,4 +13,5 @@ public class AcceptResponse {
     String payment_type;
     AcceptDetailResponse buyyer;
     AcceptDetailResponse seller;
+    Double invoice_amount;
 }

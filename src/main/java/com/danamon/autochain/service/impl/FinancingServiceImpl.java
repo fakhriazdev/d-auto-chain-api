@@ -612,7 +612,7 @@ public class FinancingServiceImpl implements FinancingService {
         }
 
         Payment payment = financingPayable.getPayment();
-        payment.setType(PaymentType.FINANCING);
+        payment.setType(PaymentType.FINANCING_PAYABLE);
         payment.setSenderId(null);
         paymentRepository.saveAndFlush(payment);
 
@@ -634,6 +634,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .payment_type(FinancingType.PAYABLE.name())
                 .buyyer(buyyer)
                 .seller(seller)
+                .invoice_amount(financingPayable.getInvoice().getAmount().doubleValue())
                 .build();
     }
 
@@ -652,18 +653,19 @@ public class FinancingServiceImpl implements FinancingService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Invalid financing request amount with amount : "+financing_amount);
         }
 
-        PaymentType partialFinancing = PaymentType.PARTIAL_FINANCING;
+        PaymentType partialFinancing = PaymentType.FINANCING_RECEIVABLE;
         AcceptDetailResponse buyyer = new AcceptDetailResponse();
-
-        if (payable_amount == 0) {
-            partialFinancing = PaymentType.FINANCING;
-        }
+        buyyer.setFinancingType(FinancingType.PAYABLE.name());
+        buyyer.setAmountPaid(payable_amount);
+        buyyer.setCompany_name(financingReceivable.getInvoice().getRecipientId().getCompanyName());
 
 //            ========================== PARTIAL DANAMON ==========================
 //            buat partial payment ke danamon & seller
         if (financing_amount < invoice_amount) {
+            partialFinancing = PaymentType.PARTIAL_FINANCING;
+//            payment ke invoice
             payment.setAmount(payable_amount);
-            payment.setType(PaymentType.PARTIAL_FINANCING);
+            payment.setType(partialFinancing);
             paymentRepository.saveAndFlush(payment);
 
             Calendar calendar = Calendar.getInstance();
@@ -671,6 +673,7 @@ public class FinancingServiceImpl implements FinancingService {
             calendar.add(Calendar.MONTH, 1);
             Date dueDate = calendar.getTime();
 
+//          Payment ke danamon
             paymentRepository.saveAndFlush(Payment.builder()
                             .paymentId(IdsGeneratorUtil.generate("PAY","DANAMON"))
                             .recipientId(financingReceivable.getInvoice().getRecipientId())
@@ -693,6 +696,7 @@ public class FinancingServiceImpl implements FinancingService {
         financingReceivable.setStatus(FinancingStatus.ONGOING);
         financingReceivableRepository.saveAndFlush(financingReceivable);
 
+
         AcceptDetailResponse seller = AcceptDetailResponse.builder()
                 .company_name(financingReceivable.getInvoice().getSenderId().getCompanyName())
                 .amountPaid(financing_amount)
@@ -701,6 +705,7 @@ public class FinancingServiceImpl implements FinancingService {
 
         return AcceptResponse.builder()
                 .payment_type(partialFinancing.name())
+                .invoice_amount(invoice_amount.doubleValue())
                 .buyyer(buyyer)
                 .seller(seller)
                 .build();
