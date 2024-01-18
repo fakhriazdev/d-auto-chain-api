@@ -1,6 +1,8 @@
 package com.danamon.autochain.config;
 
 import com.danamon.autochain.constant.*;
+import com.danamon.autochain.constant.financing.FinancingStatus;
+import com.danamon.autochain.constant.financing.FinancingType;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
@@ -11,6 +13,7 @@ import com.danamon.autochain.repository.*;
 import com.danamon.autochain.security.BCryptUtil;
 import com.danamon.autochain.service.CompanyService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
@@ -19,7 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.management.relation.Role;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,18 +42,21 @@ public class SeederConfiguration implements CommandLineRunner {
     private final CompanyService companyService;
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
+    private final FinancingPayableRepository financingPayableRepository;
+    private final FinancingReceivableRepository financingReceivableRepository;
+    private final TenureRepository tenureRepository;
     private final BCryptUtil bCryptUtil;
     private final UserRolesRepository userRolesRepository;
     private final BackofficeAccessRepository backofficeAccessRepository;
 
     //    =================== BACKOFFICE ACCOUNT as SUPER ADMIN ====================
-    private final String bo_email = "rizdaagisa99@gmail.com";
-    private final String bo_username = "rizda backoffice";
+    private final String bo_email = "oreofinalprojectdtt@gmail.com";
+    private final String bo_username = "oreofinalprojectdtt backoffice";
     private final String bo_password = "string";
 
     //    ====================== USER ACCOUNT as SUPER USER =========================
-    private final String user_email = "rizdaagisa@gmail.com";
-    private final String user_username = "rizda user";
+    private final String user_email = "tambunanferdinand1@gmail.com";
+    private final String user_username = "tambunanferdinand1 user";
     private final String user_password = "string";
 
     @Override
@@ -54,16 +64,25 @@ public class SeederConfiguration implements CommandLineRunner {
         Optional<Credential> byUsername = credentialRepository.findByEmail(bo_email);
         if (byUsername.isEmpty()) {
             rolesSeeder();
-            backofficeSeeder();
+            superBackofficeSeeder();
             companySeeder();
+            superUserSeeder();
+
             newBackOfficeSeeder();
-//            userSeeder();
             newUserSeeder();
-            invoiceAndPaymentSeeder();
+
+//            userSeeder();
+            invoiceSeeder();
+            paymentSeeder();
+//            invoiceAndPaymentSeeder();
         }
     }
 
-    public void backofficeSeeder() {
+    private void superUserSeeder() {
+        createUser(user_username, user_username, user_email, "AST123", List.of("IND234", "ITA567"), List.of("SUPER_USER"));
+    }
+
+    public void superBackofficeSeeder() {
         Roles superadmin = rolesRepository.findByRoleName("SUPER_ADMIN").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
 
         List<UserRole> role = new ArrayList<>();
@@ -97,7 +116,7 @@ public class SeederConfiguration implements CommandLineRunner {
         Roles superUser = rolesRepository.findByRoleName("SUPER_USER").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles finance = rolesRepository.findByRoleName("FINANCE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
         Roles invoice = rolesRepository.findByRoleName("INVOICE_STAFF").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "roles not exist"));
-        Company company = companyRepository.findBycompanyName("PT. Enigma").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
+        Company company = companyRepository.findById("AST123").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "company ID not found"));
 
         //        ================================= SUPER USER  ================================
 
@@ -675,22 +694,22 @@ public class SeederConfiguration implements CommandLineRunner {
         userRolesRepository.saveAllAndFlush(userRoles);
     }
 
-    private void newUserSeeder(){
-        createUser("oreo_123" , "Oreo Jaya", "oreofinalprojectdtt@gmail.com","AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
+    private void newUserSeeder() {
+//        createUser("oreo_123", "Oreo Jaya", "oreofinalprojectdtt@gmail.com", "AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
 
-        createUser("nand_123" , "Nand", "dinandtambunan28@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
+        createUser("nand_123", "Nand", "dinandtambunan28@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
 
-        createUser("abra_123" , "Abraham", "abramyct@gmail.com","AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+        createUser("abra_123", "Abraham", "abramyct@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
 
 
-        createUser("edia_123" , "Ediashta", "ediashtarevin77@gmail.com","GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
+        createUser("edia_123", "Ediashta", "ediashtarevin77@gmail.com", "GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
 
-        createUser("jere_123" , "Jeremy", "jeremysilaban3@gmail.com","GAR123", List.of("UNI456"), List.of("INVOICE_STAFF"));
+        createUser("jere_123", "Jeremy", "jeremysilaban3@gmail.com", "GAR123", List.of("UNI456"), List.of("INVOICE_STAFF"));
 
-        createUser("oliv_123" , "Oliver", "olivermuhammadf@gmail.com","GAR123", List.of("IND345"), List.of("PAYMENT_STAFF", "FINANCE_STAFF"));
+        createUser("oliv_123", "Oliver", "olivermuhammadf@gmail.com", "GAR123", List.of("IND345"), List.of("PAYMENT_STAFF", "FINANCE_STAFF"));
     }
 
-    private void createBackoffice(String username, String name, String email, String role, List<String> handleCompany){
+    private void createBackoffice(String username, String name, String email, String role, List<String> handleCompany) {
         List<UserRole> userRoles = new ArrayList<>();
 
         Credential credential = Credential.builder()
@@ -726,7 +745,7 @@ public class SeederConfiguration implements CommandLineRunner {
         credentialRepository.saveAndFlush(credential);
 
 
-        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && ! handleCompany.isEmpty()){
+        if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && !handleCompany.isEmpty()) {
             List<BackofficeUserAccess> backofficeUserAccesses = new ArrayList<>();
             handleCompany.forEach(c ->
                     {
@@ -746,13 +765,233 @@ public class SeederConfiguration implements CommandLineRunner {
         userRolesRepository.saveAllAndFlush(userRoles);
     }
 
-    private void newBackOfficeSeeder(){
+    private void newBackOfficeSeeder() {
 //        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
 
-        createBackoffice("admin_1", "Admin A", "admin@gmail.com","ADMIN", null);
+        createBackoffice("admin_1", "Admin A", "admin@gmail.com", "ADMIN", null);
 
-        createBackoffice("ca_1", "Credit Analyst A", "ca@gmail.com","CREDIT_ANALYST", null);
+        createBackoffice("ca_1", "Credit Analyst A", "ca@gmail.com", "CREDIT_ANALYST", null);
 
-        createBackoffice("rm_1", "Relation Manager A", "rm@gmail.com","RELATIONSHIP_MANAGER", List.of("GAJ456"));
+        createBackoffice("rm_1", "Relation Manager A", "rm@gmail.com", "RELATIONSHIP_MANAGER", List.of("GAJ456"));
     }
+
+    private void invoiceSeeder() {
+        try {
+            //        ================= COMPLETED ==============
+            String item = "[{\"itemsName\" : \"Torque Assy Rod Truck\", \"itemsQuantity\" : 140, \"unitPrice\" : 450000},{\"itemsName\" : \"Fuel Tank Breather\", \"itemsQuantity\" : 160, \"unitPrice\" : 300000}, {\"itemsName\" : \"Passenger Air Bag Less Door\", \"itemsQuantity\" : 180, \"unitPrice\" : 500000}]";
+            generateInvoice("INV/AST123/001", "IND345", "AST123", 201000000l, "16-08-2023", "15-06-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item);
+
+            String item2 = "[{\"itemsName\" : \"Car Battery\", \"itemsQuantity\" : 140, \"unitPrice\" : 500000},{\"itemsName\" : \"Car Horn\", \"itemsQuantity\" : 160, \"unitPrice\" : 650000}, {\"itemsName\" : \"Meter Cluster\", \"itemsQuantity\" : 200, \"unitPrice\" : 15000000}]";
+            generateInvoice("INV/AST123/002", "ITA567", "AST123", 474000000l, "25-11-2023", "24-08-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item2);
+
+            String item3 = "[{\"itemsName\" : \"Gajah Tunggal Ban Luar Mobil\", \"itemsQuantity\" : 280, \"unitPrice\" : 450000},{\"itemsName\" : \"Gajah Tunggal Gt Radial Traction Pro\", \"itemsQuantity\" : 240, \"unitPrice\" : 450000}, {\"itemsName\" : \"Gajah Tunggal Ban Mobil Gtx Pro\", \"itemsQuantity\" : 300, \"unitPrice\" : 690000}]";
+            generateInvoice("INV/GAJ456/001", "IND234", "GAJ456", 5274000000l, "08-11-2023", "11-07-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item3);
+
+            String item4 = "[{\"itemsName\" : \"Gajah Tunggal Gt Radial Savero At Plus\", \"itemsQuantity\" : 50, \"unitPrice\" : 1300000},{\"itemsName\" : \"Gajah Tunggal Gt Radial Traction Pro\", \"itemsQuantity\" : 180, \"unitPrice\" : 810000}]";
+            generateInvoice("INV/GAJ456/002", "MUL890", "GAJ456", 210800000l, "21-12-2023", "20-10-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item4);
+
+//        ================= ONGOING ===============
+            String item5 = "[{\"itemsName\" : \"Car Battery\", \"itemsQuantity\" : 140, \"unitPrice\" : 450000},{\"itemsName\" : \"Fuel Tank Breather\", \"itemsQuantity\" : 160, \"unitPrice\" : 300000}, {\"itemsName\" : \"Meter Cluster\", \"itemsQuantity\" : 200, \"unitPrice\" : 15000000}]";
+            generateInvoice("INV/AST123/003", "GAR123", "AST123", 418000000l, "17-04-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item5);
+
+            String item6 = "[{\"itemsName\" : \"Blok silinder\", \"itemsQuantity\" : 280, \"unitPrice\" : 450000},{\"itemsName\" : \"Kanvas rem\", \"itemsQuantity\" : 180, \"unitPrice\" : 300000}]";
+            generateInvoice("INV/REL567/001", "UNI456", "REL567", 180000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item6);
+
+            String item7 = "[{\"itemsName\" : \"Pin and Collars\", \"itemsQuantity\" : 140, \"unitPrice\" : 300000},{\"itemsName\" : \"Bolts\", \"itemsQuantity\" : 160, \"unitPrice\" : 150000}, {\"itemsName\" : \"Nuts\", \"itemsQuantity\" : 200, \"unitPrice\" : 200000}]";
+            generateInvoice("INV/GAR123/001", "DWI890", "GAR123", 106000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item7);
+
+            String item8 = "[{\"itemsName\" : \"Radiator\", \"itemsQuantity\" : 100, \"unitPrice\" : 3400000},{\"itemsName\" : \"Penyaring Udara\", \"itemsQuantity\" : 210, \"unitPrice\" : 550000}]";
+            generateInvoice("INV/SEL234/001", "REL567", "SEL234", 455000000l, "10-12-2024", "10-10-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item8);
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    private void generateInvoice(String id, String recipientId, String senderId, Long amount, String dueDate, String invoiceDate, InvoiceStatus status, ProcessingStatusType statusType, String item) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date1 = null;
+        Instant instant = null;
+        try {
+            date1 = dateFormat.parse(dueDate);
+            Date date2 = dateFormat.parse(invoiceDate);
+            instant = date2.toInstant();
+        } catch (ParseException e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+        }
+
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
+        Company sender = companyRepository.findById(senderId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + senderId));
+
+        invoiceRepository.saveAndFlush(
+                Invoice.builder()
+                        .invoiceId(id)
+                        .recipientId(recipient)
+                        .senderId(sender)
+                        .amount(amount)
+                        .dueDate(date1)
+                        .createdBy(sender.getCompanyName())
+                        .createdDate(instant.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        .status(status)
+                        .processingStatus(statusType)
+                        .itemList(item)
+                        .build()
+        );
+    }
+
+    private void paymentSeeder() {
+        try {
+            //        ================================ PAYMENT COMPANY TO COMPANY ===============================
+            generatePayment("PAY/IND345/001", "INV/AST123/001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//        generatePayment("PAY/ITA567/001", "INV/AST123/002", "ITA567", "AST123", PaymentType.INVOICING, PaymentStatus.PAID, PaymentMethod.BANK_TRANSFER, 474000000l, "25-11-2023", "20-11-2023");
+//        generatePayment("PAY/IND234/001", "INV/GAJ456/001", "IND234", "GAJ456", PaymentType.INVOICING, PaymentStatus.LATE_PAID, PaymentMethod.BANK_TRANSFER, 527400000l, "08-11-2023", "19-01-2024");
+            generatePayment("PAY/MUL890/001", "INV/GAJ456/002", "MUL890", "GAJ456", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 210800000l, "21-12-2023", null);
+            generatePayment("PAY/GAR123/001", "INV/AST123/003", "GAR123", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 418000000l, "17-04-2024", null);
+            generatePayment("PAY/UNI456/001", "INV/REL567/001", "UNI456", "REL567", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 180000000l, "17-03-2024", null);
+            generatePayment("PAY/DWI890/001", "INV/GAR123/001", "DWI890", "GAR123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 106000000l, "17-03-2024", null);
+            generatePayment("PAY/REL567/001", "INV/SEL234/001", "REL567", "SEL234", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 455500000l, "10-12-2023", null);
+
+//        =============================== PAYMENT PAYANCING ===========================
+//        generatePayment("PAY/DANAMON/001","INV/AST123/001",null,"AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 19650541667l,"16-08-2023",null);
+//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+//        generatePayment("PAY/DANAMON/002","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 164869022l,"16-08-2023",null);
+//
+//        generatePayment("FIN/MUL890/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l,"16-08-2023",null);
+//        generatePayment("FIN/MUL890/002","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l,"16-08-2023",null);
+//
+//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+
+        } catch (Exception e) {
+            System.err.println("Seeder Payment error with : " + e);
+        }
+    }
+
+    private void generatePayment(String id, String invoiceId, String senderId, String recipientId, PaymentType type, PaymentStatus status, PaymentMethod paymentMethod, Long amount, String dueDate, String paidDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date1 = null;
+        Date date2 = null;
+        try {
+            date1 = dateFormat.parse(dueDate);
+        } catch (ParseException e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+        }
+
+        if (paidDate != null) {
+            try {
+                date2 = dateFormat.parse(paidDate);
+            } catch (ParseException e) {
+                System.out.println("Error parsing date: " + e.getMessage());
+            }
+        }
+
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with ID : " + recipientId));
+        Company sender = companyRepository.findById(senderId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with ID : " + senderId));
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found on seeder with ID : " + senderId));
+
+        paymentRepository.saveAndFlush(
+                Payment.builder()
+                        .paymentId(id)
+                        .invoice(invoice)
+                        .senderId(sender)
+                        .recipientId(recipient)
+                        .type(type)
+                        .status(status)
+                        .method(paymentMethod)
+                        .amount(amount)
+                        .createdDate(new Date())
+                        .dueDate(date1)
+                        .paidDate(date2)
+                        .build()
+        );
+    }
+
+    private void financingSeeder() {
+//        =============== FINANCING PAYABLE ================
+//        generateFinancingPayable("FIN/REL567/002","PAY/REL567/001",);
+
+//        =============== FINANCING RECEIVABLE ==============
+//        generateFinancingReceivable();
+
+    }
+
+    private void generateFinancingPayable(String id, String paymentId, String recipientId, Double interest, Integer tenure,  Long amount, Double installment,   FinancingStatus status, String approvalDate) {
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found on seeder with name : " + paymentId));
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        try {
+            date = dateFormat.parse(approvalDate);
+        } catch (ParseException e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+        }
+
+        FinancingPayable financing = FinancingPayable.builder()
+                .financingPayableId(id)
+                .payment(payment)
+                .company(recipient)
+                .status(status)
+                .amount(amount)
+                .interest(interest)
+                .total(amount + (amount * interest))
+                .tenure(tenure)
+                .monthly_installment(installment)
+                .period_number(0)
+                .createdDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .createdBy(recipient.getCompanyName())
+                .build();
+
+        financingPayableRepository.saveAndFlush(financing);
+
+        for (int i = 1; i <= tenure; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.MONTH, i);
+            Date dueDate = calendar.getTime();
+
+            // Set the tenure status
+            TenureStatus tenureStatus = (i > 1) ? TenureStatus.UPCOMING : TenureStatus.UNPAID;
+
+            tenureRepository.saveAndFlush(
+                    Tenure.builder()
+                            .financingPayableId(financing)
+                            .dueDate(dueDate)
+                            .status(tenureStatus)
+                            .Amount(installment)
+                            .build()
+            );
+        }
+    }
+
+    private void generateFinancingReceivable(String id, String recipientId, String approvalDate, String disbursmentDate, FinancingStatus status, FinancingType type, Long amount, Double fee, Double total) {
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        Date date2 = null;
+        try {
+            date = dateFormat.parse(disbursmentDate);
+            date2 = dateFormat.parse(approvalDate);
+        } catch (ParseException e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+        }
+        financingReceivableRepository.saveAndFlush(
+                        FinancingReceivable.builder()
+                                .financingId(id)
+                                .company(recipient)
+                                .modifiedDate(date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                .createdDate(LocalDateTime.now())
+                                .disbursment_date(date)
+                                .status(status)
+                                .financingType(type)
+                                .amount(amount)
+                                .fee(fee)
+                                .total(total)
+                                .build()
+        );
+    }
+
 }

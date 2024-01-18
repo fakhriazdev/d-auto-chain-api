@@ -15,6 +15,7 @@ import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
+import com.danamon.autochain.dto.payment.CreatePaymentRequest;
 import com.danamon.autochain.entity.*;
 import com.danamon.autochain.repository.InvoiceIssueLogRepository;
 import com.danamon.autochain.repository.InvoiceRepository;
@@ -22,6 +23,7 @@ import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
 import com.danamon.autochain.service.InvoiceService;
+import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.util.IdsGeneratorUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -76,18 +78,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
         invoiceRepository.saveAndFlush(invoice);
 
-        paymentRepository.saveAndFlush(
-                Payment.builder()
-                        .invoice(invoice)
-                        .recipientId(invoice.getRecipientId())
-                        .senderId(invoice.getSenderId())
-                        .method(PaymentMethod.BANK_TRANSFER)
-                        .type(PaymentType.INVOICING)
-                        .status(PaymentStatus.UNPAID)
-                        .amount(invoice.getAmount())
-                        .dueDate(invoice.getDueDate())
-                        .build()
-        );
+        paymentRepository.saveAndFlush(Payment.builder()
+                .paymentId(IdsGeneratorUtil.generate("PAY", invoice.getSenderId().getCompanyName()))
+                .invoice(invoice)
+                .recipientId(invoice.getRecipientId())
+                .senderId(invoice.getSenderId())
+                .method(PaymentMethod.BANK_TRANSFER)
+                .type(PaymentType.INVOICING)
+                .status(PaymentStatus.UNPAID)
+                .amount(invoice.getAmount())
+                .dueDate(invoice.getDueDate())
+                .build());
     }
 
     @Override
@@ -274,7 +275,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             predicates.add(id);
 
             if (!isSuperUser) {
-                if(request.getType().equals("payable")) {
+                if (request.getType().equals("payable")) {
                     predicates.add(root.get("senderId").in(companies));
                 } else {
                     predicates.add(root.get("recipientId").in(companies));
@@ -302,7 +303,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .company_id(invoice.getSenderId().getCompany_id())
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
-                .companyName(invoice.getRecipientId().getCompanyName())
+                .companyName(invoice.getSenderId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
@@ -313,7 +314,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .company_id(invoice.getRecipientId().getCompany_id())
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
-                .companyName(invoice.getSenderId().getCompanyName())
+                .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
                 .build();
@@ -336,10 +337,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public Long getTotalPaidInvoicePayable() {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.PAID,  InvoiceStatus.LATE_PAID);
+        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.PAID, InvoiceStatus.LATE_PAID);
         long total = 0;
-        for (Invoice i : invoices){
-            total+= i.getAmount();
+        for (Invoice i : invoices) {
+            total += i.getAmount();
         }
         return total;
     }
@@ -347,10 +348,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public Long getTotalUnpaidInvoicePayable() {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.UNPAID,  InvoiceStatus.LATE_UNPAID);
+        List<Invoice> invoices = invoiceRepository.findAllByRecipientIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID);
         long total = 0;
-        for (Invoice i : invoices){
-            total+= i.getAmount();
+        for (Invoice i : invoices) {
+            total += i.getAmount();
         }
         return total;
     }
@@ -360,8 +361,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.PAID, InvoiceStatus.LATE_PAID);
         long total = 0;
-        for (Invoice i : invoices){
-            total+= i.getAmount();
+        for (Invoice i : invoices) {
+            total += i.getAmount();
         }
         return total;
     }
@@ -371,8 +372,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusOrStatus(principal.getUser().getCompany(), InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID);
         long total = 0;
-        for (Invoice i : invoices){
-            total+= i.getAmount();
+        for (Invoice i : invoices) {
+            total += i.getAmount();
         }
         return total;
     }
