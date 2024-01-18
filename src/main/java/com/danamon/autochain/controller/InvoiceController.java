@@ -101,7 +101,7 @@ public class InvoiceController {
             return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/detail/{id}")
+    @GetMapping("/detail/{invoice_id}")
     public ResponseEntity<?> invoiceDetailPayable(@PathVariable(name = "invoice_id")String invoice_id){
         InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(invoice_id);
         DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()

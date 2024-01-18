@@ -203,7 +203,7 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public void updateBackofficeUser(BackOfficeUserController.EditBackOfficeUser request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         //set up for user list
@@ -234,6 +234,8 @@ public class BackOfficeUserServiceImpl implements BackOfficeUserService {
         );
 
         credential.setRoles(userRoles);
+
+        backofficeAccessRepository.customDelete(backOffice.getBackoffice_id());
 
         if (RoleType.RELATIONSHIP_MANAGER.getName().equals(roles.getRoleName()) && !
                 request.companies().isEmpty()) {
