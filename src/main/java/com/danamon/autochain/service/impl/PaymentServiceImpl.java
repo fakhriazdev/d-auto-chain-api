@@ -440,6 +440,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse proceedPaymentInvoicing(Payment payment) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
         if (payment.getDueDate().before(from)) {
             payment.setStatus(PaymentStatus.PAID);
@@ -448,7 +449,11 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.LATE_PAID);
             payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
         }
+
         payment.setPaidDate(from);
+        payment.getInvoice().setModifiedBy(principal.getUsername2());
+        payment.getInvoice().setModifiedDate(LocalDateTime.now());
+
         paymentRepository.save(payment);
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
@@ -513,11 +518,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
-                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
+                from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute() + ":" + LocalDateTime.now().getSecond(),
                 payment.getMethod().name(),
-                payment.getInvoice().getSenderId().getCompanyName(),
-                payment.getInvoice().getRecipientId().getCompanyName(),
-                tenure.getAmount().longValue(),
+                payment.getInvoice().getSenderId().getCompanyName() != null ? payment.getInvoice().getSenderId().getCompanyName() : "Bank Danamon",
+                payment.getInvoice().getRecipientId().getCompanyName() != null ? payment.getInvoice().getSenderId().getCompanyName() : "Bank Danamon",
+                (long) tenure.getAmount().doubleValue(),
                 0.02 * tenure.getAmount()
                 );
     }
