@@ -16,6 +16,9 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class CreatePaymentRequest {
+
+    private String senderPayment;
+
     private Invoice invoice;
 
     private FinancingPayable financingPayable;

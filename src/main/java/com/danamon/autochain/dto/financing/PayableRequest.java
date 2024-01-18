@@ -23,4 +23,6 @@ public class PayableRequest {
     private Integer tenure;
 
     private Double monthly_instalment;
+
+    private String payment_method;
 }

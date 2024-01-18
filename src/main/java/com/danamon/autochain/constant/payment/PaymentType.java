@@ -1,5 +1,5 @@
 package com.danamon.autochain.constant.payment;
 
 public enum PaymentType {
-    FINANCING, INVOICING, PARTIAL_FINANCING
+    FINANCING_PAYABLE, FINANCING_RECEIVABLE ,INVOICING, PARTIAL_FINANCING
 }

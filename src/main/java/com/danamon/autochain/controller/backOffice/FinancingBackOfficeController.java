@@ -24,7 +24,7 @@ public class FinancingBackOfficeController {
     private final FinancingService financingService;
 
     @PostMapping("/approve")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN','RELATIONSHIP_MANAGER','ADMIN','CREDIT_ANALYST')")
     public ResponseEntity<?> approve_financing_backoffice(@RequestBody AcceptRequest request){
         AcceptResponse data = financingService.backoffice_accept(request);
         DataResponse<AcceptResponse> response = DataResponse.<AcceptResponse>builder()
@@ -36,7 +36,7 @@ public class FinancingBackOfficeController {
     }
 
     @PostMapping("/reject")
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN','RELATIONSHIP_MANAGER','ADMIN','CREDIT_ANALYST')")
     public ResponseEntity<?> reject_financing_backoffice(@RequestBody RejectRequest request){
         financingService.backoffice_reject(request);
         DataResponse response = DataResponse.builder()
@@ -47,7 +47,7 @@ public class FinancingBackOfficeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN','RELATIONSHIP_MANAGER','ADMIN','CREDIT_ANALYST')")
     public ResponseEntity<?> get_all_financing_backoffice(
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,

@@ -2,7 +2,6 @@ package com.danamon.autochain.service.impl;
 
 import com.danamon.autochain.constant.RoleType;
 import com.danamon.autochain.constant.TenureStatus;
-import com.danamon.autochain.constant.financing.FinancingStatus;
 import com.danamon.autochain.constant.payment.PaymentMethod;
 import com.danamon.autochain.constant.payment.PaymentStatus;
 import com.danamon.autochain.constant.payment.PaymentType;
@@ -10,7 +9,6 @@ import com.danamon.autochain.constant.invoice.InvoiceStatus;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
-import com.danamon.autochain.dto.financing.PayableDetailResponse;
 import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.*;
@@ -19,13 +17,13 @@ import com.danamon.autochain.repository.PaymentRepository;
 import com.danamon.autochain.repository.TenureRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.*;
+import com.danamon.autochain.util.IdsGeneratorUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -59,7 +56,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void createPayment(CreatePaymentRequest request) {
+        String id = IdsGeneratorUtil.generate("PAY", request.getSenderPayment());
         Payment payment = Payment.builder()
+                .paymentId(id)
                 .amount(request.getAmount())
                 .dueDate(request.getDueDate())
                 .invoice(request.getInvoice())
@@ -176,17 +175,17 @@ public class PaymentServiceImpl implements PaymentService {
                     types.add(PaymentType.INVOICING);
                     break;
                 case "FINANCING":
-                    types.add(PaymentType.FINANCING);
+                    types.add(PaymentType.FINANCING_PAYABLE);
                     break;
                 case "PARTIAL_FINANCING":
                     types.add(PaymentType.PARTIAL_FINANCING);
                     break;
                 default:
-                    types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING, PaymentType.PARTIAL_FINANCING));
+                    types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING_PAYABLE, PaymentType.PARTIAL_FINANCING));
                     break;
             }
         } else {
-            types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING, PaymentType.PARTIAL_FINANCING));
+            types.addAll(Arrays.asList(PaymentType.INVOICING, PaymentType.FINANCING_PAYABLE, PaymentType.PARTIAL_FINANCING));
         }
 
         return types;
