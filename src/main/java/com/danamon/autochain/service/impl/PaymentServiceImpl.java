@@ -386,7 +386,18 @@ public class PaymentServiceImpl implements PaymentService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
 
-        List<Payment> payments = paymentRepository.findAllByRecipientIdAndStatusInAndAmountBetween(user.getCompany(), List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+        List<Payment> payments = paymentRepository.findAllByRecipientIdAndTypeAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+
+        return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
+    }
+
+    @Override
+    public List<PaymentResponse> getPaymentForFinancingReceivable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
+        long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
+
+        List<Payment> payments = paymentRepository.findAllBySenderIdAndTypeAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
 
         return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }

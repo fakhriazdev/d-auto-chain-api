@@ -79,7 +79,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceRepository.saveAndFlush(invoice);
 
         paymentRepository.saveAndFlush(Payment.builder()
-                .paymentId(IdsGeneratorUtil.generate("PAY", invoice.getSenderId().getCompanyName()))
+                .paymentId(IdsGeneratorUtil.generate("PAY", invoice.getSenderId().getCompany_id()))
                 .invoice(invoice)
                 .recipientId(invoice.getRecipientId())
                 .senderId(invoice.getSenderId())
