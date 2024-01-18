@@ -245,11 +245,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         String paidDate = null;
-        if(payment.getPaidDate() != null) paidDate = payment.getPaidDate().toString();
+        if (payment.getPaidDate() != null) paidDate = payment.getPaidDate().toString();
 
         String recipient = "";
-        if(request != null) {
-            if(request.getGroupBy().equals("payable")) {
+        if (request != null) {
+            if (request.getGroupBy().equals("payable")) {
                 recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON";
             } else {
                 recipient = payment.getRecipientId().getCompanyName();
@@ -346,23 +346,30 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentDetailFinancing getPaymentDetailFinancing(Payment payment) {
-        //get invoice
-//        InvoiceDetailResponse invoiceDetail = invoiceService.getInvoiceDetail(payment.getInvoice().getInvoiceId());
-
-        //get financing payable
-//        PayableDetailResponse detailPayable = financingService.get_detail_payable(payment.getFinancingPayable().getFinancingPayableId());
-
         FinancingPayable financingPayable = financingPayableRepository.findByPayment(payment).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
+        List<Tenure> unpaid = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.UNPAID);
+
+        List<Tenure> complete = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.COMPLETED);
+
+        List<Tenure> upcoming = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.UPCOMING);
+
+        int tenureUnpaid = unpaid.size();
+        int tenureComplete = complete.size();
+        int tenureUpComing = upcoming.size();
 
         return PaymentDetailFinancing.builder()
                 .transactionId(financingPayable.getInvoice().getInvoiceId())
-                .tenor(financingPayable.getTenure().toString())
+                .tenor((tenureComplete + tenureUnpaid) + "/" + tenureUpComing)
                 .supplier(financingPayable.getCompany().getCompanyName())
-                .amount(financingPayable.getAmount())
+                .amount(
+                        unpaid.stream().findFirst().orElseThrow(
+                                () -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something Wrong In Database Please Contact Admin")
+                        ).getAmount()
+                )
                 .paymentMethod(financingPayable.getPayment().getMethod().name())
                 .financingId(financingPayable.getFinancingPayableId())
                 .build();
-
     }
 
     @Override
@@ -386,19 +393,19 @@ public class PaymentServiceImpl implements PaymentService {
     public UpdatePaymentResponse updatePaymentInvoicing(String id) {
         Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
-        if (payment.getStatus().equals(PaymentStatus.PAID) || payment.getStatus().equals(PaymentStatus.COMPLETED)){
+        if (payment.getStatus().equals(PaymentStatus.COMPLETED)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bill has been paid");
         }
 
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
 
-            if (from.before(payment.getDueDate())) {
-                payment.setStatus(PaymentStatus.PAID);
-                payment.getInvoice().setStatus(InvoiceStatus.PAID);
-            } else {
-                payment.setStatus(PaymentStatus.LATE_PAID);
-                payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
-            }
+        if (from.before(payment.getDueDate())) {
+            payment.setStatus(PaymentStatus.PAID);
+            payment.getInvoice().setStatus(InvoiceStatus.PAID);
+        } else {
+            payment.setStatus(PaymentStatus.LATE_PAID);
+            payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+        }
         paymentRepository.saveAndFlush(payment);
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
@@ -407,27 +414,45 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.getSenderId().getCompanyName(),
                 payment.getRecipientId().getCompanyName(),
                 payment.getAmount(),
-                0.02*payment.getAmount()
+                0.02 * payment.getAmount()
         );
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UpdatePaymentResponse updatePaymentFinancing(String id) {
-        Tenure tenure = tenureRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+    public UpdatePaymentResponse proceedPayment(String id) {
+        Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
+
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-        if (!tenure.getStatus().equals(TenureStatus.UNPAID)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Paid Payment With Status " + tenure.getStatus().name());
-        }
+
+        FinancingPayable financingPayable = financingPayableRepository.findByPayment(payment).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Not Found"));
+
+        Tenure tenure = tenureRepository.findByFinancingPayableIdAndStatusIs(financingPayable, TenureStatus.UNPAID).orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Payment Not Found, Please Contact Admin"));
+
+        tenure.setPaidDate(from);
+        tenure.setStatus(TenureStatus.COMPLETED);
 
         if (tenure.getDueDate().after(from)){
-            tenure.getFinancingPayableId().getPayment().setStatus(PaymentStatus.LATE_PAID);
+            payment.setStatus(PaymentStatus.LATE_PAID);
+        }else{
+            payment.setStatus(PaymentStatus.PAID);
         }
 
-        tenure.setStatus(TenureStatus.COMPLETED);
-        tenure.setPaidDate(from);
-
         tenureRepository.saveAndFlush(tenure);
+
+        // get tenure next month
+        Optional<Tenure> tenureNextMonth = tenureRepository.findAllByFinancingPayableIdAndStatusIsOrderByDueDateAsc(financingPayable, TenureStatus.UPCOMING).stream().findFirst();
+
+        if (tenureNextMonth.isEmpty()){
+            updatePaymentInvoicing(payment.getPaymentId());
+        }
+
+        Tenure setNextTenure = tenureNextMonth.get();
+
+        setNextTenure.setStatus(TenureStatus.UNPAID);
+
+        tenureRepository.save(setNextTenure);
+
         return new UpdatePaymentResponse(
                 tenure.getFinancingPayableId().getPayment().getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
@@ -440,5 +465,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
 
-    public record UpdatePaymentResponse(String id, String time, String method, String senderName, String recipient, Long amount, Double fee){}
+    public record UpdatePaymentResponse(String id, String time, String method, String senderName, String recipient,
+                                        Long amount, Double fee) {
+    }
 }

@@ -1,10 +1,6 @@
 package com.danamon.autochain.service;
 
-import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
-import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
-import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
-import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.payment.*;
 import com.danamon.autochain.dto.user_dashboard.LimitResponse;
 import com.danamon.autochain.entity.Payment;
@@ -28,5 +24,5 @@ public interface PaymentService {
     Payment getPaymentDetailType(String transactionId);
     List<PaymentResponse> getPaymentForFinancingPayable();
     PaymentServiceImpl.UpdatePaymentResponse updatePaymentInvoicing(String id);
-    PaymentServiceImpl.UpdatePaymentResponse updatePaymentFinancing(String id);
+    PaymentServiceImpl.UpdatePaymentResponse proceedPayment(String id);
 }
