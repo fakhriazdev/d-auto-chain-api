@@ -1,6 +1,7 @@
 package com.danamon.autochain.dto.Invoice.response;
 
 import com.danamon.autochain.dto.Invoice.ItemList;
+import com.danamon.autochain.entity.InvoiceIssueLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,4 +22,5 @@ public class InvoiceResponse {
     private Date dueDate;
     private String status;
     private List<ItemList> itemList;
+    private InvoiceIssueLog issue;
 }

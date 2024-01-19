@@ -4,6 +4,7 @@ import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.dto.DataResponse;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
+import com.danamon.autochain.dto.Invoice.request.RequestUpdateInvoice;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
@@ -110,5 +111,11 @@ public class InvoiceController {
                 .data(invoiceDetail)
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateInvoice(@RequestBody RequestUpdateInvoice requestUpdateInvoice){
+        invoiceService.updateInvoice(requestUpdateInvoice);
+        return ResponseEntity.ok("Success Update Invoice");
     }
 }

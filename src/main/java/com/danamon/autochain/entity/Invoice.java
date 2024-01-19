@@ -55,4 +55,7 @@ public class Invoice extends HistoryLog {
 
     @OneToMany(mappedBy = "invoice" ,cascade = CascadeType.ALL)
     private List<Payment> payment;
+
+    @OneToOne(mappedBy = "invoice", cascade = CascadeType.ALL)
+    private InvoiceIssueLog invoiceIssueLog;
 }
