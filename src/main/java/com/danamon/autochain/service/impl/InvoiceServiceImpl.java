@@ -87,6 +87,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .type(PaymentType.INVOICING)
                 .status(PaymentStatus.UNPAID)
                 .amount(invoice.getAmount())
+                        .createdDate(new java.util.Date())
                 .dueDate(invoice.getDueDate())
                 .build());
     }

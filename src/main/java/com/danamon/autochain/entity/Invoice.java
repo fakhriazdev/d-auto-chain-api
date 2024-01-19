@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -52,6 +53,6 @@ public class Invoice extends HistoryLog {
     @OneToOne(mappedBy = "invoice" ,cascade = CascadeType.ALL)
     private FinancingPayable financingPayable;
 
-    @OneToOne(mappedBy = "invoice" ,cascade = CascadeType.ALL)
-    private Payment payment;
+    @OneToMany(mappedBy = "invoice" ,cascade = CascadeType.ALL)
+    private List<Payment> payment;
 }
