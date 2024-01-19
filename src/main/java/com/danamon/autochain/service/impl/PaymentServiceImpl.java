@@ -473,8 +473,8 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
                 payment.getMethod().name(),
-                payment.getSenderId().getCompanyName(),
-                payment.getRecipientId().getCompanyName(),
+                payment.getSenderId().getCompanyName() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName(),
+                payment.getRecipientId().getCompanyName() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName(),
                 payment.getAmount(),
                 0.02 * payment.getAmount()
         );

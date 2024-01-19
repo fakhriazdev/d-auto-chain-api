@@ -157,7 +157,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @Deprecated
     @Override
     public void updateInvoiceIssueLog(RequestInvoiceStatus requestInvoiceStatus) {
         invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
@@ -168,7 +167,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public InvoiceDetailResponse updateInvoiceStatus(RequestInvoiceStatus requestInvoiceStatus) {
-
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Invoice invoice = invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
         if (invoice.getProcessingStatus() != null) {
@@ -181,6 +180,10 @@ public class InvoiceServiceImpl implements InvoiceService {
             processingStatusType = ProcessingStatusType.valueOf(requestInvoiceStatus.getProcessingType());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Status Type");
+        }
+
+        if (invoice.getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE) && processingStatusType.equals(ProcessingStatusType.APPROVE_INVOICE)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Update Type From Reject To Approve.");
         }
 
         if (processingStatusType.equals(ProcessingStatusType.CANCEL_INVOICE)) {
@@ -204,7 +207,8 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
             invoice.setStatus(InvoiceStatus.UNPAID);
         }
-
+        invoice.setModifiedDate(LocalDateTime.now());
+        invoice.setModifiedBy(principal.getUsername2());
         invoice.setProcessingStatus(processingStatusType);
         invoiceRepository.saveAndFlush(invoice);
 
@@ -217,6 +221,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         CompanyResponse companySender = companyService.findById(invoice.getSenderId().getCompany_id());
         CompanyResponse companyRecipient = companyService.findById(invoice.getRecipientId().getCompany_id());
+
+        if (companySender.getCompanyName() == null) {
+            companySender.setCompanyName("Bank Danamon");
+        }
 
         return InvoiceDetailResponse.builder()
                 .companyFrom(companySender)
