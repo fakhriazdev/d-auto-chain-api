@@ -361,7 +361,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentDetailFinancing.builder()
                 .transactionId(financingPayable.getInvoice().getInvoiceId())
-                .tenor((tenureComplete + tenureUnpaid) + "/" + tenureUpComing)
+                .tenor((tenureComplete + tenureUnpaid) + "/" + financingPayable.getTenure())
                 .supplier(financingPayable.getCompany().getCompanyName())
                 .amount(
                         unpaid.stream().findFirst().orElseThrow(
