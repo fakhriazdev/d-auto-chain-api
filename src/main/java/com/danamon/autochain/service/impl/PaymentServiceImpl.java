@@ -469,12 +469,15 @@ public class PaymentServiceImpl implements PaymentService {
         payment.getInvoice().setModifiedDate(LocalDateTime.now());
 
         paymentRepository.save(payment);
+
+        String companySender = payment.getSenderId() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName();
+        String companyRecipient = payment.getRecipientId() == null ? "Bank Danamon" : payment.getRecipientId().getCompanyName();
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
                 payment.getMethod().name(),
-                payment.getSenderId().getCompanyName() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName(),
-                payment.getRecipientId().getCompanyName() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName(),
+                companySender,
+                companyRecipient,
                 payment.getAmount(),
                 0.02 * payment.getAmount()
         );
