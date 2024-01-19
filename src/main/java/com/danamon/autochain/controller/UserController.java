@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "Bearer Authentication")
 public class UserController {
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF', 'SUPER_USER')")
+//    @PreAuthorize("hasAnyAuthority('INVOICE_STAFF', 'SUPER_USER')")
     public ResponseEntity<?> dashboardUser(){
         DataResponse<String> response = DataResponse.<String>builder()
                 .message("User Successfully enter")
