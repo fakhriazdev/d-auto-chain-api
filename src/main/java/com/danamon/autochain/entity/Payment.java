@@ -22,7 +22,7 @@ public class Payment {
     @Id
     private String paymentId;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "invoiceId")
     private Invoice invoice;
 
