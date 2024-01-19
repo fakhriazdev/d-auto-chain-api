@@ -25,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,21 +121,43 @@ public class PartnershipServiceImpl implements PartnershipService {
     @Override
     public Page<PartnershipResponse> getAll(String id, SearchPartnershipRequest request) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
-
+//        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
         Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, request.getSortBy());
         Company company = companyService.getById(id);
+
+        if (principal.getActor().equals(ActorType.USER)) {
+            Page<Partnership> partnerships = partnershipRepository.findAllByCompanyOrPartner(company, company, pageable);
+
+            boolean isSuperUser = principal.getRoles().stream()
+                    .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+
+            if (!isSuperUser && principal.getActor().equals(ActorType.USER)) {
+                List<Partnership> filteredPartnerships = partnerships.getContent().stream()
+                        .filter(partnership ->
+                                partnership.getCompany().equals(company) &&
+                                        principal.getUser().getUserAccsess().stream().anyMatch(userAccess ->
+                                                userAccess.getCompany().equals(partnership.getPartner())
+                                        )
+                        )
+                        .collect(Collectors.toList());
+
+                partnerships = new PageImpl<>(filteredPartnerships, partnerships.getPageable(), partnerships.getTotalElements());
+            }
+
+            return partnerships.map(this::mapToResponse);
+        }
+
         Page<Partnership> partnerships = partnershipRepository.findAllByCompanyOrPartner(company, company, pageable);
 
         boolean isSuperUser = principal.getRoles().stream()
                 .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
 
-        if (!isSuperUser) {
+        if (!isSuperUser && principal.getActor().equals(ActorType.USER)) {
             List<Partnership> filteredPartnerships = partnerships.getContent().stream()
                     .filter(partnership ->
                             partnership.getCompany().equals(company) &&
-                                    user.getUserAccsess().stream().anyMatch(userAccess ->
+                                    principal.getBackOffice().getBackofficeUserAccesses().stream().anyMatch(userAccess ->
                                             userAccess.getCompany().equals(partnership.getPartner())
                                     )
                     )
