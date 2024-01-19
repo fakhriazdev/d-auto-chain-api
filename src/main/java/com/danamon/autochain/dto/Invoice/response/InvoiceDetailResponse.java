@@ -2,6 +2,7 @@ package com.danamon.autochain.dto.Invoice.response;
 
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.company.CompanyResponse;
+import com.danamon.autochain.entity.InvoiceIssueLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +26,6 @@ public class InvoiceDetailResponse {
     private Long amount;
     private String type;
     private List<ItemList> itemList;
+    private String issue;
+    private String reason;
 }
