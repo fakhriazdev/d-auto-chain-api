@@ -9,6 +9,7 @@ import com.danamon.autochain.dto.partnership.NewPartnershipRequest;
 import com.danamon.autochain.dto.partnership.PartnershipResponse;
 import com.danamon.autochain.dto.partnership.SearchPartnershipRequest;
 import com.danamon.autochain.entity.*;
+import com.danamon.autochain.repository.BackOfficeRepository;
 import com.danamon.autochain.repository.PartnershipRepository;
 import com.danamon.autochain.repository.UserRepository;
 import com.danamon.autochain.service.CompanyService;
@@ -39,6 +40,7 @@ public class PartnershipServiceImpl implements PartnershipService {
     private final ValidationUtil validationUtil;
     private final CompanyService companyService;
     private final UserRepository userRepository;
+    private final BackOfficeRepository backOfficeRepository;
 
     @Override
     public String rejectPartnership(String partnershipId) {
@@ -127,16 +129,17 @@ public class PartnershipServiceImpl implements PartnershipService {
         Company company = companyService.getById(id);
 
         if (principal.getActor().equals(ActorType.USER)) {
+            User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
             Page<Partnership> partnerships = partnershipRepository.findAllByCompanyOrPartner(company, company, pageable);
 
             boolean isSuperUser = principal.getRoles().stream()
                     .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
 
-            if (!isSuperUser && principal.getActor().equals(ActorType.USER)) {
+            if (!isSuperUser) {
                 List<Partnership> filteredPartnerships = partnerships.getContent().stream()
                         .filter(partnership ->
                                 partnership.getCompany().equals(company) &&
-                                        principal.getUser().getUserAccsess().stream().anyMatch(userAccess ->
+                                        user.getUserAccsess().stream().anyMatch(userAccess ->
                                                 userAccess.getCompany().equals(partnership.getPartner())
                                         )
                         )
@@ -148,16 +151,20 @@ public class PartnershipServiceImpl implements PartnershipService {
             return partnerships.map(this::mapToResponse);
         }
 
+        BackOffice user = backOfficeRepository.findByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         Page<Partnership> partnerships = partnershipRepository.findAllByCompanyOrPartner(company, company, pageable);
 
-        boolean isSuperUser = principal.getRoles().stream()
-                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_USER.getName()));
+        boolean isSuperAdmin = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.SUPER_ADMIN.getName()));
 
-        if (!isSuperUser && principal.getActor().equals(ActorType.USER)) {
+        boolean isRelationManager = principal.getRoles().stream()
+                .anyMatch(role -> role.getRole().getRoleName().equals(RoleType.RELATIONSHIP_MANAGER.getName()));
+
+        if (!isSuperAdmin && isRelationManager) {
             List<Partnership> filteredPartnerships = partnerships.getContent().stream()
                     .filter(partnership ->
                             partnership.getCompany().equals(company) &&
-                                    principal.getBackOffice().getBackofficeUserAccesses().stream().anyMatch(userAccess ->
+                                    user.getBackofficeUserAccesses().stream().anyMatch(userAccess ->
                                             userAccess.getCompany().equals(partnership.getPartner())
                                     )
                     )
