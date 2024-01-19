@@ -67,14 +67,14 @@ public class SeederConfiguration implements CommandLineRunner {
             superBackofficeSeeder();
             companySeeder();
             superUserSeeder();
-
+//
             newBackOfficeSeeder();
             newUserSeeder();
-
-//            userSeeder();
+//
+////            userSeeder();
             invoiceSeeder();
             paymentSeeder();
-//            invoiceAndPaymentSeeder();
+////            invoiceAndPaymentSeeder();
         }
     }
 
@@ -842,27 +842,27 @@ public class SeederConfiguration implements CommandLineRunner {
     private void paymentSeeder() {
         try {
             //        ================================ PAYMENT COMPANY TO COMPANY ===============================
-            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
-//       generatePayment("PAY-ITA567-001", "INV-AST123-002", "ITA567", "AST123", PaymentType.INVOICING, PaymentStatus.PAID, PaymentMethod.BANK_TRANSFER, 474000000l, "25-11-2023", "20-11-2023");
-//       generatePayment("PAY-IND234-001", "INV-GAJ456-001", "IND234", "GAJ456", PaymentType.INVOICING, PaymentStatus.LATE_PAID, PaymentMethod.BANK_TRANSFER, 527400000l, "08-11-2023", "19-01-2024");
-            generatePayment("PAY-MUL890-001", "INV-GAJ456-002", "MUL890", "GAJ456", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 210800000l, "21-12-2023", null);
-            generatePayment("PAY-GAR123-001", "INV-AST123-003", "GAR123", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 418000000l, "17-04-2024", null);
-            generatePayment("PAY-UNI456-001", "INV-REL567-001", "UNI456", "REL567", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 180000000l, "17-03-2024", null);
-            generatePayment("PAY-DWI890-001", "INV-GAR123-001", "DWI890", "GAR123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 106000000l, "17-03-2024", null);
-            generatePayment("PAY-REL567-001", "INV-SEL234-001", "REL567", "SEL234", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 455500000l, "10-12-2023", null);
+            generatePayment("PAY-IND345-001", "INV-AST123-001", "AST123", "IND345", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//            generatePayment("PAY-ITA567-001", "INV-AST123-002", "ITA567", "AST123", PaymentType.INVOICING, PaymentStatus.PAID, PaymentMethod.BANK_TRANSFER, 474000000l, "25-11-2023", "20-11-2023");
+//            generatePayment("PAY-IND234-001", "INV-GAJ456-001", "IND234", "GAJ456", PaymentType.INVOICING, PaymentStatus.LATE_PAID, PaymentMethod.BANK_TRANSFER, 527400000l, "08-11-2023", "19-01-2024");
+            generatePayment("PAY-MUL890-001", "INV-GAJ456-002", "GAJ456", "MUL890", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 210800000l, "21-12-2023", null);
+            generatePayment("PAY-GAR123-001", "INV-AST123-003", "AST123", "GAR123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 418000000l, "17-04-2024", null);
+            generatePayment("PAY-UNI456-001", "INV-REL567-001", "REL567", "UNI456", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 180000000l, "17-03-2024", null);
+            generatePayment("PAY-DWI890-001", "INV-GAR123-001", "GAR123", "DWI890", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 106000000l, "17-03-2024", null);
+            generatePayment("PAY-REL567-001", "INV-SEL234-001", "SEL234", "REL567", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 455500000l, "10-12-2023", null);
 
-//        =============================== PAYMENT PAYANCING ===========================
-//        generatePayment("PAY/DANAMON/001","INV/AST123/001",null,"AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 19650541667l,"16-08-2023",null);
-//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
-//        generatePayment("PAY/DANAMON/002","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 164869022l,"16-08-2023",null);
-//
-//        generatePayment("FIN/MUL890/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l,"16-08-2023",null);
-//        generatePayment("FIN/MUL890/002","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l,"16-08-2023",null);
-//
-//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
-//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
-//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
-//        generatePayment("PAY/IND345/001","INV/AST123/001","IND345","AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l,"16-08-2023",null);
+//-        =============================== PAYMENT PAYANCING ===========================
+//            generatePayment("PAY-DANAMON-001", "INV-AST123-001", null, "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 19650541667l, "16-08-2023", null);
+//            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//            generatePayment("PAY-DANAMON-002", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 164869022l, "16-08-2023", null);
+
+//            generatePayment("FIN-MUL890-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l, "16-08-2023", null);
+//            generatePayment("FIN-MUL890-002", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 41217255l, "16-08-2023", null);
+
+//            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
 
         } catch (Exception e) {
             System.err.println("Seeder Payment error with : " + e);
@@ -917,7 +917,7 @@ public class SeederConfiguration implements CommandLineRunner {
 
     }
 
-    private void generateFinancingPayable(String id, String paymentId, String recipientId, Double interest, Integer tenure,  Long amount, Double installment,   FinancingStatus status, String approvalDate) {
+    private void generateFinancingPayable(String id, String paymentId, String recipientId, Double interest, Integer tenure, Long amount, Double installment, FinancingStatus status, String approvalDate) {
         Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found on seeder with name : " + paymentId));
 
@@ -979,18 +979,18 @@ public class SeederConfiguration implements CommandLineRunner {
             System.out.println("Error parsing date: " + e.getMessage());
         }
         financingReceivableRepository.saveAndFlush(
-                        FinancingReceivable.builder()
-                                .financingId(id)
-                                .company(recipient)
-                                .modifiedDate(date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
-                                .createdDate(LocalDateTime.now())
-                                .disbursment_date(date)
-                                .status(status)
-                                .financingType(type)
-                                .amount(amount)
-                                .fee(fee)
-                                .total(total)
-                                .build()
+                FinancingReceivable.builder()
+                        .financingId(id)
+                        .company(recipient)
+                        .modifiedDate(date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        .createdDate(LocalDateTime.now())
+                        .disbursment_date(date)
+                        .status(status)
+                        .financingType(type)
+                        .amount(amount)
+                        .fee(fee)
+                        .total(total)
+                        .build()
         );
     }
 

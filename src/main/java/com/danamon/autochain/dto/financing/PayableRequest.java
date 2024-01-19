@@ -18,11 +18,11 @@ public class PayableRequest {
 
     private String payment_id;
 
-    private Long amount;
+//    private Long amount;
 
     private Integer tenure;
 
-    private Double monthly_instalment;
+//    private Double monthly_instalment;
 
     private String payment_method;
 }
