@@ -779,29 +779,29 @@ public class SeederConfiguration implements CommandLineRunner {
         try {
             //        ================= COMPLETED ==============
             String item = "[{\"itemsName\" : \"Torque Assy Rod Truck\", \"itemsQuantity\" : 140, \"unitPrice\" : 450000},{\"itemsName\" : \"Fuel Tank Breather\", \"itemsQuantity\" : 160, \"unitPrice\" : 300000}, {\"itemsName\" : \"Passenger Air Bag Less Door\", \"itemsQuantity\" : 180, \"unitPrice\" : 500000}]";
-            generateInvoice("INV/AST123/001", "IND345", "AST123", 201000000l, "16-08-2023", "15-06-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item);
+            generateInvoice("INV-AST123-001", "IND345", "AST123", 201000000l, "16-08-2023", "15-06-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item);
 
             String item2 = "[{\"itemsName\" : \"Car Battery\", \"itemsQuantity\" : 140, \"unitPrice\" : 500000},{\"itemsName\" : \"Car Horn\", \"itemsQuantity\" : 160, \"unitPrice\" : 650000}, {\"itemsName\" : \"Meter Cluster\", \"itemsQuantity\" : 200, \"unitPrice\" : 15000000}]";
-            generateInvoice("INV/AST123/002", "ITA567", "AST123", 474000000l, "25-11-2023", "24-08-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item2);
+            generateInvoice("INV-AST123-002", "ITA567", "AST123", 474000000l, "25-11-2023", "24-08-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item2);
 
             String item3 = "[{\"itemsName\" : \"Gajah Tunggal Ban Luar Mobil\", \"itemsQuantity\" : 280, \"unitPrice\" : 450000},{\"itemsName\" : \"Gajah Tunggal Gt Radial Traction Pro\", \"itemsQuantity\" : 240, \"unitPrice\" : 450000}, {\"itemsName\" : \"Gajah Tunggal Ban Mobil Gtx Pro\", \"itemsQuantity\" : 300, \"unitPrice\" : 690000}]";
-            generateInvoice("INV/GAJ456/001", "IND234", "GAJ456", 5274000000l, "08-11-2023", "11-07-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item3);
+            generateInvoice("INV-GAJ456-001", "IND234", "GAJ456", 5274000000l, "08-11-2023", "11-07-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item3);
 
             String item4 = "[{\"itemsName\" : \"Gajah Tunggal Gt Radial Savero At Plus\", \"itemsQuantity\" : 50, \"unitPrice\" : 1300000},{\"itemsName\" : \"Gajah Tunggal Gt Radial Traction Pro\", \"itemsQuantity\" : 180, \"unitPrice\" : 810000}]";
-            generateInvoice("INV/GAJ456/002", "MUL890", "GAJ456", 210800000l, "21-12-2023", "20-10-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item4);
+            generateInvoice("INV-GAJ456-002", "MUL890", "GAJ456", 210800000l, "21-12-2023", "20-10-2023", InvoiceStatus.UNPAID, ProcessingStatusType.WAITING_STATUS, item4);
 
 //        ================= ONGOING ===============
             String item5 = "[{\"itemsName\" : \"Car Battery\", \"itemsQuantity\" : 140, \"unitPrice\" : 450000},{\"itemsName\" : \"Fuel Tank Breather\", \"itemsQuantity\" : 160, \"unitPrice\" : 300000}, {\"itemsName\" : \"Meter Cluster\", \"itemsQuantity\" : 200, \"unitPrice\" : 15000000}]";
-            generateInvoice("INV/AST123/003", "GAR123", "AST123", 418000000l, "17-04-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item5);
+            generateInvoice("INV-AST123-003", "GAR123", "AST123", 418000000l, "17-04-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item5);
 
             String item6 = "[{\"itemsName\" : \"Blok silinder\", \"itemsQuantity\" : 280, \"unitPrice\" : 450000},{\"itemsName\" : \"Kanvas rem\", \"itemsQuantity\" : 180, \"unitPrice\" : 300000}]";
-            generateInvoice("INV/REL567/001", "UNI456", "REL567", 180000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item6);
+            generateInvoice("INV-REL567-001", "UNI456", "REL567", 180000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item6);
 
             String item7 = "[{\"itemsName\" : \"Pin and Collars\", \"itemsQuantity\" : 140, \"unitPrice\" : 300000},{\"itemsName\" : \"Bolts\", \"itemsQuantity\" : 160, \"unitPrice\" : 150000}, {\"itemsName\" : \"Nuts\", \"itemsQuantity\" : 200, \"unitPrice\" : 200000}]";
-            generateInvoice("INV/GAR123/001", "DWI890", "GAR123", 106000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item7);
+            generateInvoice("INV-GAR123-001", "DWI890", "GAR123", 106000000l, "17-03-2024", "16-01-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item7);
 
             String item8 = "[{\"itemsName\" : \"Radiator\", \"itemsQuantity\" : 100, \"unitPrice\" : 3400000},{\"itemsName\" : \"Penyaring Udara\", \"itemsQuantity\" : 210, \"unitPrice\" : 550000}]";
-            generateInvoice("INV/SEL234/001", "REL567", "SEL234", 455000000l, "10-12-2024", "10-10-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item8);
+            generateInvoice("INV-SEL234-001", "REL567", "SEL234", 455000000l, "10-12-2024", "10-10-2024", InvoiceStatus.UNPAID, ProcessingStatusType.APPROVE_INVOICE, item8);
 
         } catch (Exception e) {
             System.out.println(e);
@@ -842,14 +842,14 @@ public class SeederConfiguration implements CommandLineRunner {
     private void paymentSeeder() {
         try {
             //        ================================ PAYMENT COMPANY TO COMPANY ===============================
-            generatePayment("PAY/IND345/001", "INV/AST123/001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
-//        generatePayment("PAY/ITA567/001", "INV/AST123/002", "ITA567", "AST123", PaymentType.INVOICING, PaymentStatus.PAID, PaymentMethod.BANK_TRANSFER, 474000000l, "25-11-2023", "20-11-2023");
-//        generatePayment("PAY/IND234/001", "INV/GAJ456/001", "IND234", "GAJ456", PaymentType.INVOICING, PaymentStatus.LATE_PAID, PaymentMethod.BANK_TRANSFER, 527400000l, "08-11-2023", "19-01-2024");
-            generatePayment("PAY/MUL890/001", "INV/GAJ456/002", "MUL890", "GAJ456", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 210800000l, "21-12-2023", null);
-            generatePayment("PAY/GAR123/001", "INV/AST123/003", "GAR123", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 418000000l, "17-04-2024", null);
-            generatePayment("PAY/UNI456/001", "INV/REL567/001", "UNI456", "REL567", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 180000000l, "17-03-2024", null);
-            generatePayment("PAY/DWI890/001", "INV/GAR123/001", "DWI890", "GAR123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 106000000l, "17-03-2024", null);
-            generatePayment("PAY/REL567/001", "INV/SEL234/001", "REL567", "SEL234", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 455500000l, "10-12-2023", null);
+            generatePayment("PAY-IND345-001", "INV-AST123-001", "IND345", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 201000000l, "16-08-2023", null);
+//       generatePayment("PAY-ITA567-001", "INV-AST123-002", "ITA567", "AST123", PaymentType.INVOICING, PaymentStatus.PAID, PaymentMethod.BANK_TRANSFER, 474000000l, "25-11-2023", "20-11-2023");
+//       generatePayment("PAY-IND234-001", "INV-GAJ456-001", "IND234", "GAJ456", PaymentType.INVOICING, PaymentStatus.LATE_PAID, PaymentMethod.BANK_TRANSFER, 527400000l, "08-11-2023", "19-01-2024");
+            generatePayment("PAY-MUL890-001", "INV-GAJ456-002", "MUL890", "GAJ456", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 210800000l, "21-12-2023", null);
+            generatePayment("PAY-GAR123-001", "INV-AST123-003", "GAR123", "AST123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 418000000l, "17-04-2024", null);
+            generatePayment("PAY-UNI456-001", "INV-REL567-001", "UNI456", "REL567", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 180000000l, "17-03-2024", null);
+            generatePayment("PAY-DWI890-001", "INV-GAR123-001", "DWI890", "GAR123", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 106000000l, "17-03-2024", null);
+            generatePayment("PAY-REL567-001", "INV-SEL234-001", "REL567", "SEL234", PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 455500000l, "10-12-2023", null);
 
 //        =============================== PAYMENT PAYANCING ===========================
 //        generatePayment("PAY/DANAMON/001","INV/AST123/001",null,"AST123",PaymentType.INVOICING, PaymentStatus.UNPAID, PaymentMethod.BANK_TRANSFER, 19650541667l,"16-08-2023",null);
