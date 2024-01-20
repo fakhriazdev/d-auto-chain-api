@@ -15,7 +15,7 @@ import java.util.Map;
 public class PayableDetailResponse {
     String financing_id;
     Collection payment_id;
-    Date created_date;
+    String created_date;
     Map<String,String> recipient;
     Map<String,String> sender;
     Long total_amount;
