@@ -124,8 +124,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         return InvoiceResponse.builder()
                 .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
+                .processingStatus(String.valueOf(invoice.getProcessingStatus()))
                 .invNumber(invoice.getInvoiceId())
-                .dueDate(invoice.getDueDate())
+                .dueDate(invoice.getDueDate().toString())
                 .amount(invoice.getAmount())
                 .itemList(itemLists)
                 .build();
@@ -179,7 +180,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void updateInvoiceIssueLog(RequestInvoiceStatus requestInvoiceStatus) {
         invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
-
         updateInvoiceStatus(requestInvoiceStatus);
     }
 
@@ -287,10 +287,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (request.getStatus() != null) {
+            if (request.getProcessingStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("status")),
-                        request.getStatus().toLowerCase()
+                        criteriaBuilder.lower(root.get("processingStatus")),
+                        request.getProcessingStatus().toLowerCase()
                 );
                 predicates.add(status);
             }
@@ -322,7 +322,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "processingStatus");
         Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
 
         if (request.getType().equals("payable")) {
@@ -339,7 +339,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .companyName(invoice.getSenderId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
-                .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
                 .build();
     }
 
@@ -350,7 +351,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
-                .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
                 .issue(invoice.getInvoiceIssueLog())
                 .build();
     }

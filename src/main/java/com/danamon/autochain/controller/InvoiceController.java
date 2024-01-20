@@ -58,7 +58,7 @@ public class InvoiceController {
                 .page(page)
                 .size(size)
                 .direction(direction)
-                .status(status)
+                .processingStatus(status)
                 .type(type)
                 .build();
 
