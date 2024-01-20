@@ -501,7 +501,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (tenure.getDueDate().before(from)){
             financingPayable.getInvoice().setStatus(InvoiceStatus.PAID);
         }else{
-            financingPayable.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+            financingPayable.getInvoice().setStatus(InvoiceStatus.PAID);
             financingPayable.setModifiedBy(principal.getUsername2());
             financingPayable.setModifiedDate(LocalDateTime.now());
         }

@@ -6,6 +6,9 @@ import com.danamon.autochain.dto.financing.*;
 import com.danamon.autochain.entity.FinancingReceivable;
 import com.danamon.autochain.service.FinancingService;
 import com.danamon.autochain.util.PagingUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -92,6 +95,7 @@ public class FinancingController {
     @GetMapping("/payable/{financing_id}")
     public ResponseEntity<?> get_detail_financing_payable(@PathVariable(name = "financing_id") String financing_id) {
         PayableDetailResponse data = financingService.get_detail_payable(financing_id);
+
         DataResponse<PayableDetailResponse> response = DataResponse.<PayableDetailResponse>builder()
                 .message("Success get details")
                 .statusCode(200)
