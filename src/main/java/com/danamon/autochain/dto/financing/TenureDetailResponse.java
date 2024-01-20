@@ -11,7 +11,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class TenureDetailResponse {
     String tenure_id;
-    Date due_date;
+    String due_date;
     Double amount;
     String status;
 }

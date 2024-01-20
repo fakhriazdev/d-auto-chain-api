@@ -183,7 +183,7 @@ public class FinancingServiceImpl implements FinancingService {
         tenures.forEach(tenure -> {
             listTenure.add(TenureDetailResponse.builder()
                     .tenure_id(tenure.getTenureId())
-                    .due_date(tenure.getDueDate())
+                    .due_date(tenure.getDueDate().toString())
                     .amount(tenure.getAmount())
                     .status(tenure.getStatus().name())
                     .build());
@@ -194,7 +194,7 @@ public class FinancingServiceImpl implements FinancingService {
                 .recipient(recipient)
                 .sender(sender)
                 .total_amount(financingPayable.getAmount())
-                .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
+                .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()).toString())
                 .tenure(financingPayable.getTenure())
                 .amount_instalment(financingPayable.getMonthly_installment())
                 .tenure_list_detail(listTenure)
@@ -594,7 +594,7 @@ public class FinancingServiceImpl implements FinancingService {
         if(financingPayable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already rejected by company recipient");
         if(financingPayable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already canceled by company sender");
         if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
-
+        if(financingPayable.getPayment().getType().equals(PaymentType.FINANCING_PAYABLE)) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,"Cannot Request With Type Financing Payable With same Payment ID : "+financingPayable.getPayment().getPaymentId());
 //        Double tenure_amount = financingPayable.getTotal() / financingPayable.getTenure();
 
         for (int i = 1; i <= financingPayable.getTenure(); i++) {
