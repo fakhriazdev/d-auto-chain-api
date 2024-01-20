@@ -19,8 +19,9 @@ public class InvoiceResponse {
     private String companyName;
     private String invNumber;
     private Long amount;
-    private Date dueDate;
+    private String dueDate;
     private String status;
+    private String processingStatus;
     private List<ItemList> itemList;
     private InvoiceIssueLog issue;
 }
