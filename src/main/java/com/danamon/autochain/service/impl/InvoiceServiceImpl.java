@@ -289,7 +289,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             if (request.getProcessingStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("processingStatus")),
+                        criteriaBuilder.lower(root.get("status")),
                         request.getProcessingStatus().toLowerCase()
                 );
                 predicates.add(status);
@@ -322,13 +322,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         };
 
         Sort.Direction direction = Sort.Direction.fromString(request.getDirection());
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "processingStatus");
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getSize(), direction, "status");
         Page<Invoice> invoices = invoiceRepository.findAll(specification, pageable);
 
         if (request.getType().equals("payable")) {
             return invoices.map(this::mapToResponsePayable);
         } else {
-            return invoices.map(this::mapToResponseReceivable);
+            return invoices.map(this::mapToResponseGetAllReceivable);
         }
     }
 
@@ -338,6 +338,18 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .invNumber(invoice.getInvoiceId())
                 .amount(invoice.getAmount())
                 .companyName(invoice.getSenderId().getCompanyName())
+                .status(String.valueOf(invoice.getStatus()))
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
+                .build();
+    }
+
+    private InvoiceResponse mapToResponseGetAllReceivable(Invoice invoice) {
+        return InvoiceResponse.builder()
+                .company_id(invoice.getRecipientId().getCompany_id())
+                .invNumber(invoice.getInvoiceId())
+                .amount(invoice.getAmount())
+                .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
                 .processingStatus(invoice.getProcessingStatus().name())
                 .dueDate(invoice.getDueDate().toString())
