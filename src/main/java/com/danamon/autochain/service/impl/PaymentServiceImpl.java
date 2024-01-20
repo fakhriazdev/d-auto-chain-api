@@ -251,15 +251,19 @@ public class PaymentServiceImpl implements PaymentService {
         String recipient = "";
         if (request != null) {
             if (request.getGroupBy().equals("payable")) {
-                recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON";
+                recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "Bank Danamon";
             } else {
-                recipient = payment.getRecipientId().getCompanyName();
+                recipient = payment.getRecipientId() != null ? payment.getRecipientId().getCompanyName() : "Bank Danamon";
             }
         } else {
             Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
-            recipient = Objects.equals(user.getCompany(), payment.getSenderId()) ? payment.getRecipientId().getCompanyName() : (payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "DANAMON");
+            if (Objects.equals(user.getCompany(), payment.getSenderId())) {
+                recipient = payment.getRecipientId() != null ? payment.getRecipientId().getCompanyName() : "Bank Danamon";
+            } else {
+                recipient = payment.getSenderId() != null ? payment.getSenderId().getCompanyName() : "Bank Danamon";
+            }
         }
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
@@ -389,7 +393,11 @@ public class PaymentServiceImpl implements PaymentService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
 
-        List<Payment> payments = paymentRepository.findAllByRecipientIdAndTypeAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+        List<Payment> payments = paymentRepository.findAllByRecipientIdAndTypeIsNotAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+
+//        payments.stream().filter(payment -> {
+//
+//        })
 
         return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }
@@ -400,7 +408,7 @@ public class PaymentServiceImpl implements PaymentService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
 
-        List<Payment> payments = paymentRepository.findAllBySenderIdAndTypeAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+        List<Payment> payments = paymentRepository.findAllBySenderIdAndTypeIsNotAndStatusInAndAmountBetween(user.getCompany(), PaymentType.FINANCING_PAYABLE , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
 
         return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }
