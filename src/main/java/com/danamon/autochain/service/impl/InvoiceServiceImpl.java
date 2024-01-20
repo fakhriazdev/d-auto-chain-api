@@ -420,7 +420,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
-        List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusInProAndProcessingStatusIn(user.getCompany(), List.of(InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID), List.of(ProcessingStatusType.APPROVE_INVOICE, ProcessingStatusType.RESOLVE_INVOICE));
+        List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusInAndProcessingStatusIn(user.getCompany(), List.of(InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID), List.of(ProcessingStatusType.APPROVE_INVOICE, ProcessingStatusType.RESOLVE_INVOICE));
 
         List<Invoice> filteredInvoices = invoices.stream()
                 .filter(invoice -> invoice.getFinancingReceivable() == null)

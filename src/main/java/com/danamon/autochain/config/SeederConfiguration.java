@@ -701,7 +701,6 @@ public class SeederConfiguration implements CommandLineRunner {
 
         createUser("abra_123", "Abraham", "abramyct@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
 
-
         createUser("edia_123", "Ediashta", "ediashtarevin77@gmail.com", "GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
 
         createUser("jere_123", "Jeremy", "jeremysilaban3@gmail.com", "GAR123", List.of("UNI456"), List.of("INVOICE_STAFF"));
