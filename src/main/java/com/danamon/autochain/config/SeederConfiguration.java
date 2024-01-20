@@ -939,6 +939,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayableId(id)
                 .payment(payment)
                 .company(recipient)
+                .invoice(invoice)
                 .status(status)
                 .amount(amount)
                 .interest(interest)
