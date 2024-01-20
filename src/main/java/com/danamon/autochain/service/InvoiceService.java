@@ -36,7 +36,6 @@ public interface InvoiceService {
 
     Long getTotalPaidInvoiceReceivable();
     Long getTotalUnpaidInvoiceReceivable();
-    List<Invoice> getPaidBetweenCreatedDate(Company company, List<InvoiceStatus> statuses, LocalDateTime createdDate, LocalDateTime createdDate2);
-    List<Invoice> getInvoiceApprove(Company company, ProcessingStatusType processingStatusType);
     void updateInvoice(RequestUpdateInvoice requestUpdateInvoice);
+    List<InvoiceResponse> getInvoiceForFinancingReceivable();
 }

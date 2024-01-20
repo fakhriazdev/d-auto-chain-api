@@ -9,6 +9,7 @@ import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceResponse;
 import com.danamon.autochain.dto.PagingResponse;
+import com.danamon.autochain.dto.payment.PaymentResponse;
 import com.danamon.autochain.service.InvoiceService;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -117,5 +118,19 @@ public class InvoiceController {
     public ResponseEntity<?> updateInvoice(@RequestBody RequestUpdateInvoice requestUpdateInvoice){
         invoiceService.updateInvoice(requestUpdateInvoice);
         return ResponseEntity.ok("Success Update Invoice");
+    }
+
+    @GetMapping("/request-financing-receivable")
+    public  ResponseEntity<?> getRequestFinancingReceivable(){
+        List<InvoiceResponse> invoiceForFinancingReceivable = invoiceService.getInvoiceForFinancingReceivable();
+        DataResponse<List<InvoiceResponse>> response = DataResponse.<List<InvoiceResponse>>builder()
+                .message("Success get invoices")
+                .statusCode(HttpStatus.OK.value())
+                .data(invoiceForFinancingReceivable)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 }
