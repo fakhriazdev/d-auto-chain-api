@@ -11,6 +11,7 @@ import com.danamon.autochain.constant.payment.PaymentType;
 import com.danamon.autochain.dto.Invoice.ItemList;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoice;
 import com.danamon.autochain.dto.Invoice.request.RequestInvoiceStatus;
+import com.danamon.autochain.dto.Invoice.request.RequestUpdateInvoice;
 import com.danamon.autochain.dto.Invoice.request.SearchInvoiceRequest;
 import com.danamon.autochain.dto.company.CompanyResponse;
 import com.danamon.autochain.dto.Invoice.response.InvoiceDetailResponse;
@@ -44,6 +45,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -87,7 +89,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .type(PaymentType.INVOICING)
                 .status(PaymentStatus.UNPAID)
                 .amount(invoice.getAmount())
-                        .createdDate(new java.util.Date())
+                .createdDate(new java.util.Date())
                 .dueDate(invoice.getDueDate())
                 .build());
     }
@@ -101,20 +103,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         //Get company data from request
         Company recipientCompany = companyService.getById(requestInvoice.getRecipientId());
 
-        //get userDetails data (include company) by user current login
-        User currentUserLogin = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User Not Found"));
-
         //setup Invoice
         Invoice invoice = Invoice.builder()
-                .invoiceId(IdsGeneratorUtil.generate("INV", currentUserLogin.getCompany().getCompany_id()))
-                .senderId(currentUserLogin.getCompany())
+                .invoiceId(IdsGeneratorUtil.generate("INV", principal.getUser().getCompany().getCompany_id()))
+                .senderId(principal.getUser().getCompany())
                 .recipientId(recipientCompany)
                 .dueDate(requestInvoice.getDueDate())
                 .status(InvoiceStatus.PENDING)
                 .processingStatus(ProcessingStatusType.WAITING_STATUS)
                 .amount(requestInvoice.getAmount())
                 .createdDate(LocalDateTime.now())
-                .createdBy(principal.getCredentialId())
+                .createdBy(principal.getUser().getCompany().getCompanyName())
                 .itemList(requestInvoice.getItemList())
                 .build();
 
@@ -129,6 +128,25 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .itemList(itemLists)
                 .build();
+    }
+
+    public void updateInvoice(RequestUpdateInvoice request) {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Invoice invoice = invoiceRepository.findById(request.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Invoice Not Found"));
+
+        if (principal.getUser().getCompany() == invoice.getRecipientId()) throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot Updating Invoice");
+
+        invoice.setAmount(request.getAmount());
+        invoice.setDueDate(request.getDueDate());
+        invoice.setItemList(request.getItemList());
+        invoice.setModifiedBy(principal.getUsername2());
+        invoice.setModifiedDate(LocalDateTime.now());
+        invoice.setProcessingStatus(ProcessingStatusType.RESOLVE_INVOICE);
+
+        invoiceIssueLogRepository.deleteByInvoice(invoice);
+
+        invoiceRepository.saveAndFlush(invoice);
     }
 
     @Transactional(readOnly = true)
@@ -157,7 +175,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @Deprecated
     @Override
     public void updateInvoiceIssueLog(RequestInvoiceStatus requestInvoiceStatus) {
         invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
@@ -168,7 +185,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public InvoiceDetailResponse updateInvoiceStatus(RequestInvoiceStatus requestInvoiceStatus) {
-
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Invoice invoice = invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
 
         if (invoice.getProcessingStatus() != null) {
@@ -181,6 +198,10 @@ public class InvoiceServiceImpl implements InvoiceService {
             processingStatusType = ProcessingStatusType.valueOf(requestInvoiceStatus.getProcessingType());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Status Type");
+        }
+
+        if (invoice.getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE) && processingStatusType.equals(ProcessingStatusType.APPROVE_INVOICE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Update Type From Reject To Approve.");
         }
 
         if (processingStatusType.equals(ProcessingStatusType.CANCEL_INVOICE)) {
@@ -204,7 +225,8 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoice.setProcessingStatus(ProcessingStatusType.APPROVE_INVOICE);
             invoice.setStatus(InvoiceStatus.UNPAID);
         }
-
+        invoice.setModifiedDate(LocalDateTime.now());
+        invoice.setModifiedBy(principal.getUsername2());
         invoice.setProcessingStatus(processingStatusType);
         invoiceRepository.saveAndFlush(invoice);
 
@@ -218,14 +240,24 @@ public class InvoiceServiceImpl implements InvoiceService {
         CompanyResponse companySender = companyService.findById(invoice.getSenderId().getCompany_id());
         CompanyResponse companyRecipient = companyService.findById(invoice.getRecipientId().getCompany_id());
 
+        if (companySender.getCompanyName() == null) {
+            companySender.setCompanyName("Bank Danamon");
+        }
+
+        InvoiceIssueLog invoiceIssueLog = invoice.getInvoiceIssueLog();
+        String issue = invoiceIssueLog == null ? null : invoiceIssueLog.getReason();
+        String reason = invoiceIssueLog == null ? null : invoiceIssueLog.getIssueType().name();
+
         return InvoiceDetailResponse.builder()
                 .companyFrom(companySender)
                 .companyRecipient(companyRecipient)
                 .invoiceId(invoice.getInvoiceId())
-                .date(Date.valueOf(invoice.getCreatedDate().toLocalDate()))
+                .date(Date.from(invoice.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()))
                 .dueDate(invoice.getDueDate())
                 .processingStatus(invoice.getProcessingStatus().name())
                 .itemList(itemLists)
+                .issue(issue)
+                .reason(reason)
                 .build();
     }
 
@@ -318,6 +350,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
                 .dueDate(invoice.getDueDate())
+                .issue(invoice.getInvoiceIssueLog())
                 .build();
     }
 

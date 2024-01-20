@@ -13,6 +13,7 @@ import com.danamon.autochain.service.PaymentService;
 import com.danamon.autochain.service.impl.PaymentServiceImpl;
 import com.danamon.autochain.util.PagingUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -132,18 +133,18 @@ public class PaymentController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentDetail(@PathVariable(name = "id") String transactionId){
         Payment paymentDetailType = paymentService.getPaymentDetailType(transactionId);
-        if (paymentDetailType.getType().equals(PaymentType.INVOICING)){
-            InvoiceDetailResponse paymentDetailInvoice = paymentService.getPaymentDetailInvoice(paymentDetailType);
-            DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
+        if (paymentDetailType.getType().equals(PaymentType.FINANCING_PAYABLE)){
+            PaymentDetailFinancing paymentDetail = paymentService.getPaymentDetailFinancing(paymentDetailType);
+            DataResponse<PaymentDetailFinancing> response = DataResponse.<PaymentDetailFinancing>builder()
                     .statusCode(HttpStatus.OK.value())
                     .message("Success get data")
-                    .data(paymentDetailInvoice)
+                    .data(paymentDetail)
                     .build();
             return ResponseEntity.ok(response);
         }else {
-            PaymentDetailFinancing paymentDetailFinancing = paymentService.getPaymentDetailFinancing(paymentDetailType);
-            DataResponse<PaymentDetailFinancing> response = DataResponse.<PaymentDetailFinancing>builder()
-                    .data(paymentDetailFinancing)
+            InvoiceDetailResponse paymentDetail = paymentService.getPaymentDetailInvoice(paymentDetailType);
+            DataResponse<InvoiceDetailResponse> response = DataResponse.<InvoiceDetailResponse>builder()
+                    .data(paymentDetail)
                     .statusCode(HttpStatus.OK.value())
                     .message("Success get data")
                     .build();
@@ -179,7 +180,7 @@ public class PaymentController {
                 .body(response);
     }
 
-    @PutMapping("/payment/invoice/{id}")
+    /*@PutMapping("/payment/invoice/{id}")
     public ResponseEntity<?> paymentProceedInvoicing(@PathVariable(name = "id") String id){
         PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.updatePaymentInvoicing(id);
 
@@ -189,9 +190,9 @@ public class PaymentController {
                 .statusCode(HttpStatus.OK.value())
                 .build();
         return ResponseEntity.ok(build);
-    }
+    }*/
 
-    @PutMapping("/payment/financing/{id}")
+    /*@PutMapping("/payment/financing/{id}")
     public ResponseEntity<?> paymentProceedFinancing(@PathVariable(name = "id") String id){
         PaymentServiceImpl.UpdatePaymentResponse updatePaymentResponse = paymentService.proceedPayment(id);
 
@@ -201,7 +202,7 @@ public class PaymentController {
                 .statusCode(HttpStatus.OK.value())
                 .build();
         return ResponseEntity.ok(build);
-    }
+    }*/
 
     @PutMapping("/payment/{id}")
     public ResponseEntity<?> proceedPayment(@PathVariable String id){

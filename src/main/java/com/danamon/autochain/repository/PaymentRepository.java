@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSpecificationExecutor<Payment> {
+public interface    PaymentRepository extends JpaRepository<Payment, String>, JpaSpecificationExecutor<Payment> {
     List<Payment> findAllBySenderIdAndCreatedDateBetween(Company sender, Date startDate, Date endDate);
     List<Payment> findAllByRecipientIdAndCreatedDateBetween(Company recipient, Date startDate, Date endDate);
     List<Payment> findAllByStatusEquals(String status);

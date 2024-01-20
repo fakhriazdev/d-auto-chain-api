@@ -365,7 +365,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentDetailFinancing.builder()
                 .transactionId(financingPayable.getInvoice().getInvoiceId())
-                .tenor((tenureComplete + tenureUnpaid) + "/" + tenureUpComing)
+                .tenor((tenureComplete + tenureUnpaid) + "/" + financingPayable.getTenure())
                 .supplier(financingPayable.getCompany().getCompanyName())
                 .amount(
                         unpaid.stream().findFirst().orElseThrow(
@@ -477,12 +477,15 @@ public class PaymentServiceImpl implements PaymentService {
         payment.getInvoice().setModifiedDate(LocalDateTime.now());
 
         paymentRepository.save(payment);
+
+        String companySender = payment.getSenderId() == null ? "Bank Danamon" : payment.getSenderId().getCompanyName();
+        String companyRecipient = payment.getRecipientId() == null ? "Bank Danamon" : payment.getRecipientId().getCompanyName();
         return new UpdatePaymentResponse(
                 payment.getPaymentId(),
                 from.toString() + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getSecond(),
                 payment.getMethod().name(),
-                payment.getSenderId().getCompanyName(),
-                payment.getRecipientId().getCompanyName(),
+                companySender,
+                companyRecipient,
                 payment.getAmount(),
                 0.02 * payment.getAmount()
         );
@@ -521,6 +524,8 @@ public class PaymentServiceImpl implements PaymentService {
         // if it doesn`t exist it`s mean payment are completed
         if (nextMonthList.isEmpty()){
             financingPayable.setStatus(FinancingStatus.COMPLETED);
+
+            financingPayableRepository.saveAndFlush(financingPayable);
 
             Company company = financingPayable.getCompany();
 

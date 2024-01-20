@@ -590,7 +590,9 @@ public class FinancingServiceImpl implements FinancingService {
 
     public AcceptResponse payableFinancing(AcceptRequest request){
         FinancingPayable financingPayable = financingPayableRepository.findById(request.getFinancing_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Financial Id"));
-
+        if(financingPayable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.WAITING_STATUS)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice not yet approved by company recipient");
+        if(financingPayable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.REJECT_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already rejected by company recipient");
+        if(financingPayable.getInvoice().getProcessingStatus().equals(ProcessingStatusType.CANCEL_INVOICE)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this id invoice already canceled by company sender");
         if(financingPayable.getStatus().equals(FinancingStatus.ONGOING)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"this financing id already approved by backoffice");
 
 //        Double tenure_amount = financingPayable.getTotal() / financingPayable.getTenure();
@@ -651,6 +653,12 @@ public class FinancingServiceImpl implements FinancingService {
 
         financingPayable.setStatus(FinancingStatus.ONGOING);
         financingPayableRepository.saveAndFlush(financingPayable);
+
+        Company company = companyRepository.findById(financingPayable.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Company ID for decrease remaining limit"));
+        double new_remaining_limit = company.getRemainingLimit() - financingPayable.getAmount();
+        if(new_remaining_limit < 0) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Remaining Limit Less than 0, cannot request financing");
+        company.setRemainingLimit(new_remaining_limit);
+        companyRepository.saveAndFlush(company);
 
 //        AcceptDetailResponse buyyer = new AcceptDetailResponse();
 //        buyyer.setFinancingType(FinancingType.PAYABLE.name());
@@ -793,6 +801,12 @@ public class FinancingServiceImpl implements FinancingService {
 
         financingReceivable.setStatus(FinancingStatus.ONGOING);
         financingReceivableRepository.saveAndFlush(financingReceivable);
+
+        Company company = companyRepository.findById(financingReceivable.getCompany().getCompany_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Company ID for decrease remaining limit"));
+        double new_remaining_limit = company.getRemainingLimit() - financing_amount;
+        if(new_remaining_limit < 0) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Remaining Limit Less than 0, cannot request financing");
+        company.setRemainingLimit(new_remaining_limit);
+        companyRepository.saveAndFlush(company);
 
 //        Response DTO
         buyyer.setFinancingType(FinancingType.PAYABLE.name());
