@@ -517,6 +517,8 @@ public class PaymentServiceImpl implements PaymentService {
         if (nextMonthList.isEmpty()){
             financingPayable.setStatus(FinancingStatus.COMPLETED);
 
+            financingPayableRepository.saveAndFlush(financingPayable);
+
             Company company = financingPayable.getCompany();
 
             Double totalPayable = financingPayable.getAmount().doubleValue();
