@@ -70,13 +70,11 @@ public class SeederConfiguration implements CommandLineRunner {
 //
             newBackOfficeSeeder();
             newUserSeeder();
-//
-////            userSeeder();
+
             invoiceSeeder();
             paymentSeeder();
 
-            financingSeeder();
-////            invoiceAndPaymentSeeder();
+//            financingSeeder();
         }
     }
 
