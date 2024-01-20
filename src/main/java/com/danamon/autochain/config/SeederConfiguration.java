@@ -74,7 +74,7 @@ public class SeederConfiguration implements CommandLineRunner {
             invoiceSeeder();
             paymentSeeder();
 
-//            financingSeeder();
+            financingSeeder();
         }
     }
 
