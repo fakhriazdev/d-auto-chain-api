@@ -183,22 +183,22 @@ public class FinancingServiceImpl implements FinancingService {
         tenures.forEach(tenure -> {
             listTenure.add(TenureDetailResponse.builder()
                     .tenure_id(tenure.getTenureId())
-                    .due_date(tenure.getDueDate().toString())
+//                    .due_date(tenure.getDueDate().toString())
                     .amount(tenure.getAmount())
                     .status(tenure.getStatus().name())
                     .build());
         });
         return PayableDetailResponse.builder()
                 .financing_id(financingPayable.getFinancingPayableId())
-                .payment_id(financingPayable.getInvoice().getPayment())
+                .payment_id(financingPayable.getPayment().getPaymentId())
                 .recipient(recipient)
                 .sender(sender)
                 .total_amount(financingPayable.getAmount())
-                .created_date(Date.from(financingPayable.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant()).toString())
+                .created_date(financingPayable.getCreatedDate().toString())
                 .tenure(financingPayable.getTenure())
                 .amount_instalment(financingPayable.getMonthly_installment())
                 .tenure_list_detail(listTenure)
-                .status(financingPayable.getStatus().toString())
+                .status(financingPayable.getStatus().name())
                 .build();
     }
 

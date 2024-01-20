@@ -14,7 +14,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class PayableDetailResponse {
     String financing_id;
-    Collection payment_id;
+    String payment_id;
     String created_date;
     Map<String,String> recipient;
     Map<String,String> sender;
