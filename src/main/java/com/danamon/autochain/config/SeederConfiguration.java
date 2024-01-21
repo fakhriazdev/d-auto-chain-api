@@ -697,6 +697,9 @@ public class SeederConfiguration implements CommandLineRunner {
     private void newUserSeeder() {
 //        createUser("oreo_123", "Oreo Jaya", "oreofinalprojectdtt@gmail.com", "AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
 
+        createUser("fakhriaz", "fakhri", "fakhriazdev@gmail.com", "GAR123", List.of("AST123"), List.of("SUPER_USER"));
+        createUser("ragil9", "ragil", "ragilindra9@gmail.com", "AST123", List.of("GAR123"), List.of("SUPER_USER"));
+
         createUser("nand_123", "Nand", "dinandtambunan28@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
 
         createUser("abra_123", "Abraham", "abramyct@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
@@ -766,6 +769,9 @@ public class SeederConfiguration implements CommandLineRunner {
 
     private void newBackOfficeSeeder() {
 //        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
+
+        createBackoffice("rizdaagisa", "rizdaagisa", "rizdaagisa@gmail.com", "SUPER_ADMIN", null);
+        createBackoffice("dita", "dita", "ditsabil@gmail.com", "SUPER_ADMIN", null);
 
         createBackoffice("admin_1", "Admin A", "admin@gmail.com", "ADMIN", null);
 

@@ -237,7 +237,7 @@ public class AuthServiceImpl implements AuthService {
         Credential credential = credentialRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Email Not Found"));
 
         HashMap<String, String> info = new HashMap<>();
-        String urlBuilder = "http://localhost:5432/user/forget/" + credential.getCredentialId();
+        String urlBuilder = "http://108.136.231.164:5173/user/forget/" + credential.getCredentialId();
         try {
             URL url = new URI(urlBuilder).toURL();
             String recoveryPassword = "<html style='width: 100%;'>" +
