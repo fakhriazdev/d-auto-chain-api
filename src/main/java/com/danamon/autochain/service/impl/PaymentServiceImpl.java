@@ -425,11 +425,11 @@ public class PaymentServiceImpl implements PaymentService {
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
 
         if (from.before(payment.getDueDate())) {
-            payment.setStatus(PaymentStatus.PAID);
-            payment.getInvoice().setStatus(InvoiceStatus.PAID);
-        } else {
             payment.setStatus(PaymentStatus.LATE_PAID);
             payment.getInvoice().setStatus(InvoiceStatus.LATE_PAID);
+        } else {
+            payment.setStatus(PaymentStatus.PAID);
+            payment.getInvoice().setStatus(InvoiceStatus.PAID);
         }
         paymentRepository.saveAndFlush(payment);
         return new UpdatePaymentResponse(
@@ -464,7 +464,7 @@ public class PaymentServiceImpl implements PaymentService {
     public UpdatePaymentResponse proceedPaymentInvoicing(Payment payment) {
         Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-        if (payment.getDueDate().before(from)) {
+        if (from.before(payment.getDueDate())) {
             payment.setStatus(PaymentStatus.PAID);
             payment.getInvoice().setStatus(InvoiceStatus.PAID);
         }else {
@@ -494,8 +494,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UpdatePaymentResponse proceedPaymentTenure(Payment payment) {
-        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Date from = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // get data financing payable
         FinancingPayable financingPayable = payment.getFinancingPayable();
         List<Tenure> tenures = tenureRepository.findAllByFinancingPayableIdOrderByDueDateAsc(financingPayable);
@@ -508,7 +508,7 @@ public class PaymentServiceImpl implements PaymentService {
         tenure.setStatus(TenureStatus.COMPLETED);
         tenure.setPaidDate(from);
 
-        if (tenure.getDueDate().before(from)){
+        if (from.before(tenure.getDueDate())){
             financingPayable.getInvoice().setStatus(InvoiceStatus.PAID);
         }else{
             financingPayable.getInvoice().setStatus(InvoiceStatus.PAID);
