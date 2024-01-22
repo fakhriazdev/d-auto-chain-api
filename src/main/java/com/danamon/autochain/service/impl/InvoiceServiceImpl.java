@@ -2,6 +2,7 @@ package com.danamon.autochain.service.impl;
 
 
 import com.danamon.autochain.constant.RoleType;
+import com.danamon.autochain.constant.invoice.InvoiceType;
 import com.danamon.autochain.constant.invoice.ProcessingStatusType;
 import com.danamon.autochain.constant.invoice.ReasonType;
 import com.danamon.autochain.constant.invoice.InvoiceStatus;
@@ -123,8 +124,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         return InvoiceResponse.builder()
                 .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
+                .processingStatus(String.valueOf(invoice.getProcessingStatus()))
                 .invNumber(invoice.getInvoiceId())
-                .dueDate(invoice.getDueDate())
+                .dueDate(invoice.getDueDate().toString())
                 .amount(invoice.getAmount())
                 .itemList(itemLists)
                 .build();
@@ -178,7 +180,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public void updateInvoiceIssueLog(RequestInvoiceStatus requestInvoiceStatus) {
         invoiceRepository.findById(requestInvoiceStatus.getInvNumber()).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Data Not Found"));
-
         updateInvoiceStatus(requestInvoiceStatus);
     }
 
@@ -286,10 +287,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         Specification<Invoice> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (request.getStatus() != null) {
+            if (request.getProcessingStatus() != null) {
                 Predicate status = criteriaBuilder.equal(
                         criteriaBuilder.lower(root.get("status")),
-                        request.getStatus().toLowerCase()
+                        request.getProcessingStatus().toLowerCase()
                 );
                 predicates.add(status);
             }
@@ -327,7 +328,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (request.getType().equals("payable")) {
             return invoices.map(this::mapToResponsePayable);
         } else {
-            return invoices.map(this::mapToResponseReceivable);
+            return invoices.map(this::mapToResponseGetAllReceivable);
         }
     }
 
@@ -338,7 +339,20 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .companyName(invoice.getSenderId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
-                .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
+                .build();
+    }
+
+    private InvoiceResponse mapToResponseGetAllReceivable(Invoice invoice) {
+        return InvoiceResponse.builder()
+                .company_id(invoice.getRecipientId().getCompany_id())
+                .invNumber(invoice.getInvoiceId())
+                .amount(invoice.getAmount())
+                .companyName(invoice.getRecipientId().getCompanyName())
+                .status(String.valueOf(invoice.getStatus()))
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
                 .build();
     }
 
@@ -349,7 +363,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .amount(invoice.getAmount())
                 .companyName(invoice.getRecipientId().getCompanyName())
                 .status(String.valueOf(invoice.getStatus()))
-                .dueDate(invoice.getDueDate())
+                .processingStatus(invoice.getProcessingStatus().name())
+                .dueDate(invoice.getDueDate().toString())
                 .issue(invoice.getInvoiceIssueLog())
                 .build();
     }
@@ -413,12 +428,16 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public List<Invoice> getPaidBetweenCreatedDate(Company company, List<InvoiceStatus> statuses, LocalDateTime createdDate, LocalDateTime createdDate2) {
-        return invoiceRepository.findAllByRecipientIdAndStatusInAndCreatedDateBetween(company, statuses, createdDate, createdDate2);
-    }
+    public List<InvoiceResponse> getInvoiceForFinancingReceivable() {
+        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
 
-    @Override
-    public List<Invoice> getInvoiceApprove(Company company, ProcessingStatusType processingStatusType) {
-        return invoiceRepository.findAllByRecipientIdAndProcessingStatusEquals(company, processingStatusType);
+        List<Invoice> invoices = invoiceRepository.findAllBySenderIdAndStatusInAndProcessingStatusIn(user.getCompany(), List.of(InvoiceStatus.UNPAID, InvoiceStatus.LATE_UNPAID), List.of(ProcessingStatusType.APPROVE_INVOICE, ProcessingStatusType.RESOLVE_INVOICE));
+
+        List<Invoice> filteredInvoices = invoices.stream()
+                .filter(invoice -> invoice.getFinancingReceivable() == null)
+                .toList();
+
+        return filteredInvoices.stream().map(this::mapToResponseReceivable).toList();
     }
 }

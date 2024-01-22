@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -273,8 +274,9 @@ public class PaymentServiceImpl implements PaymentService {
                                 .company_id(payment.getInvoice().getRecipientId().getCompany_id())
                                 .companyName(payment.getInvoice().getRecipientId().getCompanyName())
                                 .status(String.valueOf(payment.getInvoice().getStatus()))
+                                .processingStatus(payment.getInvoice().getProcessingStatus().name())
                                 .invNumber(payment.getInvoice().getInvoiceId())
-                                .dueDate(payment.getInvoice().getDueDate())
+                                .dueDate(payment.getInvoice().getDueDate().toString())
                                 .amount(payment.getInvoice().getAmount())
                                 .itemList(itemLists)
                                 .build()
@@ -393,24 +395,13 @@ public class PaymentServiceImpl implements PaymentService {
         User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
         long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
 
-        List<Payment> payments = paymentRepository.findAllByRecipientIdAndTypeIsNotAndStatusInAndAmountBetween(user.getCompany(), PaymentType.INVOICING , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
+        List<Payment> payments = paymentRepository.findAllByRecipientIdAndTypeIsNotAndStatusInAndAmountBetween(user.getCompany(), PaymentType.FINANCING_PAYABLE , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
 
-//        payments.stream().filter(payment -> {
-//
-//        })
+        List<Payment> filteredPayments = payments.stream()
+                .filter(payment -> payment.getFinancingPayable() == null)
+                .toList();
 
-        return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
-    }
-
-    @Override
-    public List<PaymentResponse> getPaymentForFinancingReceivable() {
-        Credential principal = (Credential) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findUserByCredential(principal).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credential invalid"));
-        long remainingLimit = (long) user.getCompany().getRemainingLimit().doubleValue();
-
-        List<Payment> payments = paymentRepository.findAllBySenderIdAndTypeIsNotAndStatusInAndAmountBetween(user.getCompany(), PaymentType.FINANCING_PAYABLE , List.of(PaymentStatus.UNPAID, PaymentStatus.LATE_UNPAID), 75000000L, remainingLimit);
-
-        return payments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
+        return filteredPayments.stream().map(payment -> mapToResponsePayment(payment, null)).toList();
     }
 
     @Override

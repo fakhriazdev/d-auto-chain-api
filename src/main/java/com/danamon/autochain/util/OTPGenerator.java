@@ -26,7 +26,7 @@ public class OTPGenerator {
 
         String timeInHex = OTP.timeInHex(System.currentTimeMillis(), 1);
         String code = OTP.create(secret, timeInHex, otpDigits, Type.TOTP);
-        URL url = new URI("http://localhost:5173/verifyOtp?secret=" + secret + "&digit=" + otpDigits + "&period=" + timeInHex + "&email=" + email).toURL();
+        URL url = new URI("http://108.136.231.164:5173/verifyOtp?secret=" + secret + "&digit=" + otpDigits + "&period=" + timeInHex + "&email=" + email).toURL();
         return OtpResponse.builder()
                 .issuer(issuer)
                 .secret(secret)

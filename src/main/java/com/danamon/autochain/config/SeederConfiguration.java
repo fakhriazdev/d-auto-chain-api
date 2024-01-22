@@ -70,11 +70,11 @@ public class SeederConfiguration implements CommandLineRunner {
 //
             newBackOfficeSeeder();
             newUserSeeder();
-//
-////            userSeeder();
+
             invoiceSeeder();
             paymentSeeder();
-////            invoiceAndPaymentSeeder();
+
+            financingSeeder();
         }
     }
 
@@ -697,10 +697,12 @@ public class SeederConfiguration implements CommandLineRunner {
     private void newUserSeeder() {
 //        createUser("oreo_123", "Oreo Jaya", "oreofinalprojectdtt@gmail.com", "AST123", List.of("IND345", "ITA567"), List.of("INVOICE_STAFF", "FINANCE_STAFF"));
 
+        createUser("fakhriaz", "fakhri", "fakhriazdev@gmail.com", "GAR123", List.of("AST123"), List.of("SUPER_USER"));
+        createUser("ragil9", "ragil", "ragilindra9@gmail.com", "AST123", List.of("GAR123"), List.of("SUPER_USER"));
+
         createUser("nand_123", "Nand", "dinandtambunan28@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF"));
 
         createUser("abra_123", "Abraham", "abramyct@gmail.com", "AST123", List.of("GAR123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
-
 
         createUser("edia_123", "Ediashta", "ediashtarevin77@gmail.com", "GAR123", List.of("AST123"), List.of("PAYMENT_STAFF", "INVOICE_STAFF", "FINANCE_STAFF"));
 
@@ -767,6 +769,9 @@ public class SeederConfiguration implements CommandLineRunner {
 
     private void newBackOfficeSeeder() {
 //        createBackoffice("superadmin_1", "Super Admin A", "oreofinalprojectdtt2@gmail.com","SUPER_ADMIN", null);
+
+        createBackoffice("rizdaagisa", "rizdaagisa", "rizdaagisa@gmail.com", "SUPER_ADMIN", null);
+        createBackoffice("dita", "dita", "ditsabil@gmail.com", "SUPER_ADMIN", null);
 
         createBackoffice("admin_1", "Admin A", "admin@gmail.com", "ADMIN", null);
 
@@ -910,16 +915,20 @@ public class SeederConfiguration implements CommandLineRunner {
 
     private void financingSeeder() {
 //        =============== FINANCING PAYABLE ================
-//        generateFinancingPayable("FIN/REL567/002","PAY/REL567/001",);
-
+        generateFinancingPayable("FIN-REL567-002","PAY-REL567-001", "REL567", "INV-SEL234-001",0.07d,3,455000000L,153608157D, FinancingStatus.ONGOING,"20-10-2023");
+        generateFinancingPayable("FIN-UNI456-002","PAY-UNI456-001", "UNI456", "INV-REL567-001",0.07d,1,180000000L,181050000D, FinancingStatus.PENDING,"26-01-2024");
+        generateFinancingPayable("FIN-DWI890-002","PAY-DWI890-001", "DWI890", "INV-GAR123-001",0.07d,2,106000000L,53464200D, FinancingStatus.REJECTED,"26-01-2024");
 //        =============== FINANCING RECEIVABLE ==============
-//        generateFinancingReceivable();
+        generateFinancingReceivable("FIN-AST123-002","INV-AST123-001","AST123","23-04-2023","23-04-2023",FinancingStatus.ONGOING,FinancingType.RECEIVABLE,201000000L,4494583.33D, 196505416.67D);
+        generateFinancingReceivable("FIN-GAJ456-002","INV-GAJ456-002","GAJ456","28-08-2023","28-08-2023",FinancingStatus.ONGOING,FinancingType.RECEIVABLE,210800000L,4713722.22D, 206086277.78D);
+        generateFinancingReceivable("FIN-GAR123-002","INV-GAR123-001","GAR123","23-11-2023","23-11-2023",FinancingStatus.PENDING,FinancingType.RECEIVABLE,106000000L,2370277.88D, 103629722.22D);
 
     }
 
-    private void generateFinancingPayable(String id, String paymentId, String recipientId, Double interest, Integer tenure, Long amount, Double installment, FinancingStatus status, String approvalDate) {
-        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
-        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found on seeder with name : " + paymentId));
+    private void generateFinancingPayable(String id, String paymentId, String recipientId, String invoiceId ,Double interest, Integer tenure, Long amount, Double installment, FinancingStatus status, String approvalDate) {
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with id : " + recipientId));
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found on seeder with id : " + paymentId));
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found on seeder with id : " + invoiceId));
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
@@ -933,6 +942,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .financingPayableId(id)
                 .payment(payment)
                 .company(recipient)
+                .invoice(invoice)
                 .status(status)
                 .amount(amount)
                 .interest(interest)
@@ -940,6 +950,7 @@ public class SeederConfiguration implements CommandLineRunner {
                 .tenure(tenure)
                 .monthly_installment(installment)
                 .period_number(0)
+                .paymentMethod(PaymentMethod.BANK_TRANSFER)
                 .createdDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
                 .createdBy(recipient.getCompanyName())
                 .build();
@@ -966,9 +977,9 @@ public class SeederConfiguration implements CommandLineRunner {
         }
     }
 
-    private void generateFinancingReceivable(String id, String recipientId, String approvalDate, String disbursmentDate, FinancingStatus status, FinancingType type, Long amount, Double fee, Double total) {
-        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with name : " + recipientId));
-
+    private void generateFinancingReceivable(String id, String invoiceId, String recipientId, String approvalDate, String disbursmentDate, FinancingStatus status, FinancingType type, Long amount, Double fee, Double total) {
+        Company recipient = companyRepository.findById(recipientId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found on seeder with ID : " + recipientId));
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Id invoice on seeder recevivable with ID : "+ invoiceId) );
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         Date date2 = null;
@@ -981,6 +992,7 @@ public class SeederConfiguration implements CommandLineRunner {
         financingReceivableRepository.saveAndFlush(
                 FinancingReceivable.builder()
                         .financingId(id)
+                        .invoice(invoice)
                         .company(recipient)
                         .modifiedDate(date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
                         .createdDate(LocalDateTime.now())
