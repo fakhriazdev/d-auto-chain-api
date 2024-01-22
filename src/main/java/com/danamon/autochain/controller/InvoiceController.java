@@ -74,7 +74,7 @@ public class InvoiceController {
         DataResponse<List<InvoiceResponse>> response = DataResponse.<List<InvoiceResponse>>builder()
                 .data(data.getContent())
                 .paging(pagingResponse)
-                .message("Success Generate Invoice")
+                .message("Success Get All Invoice")
                 .statusCode(HttpStatus.CREATED.value())
                 .build();
 
