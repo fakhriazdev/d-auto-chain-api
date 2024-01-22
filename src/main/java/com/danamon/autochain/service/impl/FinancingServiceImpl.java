@@ -212,8 +212,12 @@ public class FinancingServiceImpl implements FinancingService {
         List<FinancingReceivable> financingReceivables = new ArrayList<>();
         request.forEach(receivableRequest -> {
 
-            if (receivableRequest.getAmount() <= 75000000) {
+            if (receivableRequest.getAmount() < 75000000) {
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot less than Rp.75.000.000");
+            }
+
+            if(company.getRemainingLimit() < receivableRequest.getAmount()){
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Amount cannot less than remaining limit company : "+ company.getRemainingLimit());
             }
 
             Invoice invoice = invoiceRepository.findById(receivableRequest.getInvoice_number())
@@ -599,7 +603,7 @@ public class FinancingServiceImpl implements FinancingService {
 
         for (int i = 1; i <= financingPayable.getTenure(); i++) {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(new Date());
+            calendar.setTime(financingPayable.getInvoice().getDueDate());
             calendar.add(Calendar.MONTH, i);
             Date dueDate = calendar.getTime();
 
